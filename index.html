@@ -695,18 +695,11 @@
         .battery-bar-stripe {
             display: none !important;
         }
-        /* pastikan semua generasi hanya bingkai */
-        .node-root .node-shape,
-        .node-wife .node-shape,
-        .node-gen1 .node-shape,
-        .node-gen2 .node-shape,
-        .node-gen3 .node-shape,
-        .node-gen4 .node-shape,
+        /* pastikan generasi 5-8 tetap hanya bingkai (belum diminta warna solid) */
         .node-gen5 .node-shape,
         .node-gen6 .node-shape,
         .node-gen7 .node-shape,
-        .node-gen8 .node-shape,
-        .node-founder .node-shape {
+        .node-gen8 .node-shape {
             fill: none !important;
         }
         .battery-bars {
@@ -775,6 +768,58 @@
         .node-gen5 .battery-bar-stripe {
             display: none !important;
         }
+        /* ===== WARNA SOLID PER GENERASI + BORDER TEBAL (sesuai request user) ===== */
+        .node-root .node-shape,
+        .node-wife .node-shape {
+            fill: #f9a8d4 !important; /* pink - ROOT: Mubanan & Siti Abidah */
+            stroke: #000000 !important;
+            stroke-width: 4.5px !important;
+            stroke-linejoin: round;
+            stroke-linecap: round;
+            filter: none !important;
+        }
+        .node-gen1 .node-shape {
+            fill: #4ade80 !important; /* hijau - GEN 1 */
+            stroke: #000000 !important;
+            stroke-width: 4.5px !important;
+            stroke-linejoin: round;
+            stroke-linecap: round;
+            filter: none !important;
+        }
+        .node-gen2 .node-shape {
+            fill: #60a5fa !important; /* biru - GEN 2 */
+            stroke: #000000 !important;
+            stroke-width: 4.5px !important;
+            stroke-linejoin: round;
+            stroke-linecap: round;
+            filter: none !important;
+        }
+        .node-gen3 .node-shape {
+            fill: #facc15 !important; /* kuning - GEN 3 */
+            stroke: #000000 !important;
+            stroke-width: 4.5px !important;
+            stroke-linejoin: round;
+            stroke-linecap: round;
+            filter: none !important;
+        }
+        .node-gen4 .node-shape {
+            fill: #c084fc !important; /* ungu - GEN 4 */
+            stroke: #000000 !important;
+            stroke-width: 4.5px !important;
+            stroke-linejoin: round;
+            stroke-linecap: round;
+            filter: none !important;
+        }
+        /* sembunyikan tube baterai lama biar shape solid bersih, tanpa gradasi ganda */
+        .node-root .battery-bars, .node-root .battery-bar, .node-root .battery-bar-stripe,
+        .node-wife .battery-bars, .node-wife .battery-bar, .node-wife .battery-bar-stripe,
+        .node-gen1 .battery-bars, .node-gen1 .battery-bar, .node-gen1 .battery-bar-stripe,
+        .node-gen2 .battery-bars, .node-gen2 .battery-bar, .node-gen2 .battery-bar-stripe,
+        .node-gen3 .battery-bars, .node-gen3 .battery-bar, .node-gen3 .battery-bar-stripe,
+        .node-gen4 .battery-bars, .node-gen4 .battery-bar, .node-gen4 .battery-bar-stripe {
+            display: none !important;
+        }
+
         .node-founder .node-shape {
             fill: #ffe4e6 !important; /* polos pink muda - sesuai request polos */
             stroke: none !important; /* border love merah */
@@ -910,7 +955,7 @@
         
         /* DOUBLE LOVE - SEPERTI CONTOH: HIJAU & MERAH SOLID + BORDER HITAM */
         .node-founder .node-shape {
-            fill: #22a75a !important; /* MUBANAN - hijau solid seperti contoh */
+            fill: #f472b6 !important; /* MUBANAN - pink solid (ROOT) */
             stroke: #000000 !important;
             stroke-width: 4.5px !important;
             stroke-linejoin: round;
@@ -918,7 +963,7 @@
             filter: none !important;
         }
         .node-founder .node-shape-second {
-            fill: #ff0000 !important; /* SITI ABIDAH - merah solid seperti contoh */
+            fill: #ec4899 !important; /* SITI ABIDAH - pink solid (ROOT) */
             stroke: #000000 !important;
             stroke-width: 4.5px !important;
             stroke-linejoin: round;
@@ -967,16 +1012,16 @@
             transition: fill 0.25s ease, transform 0.15s ease, filter 0.2s ease, stroke-width 0.2s ease;
         }
         .node-founder:hover .node-shape {
-            fill: #4ade80 !important; /* hijau lebih terang saat hover */
+            fill: #f9a8d4 !important; /* pink lebih terang saat hover */
         }
         .node-founder:hover .node-shape-second {
-            fill: #f87171 !important; /* merah lebih terang saat hover */
+            fill: #f9a8d4 !important; /* pink lebih terang saat hover */
         }
         .node-founder.pressed .node-shape {
-            fill: #15803d !important; /* hijau lebih gelap saat diklik */
+            fill: #db2777 !important; /* pink lebih gelap saat diklik */
         }
         .node-founder.pressed .node-shape-second {
-            fill: #b91c1c !important; /* merah lebih gelap saat diklik */
+            fill: #db2777 !important; /* pink lebih gelap saat diklik */
         }
         
         /* FIX: HOVER DI SHAPE MUBANAN & SITI ABIDAH WARNA TIDAK BERUBAH */
@@ -1643,22 +1688,22 @@
     ].forEach(s => battScale.append('stop').attr('offset', s.off).attr('stop-color', s.c));
 
 
-    // Gradient hijau gradasi untuk 2 love MUBANAN & SITI ABIDAH
+    // Gradient pink untuk 2 love MUBANAN & SITI ABIDAH (ROOT)
     const loveGreenGrad = defs.append('linearGradient')
         .attr('id', 'grad-love-green')
         .attr('x1', '0%').attr('y1', '0%')
         .attr('x2', '0%').attr('y2', '100%');
-    loveGreenGrad.append('stop').attr('offset', '0%').attr('stop-color', '#4ade80');
-    loveGreenGrad.append('stop').attr('offset', '50%').attr('stop-color', '#22c55e');
-    loveGreenGrad.append('stop').attr('offset', '100%').attr('stop-color', '#16a34a');
+    loveGreenGrad.append('stop').attr('offset', '0%').attr('stop-color', '#f9a8d4');
+    loveGreenGrad.append('stop').attr('offset', '50%').attr('stop-color', '#f472b6');
+    loveGreenGrad.append('stop').attr('offset', '100%').attr('stop-color', '#db2777');
 
     const loveGreenGrad2 = defs.append('linearGradient')
         .attr('id', 'grad-love-green-2')
         .attr('x1', '0%').attr('y1', '0%')
         .attr('x2', '0%').attr('y2', '100%');
-    loveGreenGrad2.append('stop').attr('offset', '0%').attr('stop-color', '#86efac');
-    loveGreenGrad2.append('stop').attr('offset', '50%').attr('stop-color', '#4ade80');
-    loveGreenGrad2.append('stop').attr('offset', '100%').attr('stop-color', '#15803d');
+    loveGreenGrad2.append('stop').attr('offset', '0%').attr('stop-color', '#fbcfe8');
+    loveGreenGrad2.append('stop').attr('offset', '50%').attr('stop-color', '#f9a8d4');
+    loveGreenGrad2.append('stop').attr('offset', '100%').attr('stop-color', '#ec4899');
 
     const nodeGradients = [
         { id: 'grad-root', c1: '#fffbeb', c2: '#fef3c7' },
