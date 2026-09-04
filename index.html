@@ -55,7 +55,7 @@
             flex-wrap: wrap;
         }
         .btn {
-            background: linear-gradient(135deg, #93c5fd, #a5b4fc);
+            background: linear-gradient(135deg, #4ade80, #22c55e);
             color: white;
             border: none;
             padding: 6px 14px;
@@ -66,17 +66,18 @@
             transition: 0.2s ease;
         }
         .btn:hover {
-            background: linear-gradient(135deg, #60a5fa, #818cf8);
+            background: linear-gradient(135deg, #22c55e, #16a34a);
         }
         .btn:disabled,
         .btn[disabled] {
-            background: #cbd5e1;
-            color: #94a3b8;
+            background: linear-gradient(135deg, #4ade80, #22c55e);
+            color: white;
             cursor: not-allowed;
+            opacity: 1;
         }
         .btn:disabled:hover,
         .btn[disabled]:hover {
-            background: #cbd5e1;
+            background: linear-gradient(135deg, #4ade80, #22c55e);
         }
         .controls .btn {
             font-size: 0.7rem;
@@ -373,15 +374,15 @@
             position: relative;
         }
         #panel-switcher button.active {
-            background: linear-gradient(135deg, #93c5fd, #a5b4fc);
+            background: linear-gradient(135deg, #4ade80, #22c55e);
             color: white;
         }
         #panel-switcher button:hover:not(.active) {
-            background: #eff6ff;
-            color: #1d4ed8;
+            background: #f0fdf4;
+            color: #15803d;
         }
         #panel-switcher button.active:hover {
-            background: linear-gradient(135deg, #60a5fa, #818cf8);
+            background: linear-gradient(135deg, #22c55e, #16a34a);
         }
         #chat-panel {
             position: fixed;
@@ -1206,15 +1207,66 @@
         return bars;
     }
 
+    // ===== Utilitas: ukur lebar teks & bungkus nama pasangan yang kepanjangan ke baris baru =====
+    // (dipakai supaya nama pasangan yang panjang turun ke bawah, bukan memperlebar kotak)
+    const _measureCanvas = document.createElement('canvas');
+    const _measureCtx = _measureCanvas.getContext('2d');
+    function measureTextWidth(text, font) {
+        _measureCtx.font = font;
+        return _measureCtx.measureText(text).width;
+    }
+    const SPOUSE_FONT = '500 10px "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
+    const SPOUSE_LINE_HEIGHT = 12; // jarak antar baris tambahan nama pasangan
+    const CARD_TEXT_PAD_X = 14;    // harus sama dengan TEXT_PAD_X di fungsi update()
+
+    function nodeHasSpouseLine(d) {
+        if (!d.data.spouse) return false;
+        if (d.data.type === 'root' || d.data.type === 'wife') return false;
+        const hasWifeBranch = Array.isArray(d.data.children) && d.data.children.some(c => c.type === 'wife');
+        return !hasWifeBranch;
+    }
+    function buildSpouseText(d) {
+        if (!nodeHasSpouseLine(d)) return '';
+        let sLife = d.data.spouse_life ? ` (${d.data.spouse_life})` : '';
+        let flowerStr = d.data.spouseDeceased ? '\uD83C\uDF39 ' : '';
+        return `${flowerStr}${d.data.spouse}${sLife}`;
+    }
+    function wrapSpouseLines(d, maxWidth) {
+        const text = buildSpouseText(d);
+        if (!text) return [];
+        const words = text.split(' ');
+        const lines = [];
+        let current = '';
+        for (const word of words) {
+            const test = current ? current + ' ' + word : word;
+            if (measureTextWidth(test, SPOUSE_FONT) > maxWidth && current) {
+                lines.push(current);
+                current = word;
+            } else {
+                current = test;
+            }
+        }
+        if (current) lines.push(current);
+        return lines;
+    }
+    function spouseWrapExtraHeight(d) {
+        if (!nodeHasSpouseLine(d)) return 0;
+        let w = cardWidth;
+        if (d.data.type === 'wife') w = wifeCardWidth;
+        const maxWidth = w - CARD_TEXT_PAD_X * 2;
+        const lines = wrapSpouseLines(d, maxWidth);
+        return lines.length > 1 ? (lines.length - 1) * SPOUSE_LINE_HEIGHT : 0;
+    }
+
     function cardDims(d) {
         let w = cardWidth;
-        let h = cardHeight + (d.data.extraName ? extraNameHeight : 0) + (d.data.address ? extraNameHeight : 0);
+        let h = cardHeight + (d.data.extraName ? extraNameHeight : 0) + (d.data.address ? extraNameHeight : 0) + spouseWrapExtraHeight(d);
         if (d.data.name === 'MUBANAN BIN H. TAMYIS') {
             w = founderCardWidth;
             h = founderCardHeight;
         } else if (d.data.type === 'wife') {
             w = wifeCardWidth;
-            h = wifeCardHeight + (d.data.extraName ? extraNameHeight : 0) + (d.data.address ? extraNameHeight : 0);
+            h = wifeCardHeight + (d.data.extraName ? extraNameHeight : 0) + (d.data.address ? extraNameHeight : 0) + spouseWrapExtraHeight(d);
         }
         return { w, h };
     }
@@ -1484,12 +1536,7 @@
             minY = Infinity,
             maxY = -Infinity;
         list.forEach(d => {
-            let w = cardWidth;
-            let h = cardHeight + (d.data.extraName ? extraNameHeight : 0);
-            if (d.data.name === 'MUBANAN BIN H. TAMYIS') {
-                w = founderCardWidth;
-                h = founderCardHeight;
-            }
+            const { w, h } = cardDims(d);
             minX = Math.min(minX, d.x - h / 2);
             maxX = Math.max(maxX, d.x + h / 2);
             minY = Math.min(minY, d.y);
@@ -1923,7 +1970,7 @@
                 if (d.data.extraName && d.data.name !== 'MUBANAN BIN H. TAMYIS') {
                     const hasAddress = d.data.address ? true : false;
                     const baseY = 2;
-                    return baseY + 16 + (hasAddress ? 0 : 0);
+                    return baseY + 16 + (hasAddress ? 0 : 0) + spouseWrapExtraHeight(d);
                 }
                 return 0;
             })
@@ -1951,7 +1998,7 @@
                 if (d.data.address && d.data.name !== 'MUBANAN BIN H. TAMYIS') {
                     const hasExtra = d.data.extraName ? true : false;
                     const baseY = 16;
-                    return baseY + (hasExtra ? extraNameHeight : 0);
+                    return baseY + (hasExtra ? extraNameHeight : 0) + spouseWrapExtraHeight(d);
                 }
                 return 0;
             })
@@ -1962,7 +2009,7 @@
             .style('font-style', 'italic')
             .text(d => d.data.address || '');
 
-        // ========== SPOUSE INFO UNTUK NODE LAINNYA ==========
+        // ========== SPOUSE INFO UNTUK NODE LAINNYA (dibungkus ke baris baru jika kepanjangan) ==========
         nodeEnter.filter(d => d.data.name !== 'MUBANAN BIN H. TAMYIS')
             .append('text')
             .attr('class', 'spouse-info')
@@ -1981,11 +2028,19 @@
             .style('font-size', '10px')
             .style('font-weight', '500')
             .style('fill', '#475569')
-            .text(d => {
-                if (!hasSpouseLine(d)) return '';
-                let sLife = d.data.spouse_life ? ` (${d.data.spouse_life})` : '';
-                let flowerStr = d.data.spouseDeceased ? '\uD83C\uDF39 ' : '';
-                return `${flowerStr}${d.data.spouse}${sLife}`;
+            .each(function(d) {
+                if (!hasSpouseLine(d)) return;
+                const textEl = d3.select(this);
+                const baseY = +textEl.attr('y');
+                const { w } = cardDims(d);
+                const maxWidth = w - TEXT_PAD_X * 2;
+                const lines = wrapSpouseLines(d, maxWidth);
+                lines.forEach((line, idx) => {
+                    textEl.append('tspan')
+                        .attr('x', TEXT_PAD_X)
+                        .attr('y', baseY + idx * SPOUSE_LINE_HEIGHT)
+                        .text(line);
+                });
             });
 
         const nodeUpdate = nodeEnter.merge(node);
