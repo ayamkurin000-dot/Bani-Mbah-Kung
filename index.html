@@ -1,0 +1,3242 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Silsilah Interaktif - BANI MBAH KUNG</title>
+
+    <!-- Meta Tag Open Graph agar preview WhatsApp makin mantap -->
+    <meta property="og:title" content="Silsilah Interaktif - Bani Mbah Kung" />
+    <meta property="og:description" content="Silsilah keluarga Bani Mbah Kung" />
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            color: #1e293b;
+            overflow: hidden;
+            background-color: #fdfbf7;
+            background-image: linear-gradient(135deg, #fdfbf7 0%, #eff6ff 35%, #f5f3ff 70%, #fefce8 100%);
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'%3E%3Cg fill='none' stroke='%2394a3b8' stroke-width='1' opacity='0.06'%3E%3Ccircle cx='30' cy='30' r='16'/%3E%3Ccircle cx='90' cy='30' r='16'/%3E%3Ccircle cx='30' cy='90' r='16'/%3E%3Ccircle cx='90' cy='90' r='16'/%3E%3Ccircle cx='60' cy='60' r='16'/%3E%3C/g%3E%3C/svg%3E");
+            background-repeat: repeat;
+            background-size: 120px 120px;
+        }
+        #header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: #ffffff;
+            padding: 14px 24px;
+            box-shadow: 0 2px 12px rgba(148,163,184,0.12);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 100;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        #header h1 {
+            font-size: 1.25rem;
+            color: #0f172a;
+            font-weight: 700;
+        }
+        #header p {
+            font-size: 0.85rem;
+            color: #64748b;
+        }
+        .controls {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .btn {
+            background: linear-gradient(135deg, #93c5fd, #a5b4fc);
+            color: white;
+            border: none;
+            padding: 6px 14px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            font-weight: 600;
+            transition: 0.2s ease;
+        }
+        .btn:hover {
+            background: linear-gradient(135deg, #60a5fa, #818cf8);
+        }
+        .btn:disabled,
+        .btn[disabled] {
+            background: #cbd5e1;
+            color: #94a3b8;
+            cursor: not-allowed;
+        }
+        .btn:disabled:hover,
+        .btn[disabled]:hover {
+            background: #cbd5e1;
+        }
+        .controls .btn {
+            font-size: 0.7rem;
+            padding: 5px 10px;
+        }
+        #search-container {
+            position: relative;
+            flex: 1 1 auto;
+            max-width: 300px;
+            min-width: 150px;
+        }
+        #search-input {
+            width: 100%;
+            padding: 7px 12px;
+            border: 1px solid #cbd5e1;
+            border-radius: 7px;
+            font-size: 0.7rem;
+            outline: none;
+            box-sizing: border-box;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+        #search-input:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+        }
+        #search-results {
+            position: absolute;
+            top: calc(100% + 6px);
+            left: 0;
+            right: 0;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            box-shadow: 0 10px 26px rgba(0, 0, 0, 0.18);
+            max-height: 300px;
+            overflow-y: auto;
+            z-index: 500;
+            display: none;
+        }
+        #search-results.active {
+            display: block;
+        }
+        .search-result-item {
+            padding: 9px 14px;
+            font-size: 0.85rem;
+            color: #1e293b;
+            cursor: pointer;
+            border-bottom: 1px solid #f1f5f9;
+            transition: background 0.15s ease;
+        }
+        .search-result-item:last-child {
+            border-bottom: none;
+        }
+        .search-result-item:hover,
+        .search-result-item.kbd-active {
+            background: #eff6ff;
+            color: #1d4ed8;
+        }
+        .search-no-result {
+            padding: 9px 14px;
+            font-size: 0.8rem;
+            color: #94a3b8;
+            font-style: italic;
+        }
+        @media (max-width: 640px) {
+            #header {
+                padding: 10px 12px;
+            }
+            #header h1 {
+                font-size: 1rem;
+            }
+            #header p {
+                font-size: 0.6rem;
+                white-space: nowrap;
+                letter-spacing: -0.1px;
+            }
+            #search-container {
+                max-width: none;
+                width: 100%;
+                flex-basis: 100%;
+                order: 3;
+            }
+            .controls .btn {
+                font-size: 0.6rem;
+                padding: 4px 7px;
+            }
+            #search-input {
+                font-size: 0.6rem;
+            }
+        }
+        #chart-container {
+            width: 100vw;
+            height: 100vh;
+            padding-top: 60px;
+            position: relative;
+            z-index: 1;
+        }
+        #root-tap-hint {
+            position: fixed;
+            z-index: 500;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transform: translate(-50%, -100%);
+            animation: hint-fade-in 0.4s ease-out;
+        }
+        #root-tap-hint .hint-hand {
+            font-size: 2.4rem;
+            line-height: 1;
+            animation: hint-bounce 1.1s ease-in-out infinite;
+            filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.35));
+        }
+        #root-tap-hint .hint-text {
+            margin-bottom: 2px;
+            background: #f59e0b;
+            color: #ffffff;
+            font-weight: 800;
+            font-size: 0.78rem;
+            padding: 5px 12px;
+            border-radius: 999px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.28);
+            white-space: nowrap;
+        }
+        @keyframes hint-bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(10px); }
+        }
+        @keyframes hint-fade-in {
+            0% { opacity: 0; transform: translate(-50%, calc(-100% - 10px)); }
+            100% { opacity: 1; transform: translate(-50%, -100%); }
+        }
+
+        /* === MOBILE PERF PATCH === */
+        .node .node-shape {
+            will-change: transform;
+        }
+        @media (max-width: 640px) {
+            body { background-attachment: scroll !important; }
+            .node .node-shape {
+                filter: none !important;
+                transition: transform 0.12s ease !important;
+            }
+            .node:hover .node-shape {
+                filter: none !important;
+            }
+            #cursor-fx { display: none !important; }
+        }
+
+        #cursor-fx {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 9999;
+        }
+        #credit-tag {
+            position: fixed;
+            bottom: 10px;
+            right: 14px;
+            font-size: 0.6rem;
+            color: #475569;
+            background: #ffffff;
+            padding: 5px 10px;
+            border-radius: 6px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+            border: 1px solid #e2e8f0;
+            z-index: 10000;
+            pointer-events: none;
+            user-select: none;
+            letter-spacing: 0.2px;
+            font-weight: 600;
+        }
+        #gen-legend {
+            position: fixed;
+            top: 80px;
+            left: 14px;
+            z-index: 9998;
+            background: #ffffffee;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.14);
+            padding: 12px 16px;
+            font-size: 0.78rem;
+            color: #334155;
+            max-width: 220px;
+            line-height: 1.5;
+            transition: max-height 0.25s ease, padding 0.25s ease, opacity 0.25s ease;
+        }
+        #gen-legend .gen-legend-title {
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 6px;
+            display: block;
+        }
+        #gen-legend ol {
+            margin: 0;
+            padding-left: 20px;
+        }
+        #gen-legend li {
+            margin-bottom: 2px;
+        }
+        #gen-legend-toggle {
+            display: none;
+        }
+        @media (max-width: 640px) {
+            #gen-legend {
+                top: auto;
+                bottom: 44px;
+                left: 8px;
+                right: 8px;
+                max-width: none;
+                font-size: 0.68rem;
+                padding: 8px 10px 8px 12px;
+                max-height: 220px;
+                overflow-y: auto;
+            }
+            #gen-legend.collapsed {
+                max-height: 26px;
+                overflow: hidden;
+                padding-top: 4px;
+                padding-bottom: 4px;
+            }
+            #gen-legend .gen-legend-title {
+                margin-bottom: 4px;
+                cursor: pointer;
+            }
+            #gen-legend-toggle {
+                display: inline;
+                float: right;
+                font-weight: 400;
+                color: #2563eb;
+            }
+            #gen-legend ol {
+                padding-left: 16px;
+                columns: 2;
+                column-gap: 14px;
+            }
+        }
+        #panel-switcher button {
+            position: relative;
+        }
+        #panel-switcher button:first-child {
+            border-radius: 6px 0 0 6px;
+        }
+        #panel-switcher button:last-child {
+            border-radius: 0 6px 6px 0;
+        }
+        .chat-notif-badge {
+            position: absolute;
+            top: -6px;
+            right: -6px;
+            min-width: 15px;
+            height: 15px;
+            padding: 0 3px;
+            background: #dc2626;
+            color: #ffffff;
+            border-radius: 999px;
+            font-size: 0.55rem;
+            font-weight: 800;
+            line-height: 15px;
+            text-align: center;
+            box-shadow: 0 0 0 2px #ffffff;
+            pointer-events: none;
+        }
+        #panel-switcher {
+            position: fixed;
+            bottom: 10px;
+            right: 165px;
+            z-index: 10000;
+            background: #ffffffee;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+            display: flex;
+            overflow: visible;
+            width: auto;
+            font-size: 0.6rem;
+        }
+        #panel-switcher button {
+            background: #f8fafc;
+            border: none;
+            padding: 5px 9px;
+            font-size: 0.58rem;
+            font-weight: 800;
+            color: #64748b;
+            cursor: pointer;
+            transition: 0.15s;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            white-space: nowrap;
+            position: relative;
+        }
+        #panel-switcher button.active {
+            background: linear-gradient(135deg, #93c5fd, #a5b4fc);
+            color: white;
+        }
+        #panel-switcher button:hover:not(.active) {
+            background: #eff6ff;
+            color: #1d4ed8;
+        }
+        #panel-switcher button.active:hover {
+            background: linear-gradient(135deg, #60a5fa, #818cf8);
+        }
+        #chat-panel {
+            position: fixed;
+            top: 115px;
+            left: 14px;
+            z-index: 9998;
+            background: #ffffffee;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.14);
+            width: 340px;
+            max-width: 340px;
+            height: 62vh;
+            max-height: 520px;
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+            backdrop-filter: blur(6px);
+        }
+        #chat-panel.active {
+            display: flex;
+        }
+        #gen-legend.chat-hidden {
+            display: none;
+        }
+        #gen-legend {
+            top: 115px !important;
+        }
+        .chat-header {
+            padding: 10px 12px;
+            background: #f8fafc;
+            border-bottom: 1px solid #e2e8f0;
+            font-weight: 800;
+            font-size: 0.78rem;
+            color: #0f172a;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .chat-header small {
+            font-weight: 600;
+            color: #64748b;
+            font-size: 0.65rem;
+        }
+        #chat-login-form {
+            padding: 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            overflow-y: auto;
+        }
+        #chat-login-form label {
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: #334155;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        #chat-login-form input, #chat-login-form select {
+            width: 100%;
+            padding: 8px 10px;
+            border: 1px solid #cbd5e1;
+            border-radius: 7px;
+            font-size: 0.8rem;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        #chat-login-form input:focus, #chat-login-form select:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59,130,246,0.15);
+        }
+        .chat-user-info {
+            padding: 10px 12px;
+            background: #eff6ff;
+            border-bottom: 1px solid #dbeafe;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.75rem;
+        }
+        .chat-user-info b {
+            color: #1d4ed8;
+        }
+        .chat-bani-badge {
+            background: #dbeafe;
+            color: #1e40af;
+            padding: 2px 7px;
+            border-radius: 20px;
+            font-size: 0.62rem;
+            font-weight: 800;
+            border: 1px solid #bfdbfe;
+            display: inline-block;
+            margin-top: 2px;
+        }
+        #chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            background: #ffffff;
+        }
+        .chat-msg {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 8px 10px;
+            font-size: 0.76rem;
+            line-height: 1.4;
+            position: relative;
+        }
+        .chat-msg .msg-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 4px;
+        }
+        .chat-msg .msg-name {
+            font-weight: 800;
+            color: #0f172a;
+            font-size: 0.75rem;
+        }
+        .chat-msg .msg-time {
+            font-size: 0.6rem;
+            color: #94a3b8;
+        }
+        .chat-msg .msg-text {
+            color: #334155;
+            word-break: break-word;
+            white-space: pre-wrap;
+        }
+        .chat-msg .msg-actions {
+            margin-top: 6px;
+            display: flex;
+            gap: 8px;
+        }
+        .chat-msg .msg-actions button {
+            background: none;
+            border: none;
+            font-size: 0.65rem;
+            font-weight: 700;
+            color: #3b82f6;
+            cursor: pointer;
+            padding: 0;
+        }
+        .chat-msg .msg-actions button:hover {
+            color: #1d4ed8;
+            text-decoration: underline;
+        }
+        .chat-msg.reply {
+            margin-left: 18px;
+            border-left: 3px solid #3b82f6;
+            background: #eff6ff;
+        }
+        .chat-msg .reply-preview {
+            font-size: 0.65rem;
+            color: #64748b;
+            background: #f1f5f9;
+            padding: 3px 6px;
+            border-radius: 5px;
+            margin-bottom: 5px;
+            border-left: 2px solid #94a3b8;
+        }
+        #chat-input-area {
+            padding: 10px;
+            border-top: 1px solid #e2e8f0;
+            background: #f8fafc;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        #chat-input-area textarea {
+            width: 100%;
+            min-height: 58px;
+            max-height: 90px;
+            padding: 8px 10px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            resize: vertical;
+            outline: none;
+            font-family: inherit;
+        }
+        #chat-input-area textarea:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59,130,246,0.12);
+        }
+        .chat-filter {
+            padding: 6px 10px;
+            border-bottom: 1px solid #f1f5f9;
+            display: flex;
+            gap: 6px;
+            align-items: center;
+            background: #ffffff;
+        }
+        .chat-filter select {
+            flex: 1;
+            padding: 5px 8px;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 0.7rem;
+        }
+        .replying-to {
+            font-size: 0.68rem;
+            background: #dbeafe;
+            padding: 5px 8px;
+            border-radius: 6px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #1e40af;
+        }
+        @media (max-width: 640px) {
+            #gen-legend {
+                top: auto !important;
+                bottom: 44px;
+                left: 8px;
+                right: 8px;
+            }
+            #chat-panel {
+                top: auto;
+                bottom: 44px;
+                left: 8px;
+                right: 8px;
+                width: auto;
+                max-width: none;
+                height: 58vh;
+                max-height: 58vh;
+            }
+        }
+        .node {
+            cursor: pointer;
+        }
+        .node .node-shape {
+            stroke-width: 3.5px;
+            stroke: #000000;
+            stroke-linejoin: round;
+            stroke-linecap: round;
+            transition: transform 0.15s ease, filter 0.2s ease, stroke-width 0.2s ease;
+            transform-box: fill-box;
+            transform-origin: center;
+            filter: drop-shadow(0 3px 6px rgba(15, 23, 42, 0.28));
+        }
+        .node:hover .node-shape {
+            transform: scale(1.045);
+            filter: drop-shadow(0 7px 16px rgba(15, 23, 42, 0.35)) brightness(1.06);
+            stroke-width: 4px;
+        }
+        .node.pressed .node-shape {
+            animation: btn-press 0.32s cubic-bezier(.4, 0, .2, 1);
+        }
+        @keyframes btn-press {
+            0% {
+                transform: scale(1);
+                filter: drop-shadow(0 3px 6px rgba(15, 23, 42, 0.28));
+            }
+            40% {
+                transform: scale(0.9);
+                filter: drop-shadow(0 1px 2px rgba(15, 23, 42, 0.4)) brightness(0.9);
+            }
+            100% {
+                transform: scale(1);
+                filter: drop-shadow(0 3px 6px rgba(15, 23, 42, 0.28));
+            }
+        }
+        .node.shake-highlight .node-shape {
+            animation: shake-node 0.35s ease-in-out 1;
+            transform-origin: center;
+            stroke-width: 4px !important;
+        }
+        @keyframes shake-border-color {
+            0%, 100% { stroke: #000000; }
+            50% { stroke: #f59e0b; }
+        }
+        @keyframes shake-node {
+            0%, 100% { transform: translateX(0) scale(1); }
+            15% { transform: translateX(-7px) scale(1.03); }
+            30% { transform: translateX(6px) scale(1.03); }
+            45% { transform: translateX(-5px) scale(1.03); }
+            60% { transform: translateX(4px) scale(1.03); }
+            75% { transform: translateX(-2px) scale(1.02); }
+            90% { transform: translateX(2px) scale(1.02); }
+        }
+        .link {
+            fill: none;
+            stroke: #cbd5e1;
+            stroke-width: 2px;
+        }
+        .node-shape {
+            fill: none !important;
+            stroke: #0f172a;
+            stroke-width: 2.5px;
+            pointer-events: fill;
+            cursor: pointer;
+        }
+        .node-fill,
+        .node-fill-green,
+        .node-fill-red,
+        .node-fill-shine,
+        .battery-bars,
+        .battery-bar,
+        .battery-bar-stripe {
+            display: none !important;
+        }
+        /* pastikan semua generasi hanya bingkai */
+        .node-root .node-shape,
+        .node-wife .node-shape,
+        .node-gen1 .node-shape,
+        .node-gen2 .node-shape,
+        .node-gen3 .node-shape,
+        .node-gen4 .node-shape,
+        .node-gen5 .node-shape,
+        .node-gen6 .node-shape,
+        .node-gen7 .node-shape,
+        .node-gen8 .node-shape,
+        .node-founder .node-shape {
+            fill: none !important;
+        }
+        .battery-bars {
+            pointer-events: none;
+        }
+        .battery-bar {
+            opacity: 1;
+        }
+        .node-root .battery-bar {
+            fill: #86efac;
+        }
+        .node-wife .battery-bar {
+            fill: #f9a8d4;
+        }
+        .node-gen1 .battery-bar {
+            fill: #fca5a5;
+        }
+        .node-gen3 .battery-bar {
+            fill: #93c5fd;
+        }
+        .node-gen4 .battery-bar {
+            fill: #fde047;
+        }
+        .node-gen5 .battery-bar {
+            fill: #d8b4fe;
+        }
+        .node-gen6 .battery-bar {
+            fill: #86efac;
+        }
+        .node-gen7 .battery-bar {
+            fill: #fca5a5;
+        }
+        .node-gen8 .battery-bar {
+            fill: #93c5fd;
+        }
+        /* ===== Shape baterai full-frame bergradasi pipa 3D: root + gen1-gen5 ===== */
+        .node-root .battery-bars,
+        .node-root .battery-bar,
+        .node-wife .battery-bars,
+        .node-wife .battery-bar,
+        .node-gen1 .battery-bars,
+        .node-gen1 .battery-bar,
+        .node-gen2 .battery-bars,
+        .node-gen2 .battery-bar,
+        .node-gen3 .battery-bars,
+        .node-gen3 .battery-bar,
+        .node-gen4 .battery-bars,
+        .node-gen4 .battery-bar,
+        .node-gen5 .battery-bars,
+        .node-gen5 .battery-bar {
+            display: block !important;
+        }
+        .node-root .battery-bar { fill: url(#grad-tube-root) !important; stroke: #444444; stroke-width: 0.75px; }
+        .node-wife .battery-bar { fill: url(#grad-tube-wife) !important; stroke: #9d174d; stroke-width: 0.75px; }
+        .node-gen1 .battery-bar { fill: url(#grad-tube-gen1) !important; stroke: #0c3d66; stroke-width: 0.75px; }
+        .node-gen2 .battery-bar { fill: url(#grad-tube-gen2) !important; stroke: #14532d; stroke-width: 0.75px; }
+        .node-gen3 .battery-bar { fill: url(#grad-tube-gen3) !important; stroke: #831843; stroke-width: 0.75px; }
+        .node-gen4 .battery-bar { fill: url(#grad-tube-gen4) !important; stroke: #4c1d95; stroke-width: 0.75px; }
+        .node-gen5 .battery-bar { fill: url(#grad-tube-gen5) !important; stroke: #713f12; stroke-width: 0.75px; }
+        .node-root .battery-bar-stripe,
+        .node-wife .battery-bar-stripe,
+        .node-gen1 .battery-bar-stripe,
+        .node-gen2 .battery-bar-stripe,
+        .node-gen3 .battery-bar-stripe,
+        .node-gen4 .battery-bar-stripe,
+        .node-gen5 .battery-bar-stripe {
+            display: none !important;
+        }
+        .node-founder .node-shape {
+            stroke-width: 4.5px;
+        }
+        .node-founder .battery-bar {
+            fill: url(#grad-battery-scale);
+            opacity: 1;
+        }
+        .node-founder .battery-bar-stripe {
+            display: none;
+        }
+        .node-farath .node-shape {
+            fill: #ffffff !important;
+            stroke: #e5e7eb !important;
+            stroke-width: 1.2px !important;
+            filter: none !important;
+        }
+        .node-farath .battery-bar,
+        .node-farath .battery-bar-stripe,
+        .node-farath .node-gloss,
+        .node-farath .glass-gloss {
+            display: none !important;
+        }
+        .node-farath {
+            filter: drop-shadow(0 1px 3px rgba(0,0,0,0.08)) !important;
+        }
+        .node-founder text.name-life {
+            font-size: 18px;
+            font-weight: 900;
+            fill: #000000;
+            text-transform: uppercase;
+        }
+        .node-founder text.spouse-info {
+            font-size: 11px;
+            font-weight: 700;
+            fill: #14532d;
+        }
+        .node-founder .separator-line {
+            stroke: #15803d;
+            stroke-width: 1.5px;
+            stroke-dasharray: 4,4;
+        }
+        .node.search-highlight .node-shape {
+            stroke: #f59e0b !important;
+            stroke-width: 4px !important;
+            animation: search-pulse 1.3s ease-in-out 2;
+        }
+        @keyframes search-pulse {
+            0% {
+                filter: drop-shadow(0 0 0px rgba(245, 158, 11, 0.95));
+            }
+            50% {
+                filter: drop-shadow(0 0 18px rgba(245, 158, 11, 0.95)) brightness(1.08);
+            }
+            100% {
+                filter: drop-shadow(0 0 0px rgba(245, 158, 11, 0.95));
+            }
+        }
+        .node-root-shape .node-shape {
+            width: 260px !important;
+            height: 68px !important;
+        }
+        .node-default-shape .node-shape {
+            width: 240px !important;
+            height: 60px !important;
+        }
+        .toggle-indicator {
+            pointer-events: none;
+        }
+        .toggle-indicator circle {
+            fill: #ffffff;
+            stroke: #94a3b8;
+            stroke-width: 1.5px;
+        }
+        .toggle-indicator .toggle-icon {
+            stroke: #334155;
+            stroke-width: 1.8px;
+            stroke-linecap: round;
+        }
+        @media (max-width: 640px) {
+            #credit-tag {
+                bottom: 10px !important;
+                right: 8px !important;
+                left: auto !important;
+            }
+        }
+            .feature-disabled-toast {
+            position: fixed;
+            top: 90px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-12px);
+            background: #1e293b;
+            color: #ffffff;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.25);
+            opacity: 0;
+            pointer-events: none;
+            z-index: 9999;
+            transition: opacity 0.25s ease, transform 0.25s ease;
+        }
+        .feature-disabled-toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+    
+        .special-flower-badge, .deceased-flower-badge {
+            /* always in front */
+            isolation: isolate;
+        }
+        .deceased-flower-badge {
+            /* merah lebih pop in front */
+            filter: drop-shadow(0 3px 7px rgba(185,28,28,0.45)) !important;
+        }
+
+        </style>
+</head>
+<body>
+    <div id="header">
+        <div>
+            <h1>SILSILAH BANI MBAH KUNG</h1>
+            <p>KLIK NODE UNTUK BUKA/TUTUP, SCROLL/DRAG UNTUK ZOOM & PAN</p>
+        </div>
+        <div id="search-container">
+            <input type="text" id="search-input" placeholder="cari nama (min. 3 huruf)..." autocomplete="off">
+            <div id="search-results"></div>
+        </div>
+        <div class="controls">
+            <button class="btn" onclick="resetZoom()">RESET</button>
+            <button class="btn" onclick="showFeatureDisabledNotice()">BUKA SEMUA</button>
+            <button class="btn" onclick="showFeatureDisabledNotice()">TUTUP SEMUA</button>
+            <button class="btn" id="perf-btn" onclick="togglePerf()" style="background:#64748b;">⚡ EFEK: ON</button>
+        </div>
+    </div>
+
+    <div id="feature-disabled-toast" class="feature-disabled-toast">Fitur ini dinonaktifkan</div>
+
+    <div id="chart-container"></div>
+
+    <!-- Hint tap awal: arahkan user untuk mengetuk shape MUBANAN BIN H. TAMYIS (root) pertama kali -->
+    <div id="root-tap-hint" style="display:none;">
+        <div class="hint-text">Ketuk di sini</div>
+        <div class="hint-hand">👇</div>
+    </div>
+
+    <!-- Foto pasangan di atas shape MUBANAN BIN H. TAMYIS (root) - hanya tampil di tampilan awal, fade out saat shape diketuk -->
+    <div id="root-photo-frame" style="position:fixed; z-index:55; pointer-events:none; display:none; opacity:0; transition:opacity 0.6s ease, transform 0.6s ease;">
+        <svg viewBox="0 0 220 220" width="190" height="190" style="display:block; filter:drop-shadow(0 4px 10px rgba(0,0,0,0.35));">
+            <defs>
+                <clipPath id="root-photo-clip">
+                    <circle cx="110" cy="110" r="78"/>
+                </clipPath>
+                <g id="root-photo-flower">
+                    <circle cx="0" cy="-5.5" r="4.6" fill="#f9a8d4"/>
+                    <circle cx="5.2" cy="1.7" r="4.6" fill="#f472b6"/>
+                    <circle cx="-5.2" cy="1.7" r="4.6" fill="#f472b6"/>
+                    <circle cx="3.2" cy="5.6" r="4.2" fill="#fb7185"/>
+                    <circle cx="-3.2" cy="5.6" r="4.2" fill="#fb7185"/>
+                    <circle cx="0" cy="1.5" r="3" fill="#fde047"/>
+                </g>
+            </defs>
+            <circle cx="110" cy="110" r="95" fill="#fffbeb"/>
+            <circle cx="110" cy="110" r="95" fill="none" stroke="#eab308" stroke-width="2" stroke-dasharray="2 4" opacity="0.6"/>
+            <image href="" id="root-photo-img" x="32" y="32" width="156" height="156" clip-path="url(#root-photo-clip)" preserveAspectRatio="xMidYMid slice"/>
+            <circle cx="110" cy="110" r="78" fill="none" stroke="#ffffff" stroke-width="5"/>
+            <circle cx="110" cy="110" r="83" fill="none" stroke="#eab308" stroke-width="1.5"/>
+            <g id="root-photo-flowers">
+                <use href="#root-photo-flower" transform="translate(110.0,21.0)"/>
+                <use href="#root-photo-flower" transform="translate(162.3,38.0)"/>
+                <use href="#root-photo-flower" transform="translate(194.6,82.5)"/>
+                <use href="#root-photo-flower" transform="translate(194.6,137.5)"/>
+                <use href="#root-photo-flower" transform="translate(162.3,182.0)"/>
+                <use href="#root-photo-flower" transform="translate(110.0,199.0)"/>
+                <use href="#root-photo-flower" transform="translate(57.7,182.0)"/>
+                <use href="#root-photo-flower" transform="translate(25.4,137.5)"/>
+                <use href="#root-photo-flower" transform="translate(25.4,82.5)"/>
+                <use href="#root-photo-flower" transform="translate(57.7,38.0)"/>
+            </g>
+        </svg>
+    </div>
+    <canvas id="cursor-fx"></canvas>
+    <div id="credit-tag">DIBUAT OLEH: MANNIXS-21</div>
+    <div id="panel-switcher">
+        <button id="tab-generasi" class="active" onclick="switchSide('generasi')">GENERASI</button>
+        <button id="tab-chat" onclick="switchSide('chat')">CHAT BANI<span id="chat-notif-badge" class="chat-notif-badge" style="display:none;">0</span></button>
+    </div>
+
+    <div id="gen-legend">
+        <span class="gen-legend-title" onclick="toggleGenLegend()">GENERASI KE ATAS / BAWAH: <span id="gen-legend-toggle">▲</span></span>
+        <ol>
+            <li>BAPAK/IBU-ANAK/PUTRA</li>
+            <li>SI MBAH-PUTU/WAYAH</li>
+            <li>BUYUT</li>
+            <li>CANGGAH</li>
+            <li>WARENG</li>
+            <li>UDHEG-UDHEG</li>
+            <li>GANTUNG SIWUR</li>
+            <li>GROPAK SENTHE</li>
+            <li>DEBOG BOSOK</li>
+            <li>GALIH ASEM</li>
+        </ol>
+    </div>
+
+    <div id="chat-panel">
+        <div class="chat-header">
+            <span>💬 CHAT & SARAN BANI MBAH KUNG</span>
+            <small id="chat-count">0 pesan</small>
+        </div>
+
+        <!-- PESAN CHAT - SELALU TAMPIL, SIAPA SAJA BISA BACA TANPA LOGIN -->
+        <div id="chat-messages"></div>
+
+        <!-- GUEST BAR - tampil untuk pengunjung yang BELUM login. Klik untuk login baru saat mau kirim/balas -->
+        <div id="chat-guest-bar" style="padding:10px 12px; border-top:1px solid #e2e8f0; background:#f8fafc;">
+            <button class="btn" style="width:100%; padding:9px; font-size:0.8rem;" onclick="showLoginForm()">✍️ Masuk untuk Kirim / Balas Pesan</button>
+        </div>
+
+        <!-- LOGIN FORM - NAMA + EMAIL + BANI - hanya tampil saat guest menekan tombol di atas -->
+        <div id="chat-login-form" style="display:none;">
+            <div style="display:flex; justify-content:flex-end; margin:-6px -6px -6px 0;">
+                <button onclick="hideLoginForm()" title="Tutup" style="background:none; border:none; color:#94a3b8; font-weight:800; font-size:0.95rem; cursor:pointer; padding:2px 6px;">✕</button>
+            </div>
+            <div style="text-align:center; padding: 0 0 6px;">
+                <div style="font-size:1.3rem;">👋</div>
+                <div style="font-weight:800; font-size:0.85rem; color:#0f172a;">Masuk ke Chat Bani</div>
+                <div style="font-size:0.68rem; color:#64748b; margin-top:3px;">Isi nama, email & pilih bani kamu (8 bani)</div>
+            </div>
+            <div style="display:flex; justify-content:center; margin-bottom:2px;">
+                <div style="position:relative;">
+                    <div id="profile-photo-preview" style="width:64px; height:64px; border-radius:50%; background:#e2e8f0; display:flex; align-items:center; justify-content:center; font-size:1.5rem; color:#94a3b8; overflow:hidden; border:2px dashed #cbd5e1; cursor:pointer;" onclick="document.getElementById('chat-profile-photo-input').click()" title="Upload foto profil">📷</div>
+                    <input type="file" id="chat-profile-photo-input" accept="image/*" style="display:none;">
+                </div>
+            </div>
+            <div style="text-align:center; font-size:0.6rem; color:#94a3b8; margin:-4px 0 8px;">Tap foto untuk upload foto profil (opsional)</div>
+            <div>
+                <label>Email (optional) - tidak wajib</label>
+                <input type="email" id="chat-email" placeholder="nama@email.com (opsional, tidak wajib)">
+            </div>
+            <div>
+                <label>Nama Lengkap * <span style="text-transform:none; font-weight:600; color:#94a3b8;">(Buku Tamu)</span></label>
+                <input type="text" id="chat-name" placeholder="Contoh: Ahmad Fauzi" maxlength="40">
+            </div>
+            <div>
+                <label>Pilih Bani / Asal *</label>
+                <select id="chat-bani">
+                    <option value="">-- Pilih Bani --</option>
+                    <optgroup label="Anak dari MUBANAN BIN H. TAMYIS (8 Bani)">
+                        <option value="Anak ke-1|MUBANAN BIN H. TAMYIS">Anak ke-1</option>
+                        <option value="Anak ke-2|MUBANAN BIN H. TAMYIS">Anak ke-2</option>
+                        <option value="Anak ke-3|MUBANAN BIN H. TAMYIS">Anak ke-3</option>
+                        <option value="Anak ke-4|MUBANAN BIN H. TAMYIS">Anak ke-4</option>
+                        <option value="Anak ke-5|MUBANAN BIN H. TAMYIS">Anak ke-5</option>
+                        <option value="Anak ke-6|MUBANAN BIN H. TAMYIS">Anak ke-6</option>
+                        <option value="Anak ke-7|MUBANAN BIN H. TAMYIS">Anak ke-7</option>
+                        <option value="Anak ke-8|MUBANAN BIN H. TAMYIS">Anak ke-8</option>
+                    </optgroup>
+                </select>
+            </div>
+            <button class="btn" id="login-submit-btn" disabled style="width:100%; padding:9px; margin-top:4px; font-size:0.82rem;" onclick="loginChat()">MASUK CHAT →</button>
+            <div style="font-size:0.62rem; color:#94a3b8; text-align:center; line-height:1.4;">Data hanya disimpan di browser ini (localStorage).<br>Untuk multi-user real-time bisa hubungkan ke Firebase/Supabase nanti.</div>
+        </div>
+
+        <!-- CHAT AREA (setelah login: kotak nama user + form kirim pesan) -->
+        <div id="chat-main" style="display:none; flex-direction:column; overflow:hidden;">
+            <div class="chat-user-info">
+                <div style="display:flex; align-items:center; gap:8px; min-width:0;">
+                    <div id="chat-header-avatar" onclick="document.getElementById('chat-profile-photo-edit-input').click()" title="Ganti foto profil" style="width:34px; height:34px; min-width:34px; border-radius:50%; overflow:hidden; cursor:pointer; flex-shrink:0;"></div>
+                    <input type="file" id="chat-profile-photo-edit-input" accept="image/*" style="display:none;">
+                    <div style="min-width:0;">
+                        <span>Halo, <b id="chat-user-name"></b> <span id="admin-badge" style="display:none; background:#7c3aed; color:white; padding:2px 6px; border-radius:10px; font-size:0.55rem; font-weight:900; margin-left:4px;">ADMIN FULL</span></span><br>
+                        <span id="chat-user-bani" class="chat-bani-badge"></span>
+                        <small id="chat-user-ibu" style="font-size:0.6rem; color:#64748b; margin-left:4px;"></small>
+                    </div>
+                </div>
+                <button onclick="logoutChat()" style="background:#fee2e2; border:1px solid #fecaca; color:#dc2626; padding:4px 8px; border-radius:6px; font-size:0.65rem; font-weight:700; cursor:pointer;">KELUAR</button>
+            </div>
+
+            <div id="chat-input-area">
+                <div id="reply-preview" class="replying-to" style="display:none;">
+                    <span id="reply-text"></span>
+                    <button onclick="cancelReply()" style="background:none; border:none; color:#dc2626; font-weight:800; cursor:pointer;">✕</button>
+                </div>
+                <div id="file-preview" style="display:none; background:#f1f5f9; border:1px solid #e2e8f0; border-radius:8px; padding:8px; margin-bottom:6px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <span id="file-preview-name" style="font-size:0.7rem; font-weight:700; color:#334155;"></span>
+                        <button onclick="clearFilePreview()" style="background:none; border:none; color:#dc2626; font-weight:800; cursor:pointer;">✕ Hapus</button>
+                    </div>
+                    <img id="file-preview-img" style="display:none; max-width:100%; max-height:120px; border-radius:6px; margin-top:6px;">
+                </div>
+                <div style="display:flex; gap:6px; align-items:flex-end;">
+                    <textarea id="chat-input" placeholder="Tulis pesan... (Enter kirim)" style="flex:1; min-height:58px;"></textarea>
+                    <input type="file" id="chat-file-input" accept="image/*,.pdf,.doc,.docx,.txt" style="display:none;">
+                    <button class="btn" style="background:#f1f5f9; color:#475569; border:1px solid #e2e8f0; padding:8px 10px;" onclick="document.getElementById('chat-file-input').click()" title="Lampirkan file / foto">📎</button>
+                </div>
+                <div style="display:flex; gap:6px; margin-top:6px;">
+                    <button class="btn" style="flex:1; padding:8px;" onclick="sendMessage()">KIRIM 💬</button>
+                    <button class="btn" style="background:#f1f5f9; color:#475569; border:1px solid #e2e8f0;" onclick="clearChatLocal()">HAPUS</button>
+                    <button id="admin-clear-all" class="btn" style="display:none; background:#7c3aed; color:white;" onclick="adminClearAll()">HAPUS SEMUA (ADMIN)</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL CROP FOTO PROFIL -->
+    <div id="photo-crop-modal" style="display:none; position:fixed; inset:0; background:rgba(15,23,42,0.75); z-index:20000; align-items:center; justify-content:center; padding:16px;">
+        <div style="background:#ffffff; border-radius:14px; padding:18px; width:300px; max-width:100%; text-align:center; box-shadow:0 20px 50px rgba(0,0,0,0.35);">
+            <div style="font-weight:800; font-size:0.85rem; color:#0f172a; margin-bottom:10px;">✂️ Sesuaikan Foto Profil</div>
+            <div id="crop-viewport" style="width:240px; height:240px; margin:0 auto; border-radius:50%; overflow:hidden; position:relative; background:#e2e8f0; cursor:grab; border:2px solid #cbd5e1; touch-action:none;">
+                <img id="crop-image" draggable="false" style="position:absolute; top:0; left:0; user-select:none; -webkit-user-drag:none; max-width:none;">
+            </div>
+            <input type="range" id="crop-zoom" min="100" max="300" value="100" style="width:100%; margin-top:14px; accent-color:#3b82f6;">
+            <div style="font-size:0.6rem; color:#94a3b8; margin-top:2px;">Geser foto untuk atur posisi &bull; geser slider untuk zoom</div>
+            <div style="display:flex; gap:8px; margin-top:14px;">
+                <button class="btn" style="flex:1; background:#f1f5f9; color:#475569; border:1px solid #e2e8f0;" onclick="cancelCrop()">Batal</button>
+                <button class="btn" style="flex:1;" onclick="confirmCrop()">Simpan Foto</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL LIGHTBOX FOTO PROFIL (perbesar saat diketuk) -->
+    <div id="photo-lightbox-modal" style="display:none; position:fixed; inset:0; background:rgba(15,23,42,0.85); z-index:20000; align-items:center; justify-content:center; padding:20px;" onclick="closePhotoLightbox()">
+        <div style="max-width:90vw; max-height:85vh; text-align:center;" onclick="event.stopPropagation()">
+            <img id="lightbox-photo-img" style="max-width:min(80vw, 380px); max-height:70vh; border-radius:16px; box-shadow:0 20px 60px rgba(0,0,0,0.5); display:block; margin:0 auto; object-fit:cover; aspect-ratio:1/1;">
+            <div id="lightbox-photo-name" style="color:#fff; font-weight:700; font-size:0.95rem; margin-top:14px;"></div>
+            <button onclick="closePhotoLightbox()" style="margin-top:14px; background:#ffffff22; border:1px solid #ffffff55; color:#fff; padding:6px 16px; border-radius:8px; font-size:0.75rem; cursor:pointer;">Tutup ✕</button>
+        </div>
+    </div>
+
+    <script>
+    // =====================================================================
+    // DATA SILSILAH BANI MBAH KUNG - DARI EXCEL
+    // =====================================================================
+
+    const treeData = {
+        "name": "MUBANAN BIN H. TAMYIS",
+        "life": "",
+        "spouse": "SITI ABIDAH binti H. ABU BAKAR",
+        "spouse_life": "",
+        "type": "root",
+        "extraName": "BANI MBAH KUNG",
+        "children": [
+            { "name": "Anak ke-1", "life": "", "spouse": "", "spouse_life": "", "type": "gen1", "address": "", "extraName": "", "children": [] },
+            { "name": "SITI MASLUKHAH", "life": "1966 - ....", "spouse": "NUR HASYIM", "spouse_life": "1963 - ....", "type": "gen1", "address": "", "extraName": "ANAK KE-2", "children": [
+                { "name": "SITI ROUDLOTUL MUALIMAH", "life": "1989 - ....", "spouse": "IMAM CHANAFI", "spouse_life": "1984 - ....", "type": "gen2", "address": "", "extraName": "", "children": [
+                    { "name": "M. FATIKHUL MINAN AL FAQIH", "life": "2013 - ....", "spouse": "", "spouse_life": "", "type": "gen3", "address": "", "extraName": "", "children": [] },
+                    { "name": "A. NAJIH MUNTAHA", "life": "2018 - ....", "spouse": "", "spouse_life": "", "type": "gen3", "address": "", "extraName": "", "children": [] },
+                    { "name": "M. IRSYAD MACHASIN", "life": "2019 - ....", "spouse": "", "spouse_life": "", "type": "gen3", "address": "", "extraName": "", "children": [] }
+                ] },
+                { "name": "AZIMAH FAUZIYAH", "life": "1991 - ....", "spouse": "SULTHON", "spouse_life": "1979 - ....", "type": "gen2", "address": "", "extraName": "", "children": [
+                    { "name": "MUHAMMAD HAIDAR 'ABQORY JALIL", "life": "2015 - ....", "spouse": "", "spouse_life": "", "type": "gen3", "address": "", "extraName": "", "children": [] },
+                    { "name": "MUHAMMAD 'ABDAN HAJID HUSEIN", "life": "2019 - ....", "spouse": "", "spouse_life": "", "type": "gen3", "address": "", "extraName": "", "children": [] },
+                    { "name": "HAYYINA SAYYIDAH FATIMAH", "life": "2021 - ....", "spouse": "", "spouse_life": "", "type": "gen3", "address": "", "extraName": "", "children": [] }
+                ] }
+            ] },
+            { "name": "Anak ke-3", "life": "", "spouse": "", "spouse_life": "", "type": "gen1", "address": "", "extraName": "", "children": [] },
+            { "name": "NUR AZIZAH", "life": "1969 - ....", "spouse": "MASTUR", "spouse_life": "1967 - ....", "type": "gen1", "address": "", "extraName": "ANAK KE-4", "children": [
+                { "name": "NURMASLIKAH", "life": "1992 - ....", "spouse": "KUSMARAN", "spouse_life": "", "type": "gen2", "address": "", "extraName": "", "children": [
+                    { "name": "HIFZA NUR MAFAZA", "life": "2021 - ....", "spouse": "", "spouse_life": "", "type": "gen3", "address": "", "extraName": "", "children": [] },
+                    { "name": "HAFA NUR AIZA", "life": "2026 - ....", "spouse": "", "spouse_life": "", "type": "gen3", "address": "", "extraName": "", "children": [] }
+                ] },
+                { "name": "MUHAMMAD FEBRIYANTO", "life": "2000 - ....", "spouse": "SITI SOFIA", "spouse_life": "", "type": "gen2", "address": "", "extraName": "", "children": [
+                    { "name": "MUHAMMAD SYAQIF NARENDRA", "life": "2026 - ....", "spouse": "", "spouse_life": "", "type": "gen3", "address": "", "extraName": "", "children": [] }
+                ] }
+            ] },
+            { "name": "SITI MUHSINAH", "life": "1972 - ....", "spouse": "HERI WIDJANARSO", "spouse_life": "1971 - ....", "type": "gen1", "address": "", "extraName": "ANAK KE-5", "children": [] },
+            { "name": "SITI AROFAH", "life": "1974 - ....", "spouse": "DARMADJI", "spouse_life": "1971 - ....", "type": "gen1", "address": "", "extraName": "ANAK KE-6", "children": [
+                { "name": "DARMADIKA REGA SAHPUTRA", "life": "2008 - ....", "spouse": "", "spouse_life": "", "type": "gen2", "address": "", "extraName": "", "children": [] },
+                { "name": "FATEH RENNO HAGSAPUTRA", "life": "2019 - ....", "spouse": "", "spouse_life": "", "type": "gen2", "address": "", "extraName": "", "children": [] }
+            ] },
+            { "name": "SITI KHUSNIAH", "life": "1978 - ....", "spouse": "IMAM JUREMI", "spouse_life": "1975 - ....", "type": "gen1", "address": "", "extraName": "ANAK KE-7", "children": [
+                { "name": "AHMAD NGIDUL RIJALI", "life": "2000 - ....", "spouse": "NORMA DWI LESTARI", "spouse_life": "2000 - ....", "type": "gen2", "address": "", "extraName": "", "children": [] },
+                { "name": "ALFI MAGFIRAH", "life": "2002 - ....", "spouse": "MUHAMMAD NUR ARAFI", "spouse_life": "2003 - ....", "type": "gen2", "address": "", "extraName": "", "children": [
+                    { "name": "MUHAMMAD AZZAM NAUFAL", "life": "2025 - ....", "spouse": "", "spouse_life": "", "type": "gen3", "address": "", "extraName": "", "children": [] }
+                ] },
+                { "name": "ROSIDATUL MUFIDAH", "life": "2006 - ....", "spouse": "", "spouse_life": "", "type": "gen2", "address": "", "extraName": "", "children": [] }
+            ] },
+            { "name": "SITI KHOTIMATUN", "life": "1981 - ....", "spouse": "ARWANI MA'RUF", "spouse_life": "1971 - ....", "type": "gen1", "address": "", "extraName": "ANAK KE-8", "children": [
+                { "name": "AWLA NADA ROHMANI", "life": "2004 - ....", "spouse": "", "spouse_life": "", "type": "gen2", "address": "", "extraName": "", "children": [] },
+                { "name": "NUR FATMA AL KARIMAH", "life": "2007 - ....", "spouse": "", "spouse_life": "", "type": "gen2", "address": "", "extraName": "", "children": [] },
+                { "name": "AHMAD ALBY MA'RUF", "life": "2016 - ....", "spouse": "", "spouse_life": "", "type": "gen2", "address": "", "extraName": "", "children": [] }
+            ] }
+        ]
+    };
+
+    // =====================================================================
+    // KONFIGURASI DAN RENDER VISUALISASI
+    // =====================================================================
+
+    const width = window.innerWidth;
+    const height = window.innerHeight;
+    const cardWidth = 240;
+    const cardHeight = 60;
+    const founderCardWidth = 320;  // DIPERBESAR untuk 2 baris teks
+    const founderCardHeight = 100; // DIPERBESAR untuk 2 baris teks
+    const rootCardWidth = 260;
+    const rootCardHeight = 68;
+    const extraNameHeight = 18;
+    // ===== Ukuran & jarak khusus kotak "ISTERI/SUAMI" (pasangan ke-2 dst) =====
+    // Dibuat lebih kecil dari kartu utama supaya renggang & tidak menumpuk kotak lain.
+    const wifeCardWidth = Math.round(cardWidth * 0.72);   // ~173
+    const wifeCardHeight = Math.round(cardHeight * 0.72); // ~43
+    const wifeGapX = 60; // jarak renggang horizontal dari kotak utama (suami/isteri) - digeser lebih ke kanan
+    const wifeGapY = 10; // jarak renggang vertikal antar kotak isteri/suami yang bertumpuk
+
+    function batteryPath(w, h) {
+        if (!w || !h) return 'M0,0 Z';
+        const r = Math.min(14, h / 2, w / 2);
+        const nubH = Math.min(h * 0.38, 34);
+        const nubW = 10;
+        const nubR = 3;
+        const y0 = -h / 2, y1 = h / 2;
+        return `M ${r},${y0} L ${w - r},${y0} Q ${w},${y0} ${w},${y0 + r} ` +
+            `L ${w},${-nubH / 2 - nubR} Q ${w},${-nubH / 2} ${w + nubR},${-nubH / 2} ` +
+            `L ${w + nubW - nubR},${-nubH / 2} Q ${w + nubW},${-nubH / 2} ${w + nubW},${-nubH / 2 + nubR} ` +
+            `L ${w + nubW},${nubH / 2 - nubR} Q ${w + nubW},${nubH / 2} ${w + nubW - nubR},${nubH / 2} ` +
+            `L ${w + nubR},${nubH / 2} Q ${w},${nubH / 2} ${w},${nubH / 2 + nubR} ` +
+            `L ${w},${y1 - r} Q ${w},${y1} ${w - r},${y1} ` +
+            `L ${r},${y1} Q 0,${y1} 0,${y1 - r} ` +
+            `L 0,${y0 + r} Q 0,${y0} ${r},${y0} Z`;
+    }
+
+    function batteryBars(w, h, forceCount, pad) {
+        if (!w || !h) return [];
+        const count = forceCount || (w >= 300 ? 6 : 4);
+        const padX = (pad && pad.x !== undefined) ? pad.x : 18;
+        const padY = (pad && pad.y !== undefined) ? pad.y : 10;
+        const gap = 6;
+        const usableW = w - padX * 2;
+        const barW = (usableW - (count - 1) * gap) / count;
+        const barH = h - padY * 2;
+        const bars = [];
+        for (let idx = 0; idx < count; idx++) {
+            bars.push({ x: padX + idx * (barW + gap), y: -barH / 2, w: barW, h: barH });
+        }
+        return bars;
+    }
+
+    function cardDims(d) {
+        let w = cardWidth;
+        let h = cardHeight + (d.data.extraName ? extraNameHeight : 0) + (d.data.address ? extraNameHeight : 0);
+        if (d.data.name === 'MUBANAN BIN H. TAMYIS') {
+            w = founderCardWidth;
+            h = founderCardHeight;
+        } else if (d.data.type === 'wife') {
+            w = wifeCardWidth;
+            h = wifeCardHeight + (d.data.extraName ? extraNameHeight : 0) + (d.data.address ? extraNameHeight : 0);
+        }
+        return { w, h };
+    }
+
+    let i = 0;
+    const duration = 500;
+    let root;
+    let rootFirstExpandZoomDone = false; // flag: efek zoom-out + geser kiri hanya berlaku sekali (klik pertama shape root)
+
+    const svg = d3.select("#chart-container")
+        .append("svg")
+        .attr("width", width)
+        .attr("height", height);
+
+    const defs = svg.append("defs");
+
+    // Pattern garis diagonal putih untuk overlay di atas bar indikator baterai
+    const diagPattern = defs.append('pattern')
+        .attr('id', 'diag-stripes')
+        .attr('width', 8)
+        .attr('height', 8)
+        .attr('patternUnits', 'userSpaceOnUse')
+        .attr('patternTransform', 'rotate(45)');
+    diagPattern.append('rect')
+        .attr('width', 8).attr('height', 8)
+        .attr('fill', 'transparent');
+    diagPattern.append('rect')
+        .attr('x', 0).attr('y', 0)
+        .attr('width', 3.5).attr('height', 8)
+        .attr('fill', '#ffffff')
+        .attr('opacity', 0.55);
+
+    // ===== Symbol: badge bunga besar untuk node "Amirul Mukminin" (pasangan belum berketurunan) =====
+    const bigFlowerBadge = defs.append('g').attr('id', 'big-flower-badge');
+    bigFlowerBadge.append('circle')
+        .attr('r', 20).attr('fill', '#ffffff').attr('opacity', 0.95);
+    bigFlowerBadge.append('circle')
+        .attr('r', 20).attr('fill', 'none').attr('stroke', '#eab308').attr('stroke-width', 1.5).attr('opacity', 0.8);
+    [0, 72, 144, 216, 288].forEach(angle => {
+        const rad = angle * Math.PI / 180;
+        const px = 9.5 * Math.cos(rad);
+        const py = 9.5 * Math.sin(rad);
+        bigFlowerBadge.append('ellipse')
+            .attr('cx', px).attr('cy', py)
+            .attr('rx', 7.5).attr('ry', 5.5)
+            .attr('transform', `rotate(${angle + 90}, ${px}, ${py})`)
+            .attr('fill', angle % 144 === 0 ? '#fb7185' : '#f472b6');
+    });
+    bigFlowerBadge.append('circle')
+        .attr('r', 5.5).attr('fill', '#fde047');
+    bigFlowerBadge.append('circle')
+        .attr('r', 5.5).attr('fill', 'none').attr('stroke', '#eab308').attr('stroke-width', 1);
+
+    // ===== Symbol: badge bunga merah besar untuk node yang sudah alm./almh. (deceased) =====
+    const bigFlowerBadgeRed = defs.append('g').attr('id', 'big-flower-badge-red');
+    bigFlowerBadgeRed.append('circle')
+        .attr('r', 20).attr('fill', '#ffffff').attr('opacity', 0.95);
+    bigFlowerBadgeRed.append('circle')
+        .attr('r', 20).attr('fill', 'none').attr('stroke', '#b91c1c').attr('stroke-width', 1.5).attr('opacity', 0.8);
+    [0, 72, 144, 216, 288].forEach(angle => {
+        const rad = angle * Math.PI / 180;
+        const px = 9.5 * Math.cos(rad);
+        const py = 9.5 * Math.sin(rad);
+        bigFlowerBadgeRed.append('ellipse')
+            .attr('cx', px).attr('cy', py)
+            .attr('rx', 7.5).attr('ry', 5.5)
+            .attr('transform', `rotate(${angle + 90}, ${px}, ${py})`)
+            .attr('fill', angle % 144 === 0 ? '#b91c1c' : '#dc2626');
+    });
+    bigFlowerBadgeRed.append('circle')
+        .attr('r', 5.5).attr('fill', '#fecaca');
+    bigFlowerBadgeRed.append('circle')
+        .attr('r', 5.5).attr('fill', 'none').attr('stroke', '#b91c1c').attr('stroke-width', 1);
+
+
+
+    // Gradasi tabung 3D per generasi (arah vertikal: terang di atas, gelap di bawah)
+    function addTubeGradient(id, stops) {
+        const g = defs.append('linearGradient')
+            .attr('id', id)
+            .attr('x1', '0%').attr('y1', '0%')
+            .attr('x2', '0%').attr('y2', '100%');
+        stops.forEach(s => g.append('stop').attr('offset', s.off).attr('stop-color', s.c));
+        return g;
+    }
+    addTubeGradient('grad-tube-gen1', [
+        { off: '0%', c: '#eff6ff' },
+        { off: '35%', c: '#dbeafe' },
+        { off: '100%', c: '#bfdbfe' }
+    ]);
+    addTubeGradient('grad-tube-gen2', [
+        { off: '0%', c: '#f0fdf4' },
+        { off: '35%', c: '#dcfce7' },
+        { off: '100%', c: '#bbf7d0' }
+    ]);
+    addTubeGradient('grad-tube-gen3', [
+        { off: '0%', c: '#fdf2f8' },
+        { off: '35%', c: '#fce7f3' },
+        { off: '100%', c: '#fbcfe8' }
+    ]);
+    addTubeGradient('grad-tube-gen4', [
+        { off: '0%', c: '#f5f3ff' },
+        { off: '35%', c: '#ede9fe' },
+        { off: '100%', c: '#ddd6fe' }
+    ]);
+    addTubeGradient('grad-tube-gen5', [
+        { off: '0%', c: '#fefce8' },
+        { off: '35%', c: '#fef9c3' },
+        { off: '100%', c: '#fde68a' }
+    ]);
+    addTubeGradient('grad-tube-wife', [
+        { off: '0%', c: '#fdf2f8' },
+        { off: '35%', c: '#fce7f3' },
+        { off: '100%', c: '#fbcfe8' }
+    ]);
+    // Root: gradasi pelangi horizontal
+    const tubeRoot = defs.append('linearGradient')
+        .attr('id', 'grad-tube-root')
+        .attr('x1', '0%').attr('y1', '0%')
+        .attr('x2', '100%').attr('y2', '0%');
+    [
+        { off: '0%', c: '#ef4444' },
+        { off: '17%', c: '#f97316' },
+        { off: '34%', c: '#eab308' },
+        { off: '51%', c: '#22c55e' },
+        { off: '68%', c: '#3b82f6' },
+        { off: '84%', c: '#6366f1' },
+        { off: '100%', c: '#a855f7' }
+    ].forEach(s => tubeRoot.append('stop').attr('offset', s.off).attr('stop-color', s.c));
+    // Overlay kilap kaca vertikal (dipakai di atas warna pelangi root agar tetap terasa tabung 3D)
+    const glassGloss = defs.append('linearGradient')
+        .attr('id', 'grad-glass-gloss')
+        .attr('x1', '0%').attr('y1', '0%')
+        .attr('x2', '0%').attr('y2', '100%');
+    [
+        { off: '0%', c: '#ffffff', o: 0.6 },
+        { off: '28%', c: '#ffffff', o: 0.08 },
+        { off: '55%', c: '#000000', o: 0 },
+        { off: '80%', c: '#000000', o: 0.16 },
+        { off: '100%', c: '#000000', o: 0.32 }
+    ].forEach(s => glassGloss.append('stop').attr('offset', s.off).attr('stop-color', s.c).attr('stop-opacity', s.o));
+
+    // Pola "rusuk silinder" berulang (spt sel-sel baterai pada foto): dipakai sbg overlay
+    // blend-mode di atas warna dasar tiap generasi agar terlihat seperti beberapa tabung kaca
+    // berjajar, bukan satu gradasi polos.
+    const ribTileGrad = defs.append('linearGradient')
+        .attr('id', 'grad-rib-tile')
+        .attr('x1', '0%').attr('y1', '0%')
+        .attr('x2', '100%').attr('y2', '0%');
+    [
+        { off: '0%', c: '#000000', o: 0.38 },
+        { off: '9%', c: '#000000', o: 0.12 },
+        { off: '26%', c: '#ffffff', o: 0.6 },
+        { off: '46%', c: '#ffffff', o: 0 },
+        { off: '72%', c: '#000000', o: 0.05 },
+        { off: '100%', c: '#000000', o: 0.38 }
+    ].forEach(s => ribTileGrad.append('stop').attr('offset', s.off).attr('stop-color', s.c).attr('stop-opacity', s.o));
+    const ribSegWidth = 24;
+    defs.append('pattern')
+        .attr('id', 'patt-rib-overlay')
+        .attr('patternUnits', 'userSpaceOnUse')
+        .attr('x', 0).attr('y', 0)
+        .attr('width', ribSegWidth).attr('height', 300)
+        .append('rect')
+        .attr('x', 0).attr('y', 0).attr('width', ribSegWidth).attr('height', 300)
+        .attr('fill', 'url(#grad-rib-tile)');
+
+    // Gradient khusus root/founder: merah - oranye - kuning - hijau (spt indikator baterai)
+    const battScale = defs.append('linearGradient')
+        .attr('id', 'grad-battery-scale')
+        .attr('gradientUnits', 'userSpaceOnUse')
+        .attr('x1', 0).attr('y1', 0)
+        .attr('x2', founderCardWidth).attr('y2', 0);
+    [
+        { off: '0%', c: '#dc2626' },
+        { off: '35%', c: '#f97316' },
+        { off: '60%', c: '#eab308' },
+        { off: '100%', c: '#22c55e' }
+    ].forEach(s => battScale.append('stop').attr('offset', s.off).attr('stop-color', s.c));
+
+
+    const nodeGradients = [
+        { id: 'grad-root', c1: '#fffbeb', c2: '#fef3c7' },
+        { id: 'grad-wife', c1: '#fdf2f8', c2: '#fce7f3' },
+        { id: 'grad-gen1', c1: '#fff1f2', c2: '#ffe4e6' },
+        { id: 'grad-gen2', c1: '#fff7ed', c2: '#ffedd5' },
+        { id: 'grad-gen3', c1: '#fefce8', c2: '#fef9c3' },
+        { id: 'grad-gen4', c1: '#f0fdf4', c2: '#dcfce7' },
+        { id: 'grad-gen5', c1: '#f0fdfa', c2: '#ccfbf1' },
+        { id: 'grad-gen6', c1: '#eff6ff', c2: '#dbeafe' },
+        { id: 'grad-gen7', c1: '#eef2ff', c2: '#e0e7ff' },
+        { id: 'grad-gen8', c1: '#faf5ff', c2: '#f3e8ff' },
+        { id: 'grad-founder', c1: '#fffbeb', c2: '#fef3c7' }
+    ];
+    nodeGradients.forEach(g => {
+        const lg = defs.append('linearGradient')
+            .attr('id', g.id)
+            .attr('x1', '0%').attr('y1', '0%')
+            .attr('x2', '0%').attr('y2', '100%');
+        lg.append('stop').attr('offset', '0%').attr('stop-color', g.c1);
+        lg.append('stop').attr('offset', '100%').attr('stop-color', g.c2);
+    });
+
+    const gContainer = svg.append("g");
+
+    const zoom = d3.zoom()
+        .scaleExtent([0.2, 2])
+        .on("zoom", (event) => {
+            gContainer.attr("transform", event.transform);
+        });
+
+    svg.call(zoom);
+
+    const tree = d3.tree().nodeSize([cardHeight + extraNameHeight + 25, cardWidth + 100]);
+
+    root = d3.hierarchy(treeData, d => d.children);
+    root.x0 = height / 2;
+    root.y0 = 60;
+
+    function findNodeByName(node, name) {
+        if (node.data.name === name) return node;
+        if (node.children) {
+            for (const c of node.children) {
+                const found = findNodeByName(c, name);
+                if (found) return found;
+            }
+        }
+        if (node._children) {
+            for (const c of node._children) {
+                const found = findNodeByName(c, name);
+                if (found) return found;
+            }
+        }
+        return null;
+    }
+
+    function resetToInitialState() {
+        expand(root);
+        const founderNode = findNodeByName(root, 'MUBANAN BIN H. TAMYIS');
+        if (founderNode) {
+            const ancestors = [];
+            let n = founderNode.parent;
+            while (n) { ancestors.unshift(n);
+                n = n.parent; }
+            for (let i = 0; i < ancestors.length; i++) {
+                const node = ancestors[i];
+                const nextInPath = (i + 1 < ancestors.length) ? ancestors[i + 1] : founderNode;
+                if (node.children) {
+                    node.children.forEach(child => {
+                        if (child !== nextInPath) collapse(child);
+                    });
+                }
+            }
+            collapse(founderNode);
+        } else if (root.children) {
+            root.children.forEach(collapse);
+        }
+        update(root);
+    }
+
+    resetToInitialState();
+
+    function computeVisibleBBox() {
+        const list = root.descendants();
+        let minX = Infinity,
+            maxX = -Infinity,
+            minY = Infinity,
+            maxY = -Infinity;
+        list.forEach(d => {
+            let w = cardWidth;
+            let h = cardHeight + (d.data.extraName ? extraNameHeight : 0);
+            if (d.data.name === 'MUBANAN BIN H. TAMYIS') {
+                w = founderCardWidth;
+                h = founderCardHeight;
+            }
+            minX = Math.min(minX, d.x - h / 2);
+            maxX = Math.max(maxX, d.x + h / 2);
+            minY = Math.min(minY, d.y);
+            maxY = Math.max(maxY, d.y + w);
+        });
+        return { x: minY, y: minX, width: maxY - minY, height: maxX - minX };
+    }
+
+    function fitToView(duration) {
+        const bbox = computeVisibleBBox();
+        if (!isFinite(bbox.width) || !isFinite(bbox.height) || bbox.width <= 0 || bbox.height <= 0) return;
+        const padding = 30;
+        const headerOffset = 70;
+        const curW = window.innerWidth;
+        const curH = window.innerHeight;
+        const availW = curW - padding * 2;
+        const availH = curH - padding * 2 - headerOffset;
+        let scale = Math.min(availW / bbox.width, availH / bbox.height);
+        scale = Math.min(scale, 1);
+        scale = Math.max(scale, 0.25);
+        const tx = (curW - bbox.width * scale) / 2 - bbox.x * scale;
+        const ty = headerOffset + (availH - bbox.height * scale) / 2 - bbox.y * scale;
+        svg.transition().duration(duration).call(zoom.transform, d3.zoomIdentity.translate(tx, ty).scale(scale));
+    }
+
+    fitToView(0);
+
+    // ============================================================
+    // HINT AWAL: arahkan user untuk mengetuk shape MUBANAN BIN H. TAMYIS (root)
+    // ============================================================
+    function positionRootTapHint() {
+        const hintEl = document.getElementById('root-tap-hint');
+        if (!hintEl || hintEl.dataset.dismissed === '1') return;
+        const founderShape = document.querySelector('.node-founder .node-shape');
+        if (!founderShape) return;
+        const rect = founderShape.getBoundingClientRect();
+        hintEl.style.left = (rect.left + rect.width / 2) + 'px';
+        hintEl.style.top = (rect.top - 8) + 'px';
+        hintEl.style.display = 'flex';
+    }
+
+    function hideRootTapHint() {
+        const hintEl = document.getElementById('root-tap-hint');
+        if (!hintEl) return;
+        hintEl.dataset.dismissed = '1';
+        hintEl.style.display = 'none';
+    }
+
+    setTimeout(positionRootTapHint, 700);
+    window.addEventListener('resize', positionRootTapHint);
+
+    // ============================================================
+    // FOTO AWAL DI ATAS SHAPE MUBANAN BIN H. TAMYIS (root) - bingkai lingkaran motif bunga
+    // Hanya tampil di tampilan awal (sebelum shape MUBANAN BIN H. TAMYIS diketuk), lalu fade out.
+    // ============================================================
+    const ROOT_PHOTO_BASE64 = "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";
+
+    function positionRootPhotoFrame() {
+        const frameEl = document.getElementById('root-photo-frame');
+        if (!frameEl || frameEl.dataset.dismissed === '1') return;
+        const founderShape = document.querySelector('.node-founder .node-shape');
+        if (!founderShape) return;
+        const rect = founderShape.getBoundingClientRect();
+        // Ditempatkan di tengah, menumpuk di atas shape MUBANAN BIN H. TAMYIS (sebagian menutupi tepi atas shape)
+        frameEl.style.left = (rect.left + rect.width / 2) + 'px';
+        frameEl.style.top = rect.top + 'px';
+        frameEl.style.transform = 'translate(-50%, -130%)';
+        frameEl.style.display = 'block';
+        requestAnimationFrame(() => { frameEl.style.opacity = '1'; });
+    }
+
+    function hideRootPhotoFrame() {
+        const frameEl = document.getElementById('root-photo-frame');
+        if (!frameEl || frameEl.dataset.dismissed === '1') return;
+        frameEl.dataset.dismissed = '1';
+        frameEl.style.opacity = '0';
+        frameEl.style.transform = 'translate(-50%, -130%) scale(0.85)';
+        setTimeout(() => { frameEl.style.display = 'none'; }, 650);
+    }
+
+    (function initRootPhotoFrame() {
+        const imgEl = document.getElementById('root-photo-img');
+        if (imgEl) imgEl.setAttribute('href', 'data:image/jpeg;base64,' + ROOT_PHOTO_BASE64);
+        setTimeout(positionRootPhotoFrame, 700);
+        window.addEventListener('resize', positionRootPhotoFrame);
+    })();
+
+    // Efek khusus: saat shape ROOT (Bani Mbah Kung) diklik/diketuk PERTAMA KALI untuk
+    // membuka anak-anaknya (gen 1), tampilan mengecil ke 75% dan bergeser ke kiri
+    // sehingga sebagian shape gen 1 ikut terlihat. Klik-klik berikutnya tidak lagi
+    // memicu pengecilan ini (konsisten).
+    function zoomRootFirstExpand(d) {
+        const targetScale = 0.75;
+        const svgW = window.innerWidth;
+        const svgH = window.innerHeight;
+        const anchorX = svgW * 0.5; // tengah layar (horizontal)
+        const anchorY = svgH / 2;   // tengah layar (vertikal)
+
+        // Node yang ingin ditampilkan tepat di tengah layar setelah root diklik pertama kali
+        const targetNode = findNodeByName(root, 'HJ. NOORCHOSIJAH');
+
+        let tx, ty;
+        if (targetNode) {
+            const w = cardWidth; // lebar shape anak (gen1) standar
+            const centerY = targetNode.y + w / 2; // titik tengah horizontal shape target
+            const centerX = targetNode.x;          // titik tengah vertikal shape target
+            tx = anchorX - centerY * targetScale;
+            ty = anchorY - centerX * targetScale;
+        } else {
+            // fallback: tepi kanan shape root di tengah layar (perilaku sebelumnya)
+            const rootRightEdgeY = d.y + founderCardWidth;
+            tx = anchorX - rootRightEdgeY * targetScale;
+            ty = anchorY - d.x * targetScale;
+        }
+
+        svg.transition().duration(600)
+            .call(zoom.transform, d3.zoomIdentity.translate(tx, ty).scale(targetScale))
+            .on('end', () => {
+                if (targetNode) shakeNode(targetNode);
+            });
+    }
+
+    // Efek getar (shake) pada shape tertentu, dipicu setelah kamera selesai berpindah
+    function shakeNode(targetNode) {
+        const nodeSel = gContainer.selectAll('g.node')
+            .filter(n => n === targetNode || (n.data && n.data.name === targetNode.data.name));
+        nodeSel.classed('shake-highlight', false);
+        nodeSel.classed('shake-highlight', true);
+        setTimeout(() => nodeSel.classed('shake-highlight', false), 1600);
+    }
+
+    // ============================================================
+    // UPDATE VISUALISASI
+    // ============================================================
+
+    function update(source) {
+        const treeMap = tree(root);
+        const nodes = treeMap.descendants();
+        const links = treeMap.links();
+
+        const founderChildGap = 180; // jarak ekstra antara shape MUBANAN BIN H. TAMYIS dan anak-anaknya
+        nodes.forEach(d => {
+            if (d.depth === 0) {
+                d.y = 0;
+            } else {
+                d.y = (founderCardWidth + founderChildGap) + (d.depth - 1) * (cardWidth + 100);
+            }
+        });
+
+        // ========== POSISI KHUSUS UNTUK KOTAK "ISTERI" (pasangan ke-2 dst) ==========
+        // Kotak isteri ditaruh menyamping (sejajar separo badan) dengan kotak suami,
+        // bukan digambar sebagai generasi baru di kolom berikutnya.
+        nodes.forEach(d => {
+            if (d.data.type === 'wife' && d.parent) {
+                const order = d.data.partnerOrder || 1;
+                const { w: parentW, h: parentH } = cardDims(d.parent);
+                const { w: wifeW, h: wifeH } = cardDims(d);
+                const side = (order % 2 === 1) ? -1 : 1;      // ganjil ke atas, genap ke bawah
+                const rank = Math.ceil(order / 2);            // urutan bertumpuk pada sisi yang sama (1,1,2,2,...)
+                const oldX = d.x, oldY = d.y;
+                d.y = d.parent.y + parentW / 2 + wifeW / 2 + wifeGapX; // geser kanan, renggang penuh dari kotak utama
+                d.x = d.parent.x + side * (parentH / 2 + wifeGapY + (wifeH + wifeGapY) * (rank - 1) + wifeH / 2); // renggang vertikal antar kotak
+                const dx = d.x - oldX, dy = d.y - oldY;
+                d.descendants().forEach(desc => {
+                    if (desc === d) return;
+                    desc.x += dx;
+                    desc.y += dy;
+                });
+            }
+        });
+
+        const node = gContainer.selectAll('g.node')
+            .data(nodes, d => d.id || (d.id = ++i));
+
+        const nodeEnter = node.enter().append('g')
+            .attr('class', d => {
+                let cls = `node node-${d.data.type || 'gen3'}`;
+                if (d.data.name === 'MUBANAN BIN H. TAMYIS') cls += ' node-founder';
+                if ((d.data.name && d.data.name.toUpperCase().includes('FARATH')) || (d.data.extraName && d.data.extraName.toUpperCase().includes('FARATH'))) cls += ' node-farath';
+                return cls;
+            })
+            .attr("transform", d => `translate(${source.y0},${source.x0})`)
+            .on('click', function(event, d) {
+                const nodeSel = d3.select(this);
+                nodeSel.classed('pressed', false);
+                nodeSel.node().getBoundingClientRect();
+                nodeSel.classed('pressed', true);
+                setTimeout(() => nodeSel.classed('pressed', false), 320);
+
+                const isRootNode = d.data.name === 'MUBANAN BIN H. TAMYIS';
+                const isFirstRootExpand = isRootNode && !!d._children && !d.children && !rootFirstExpandZoomDone;
+
+                if (isRootNode) { hideRootTapHint(); hideRootPhotoFrame(); }
+
+                if (NO_DATA_NODES.includes(d.data.name)) {
+                    showNoDataNotice(nodeSel.node());
+                }
+
+                if (d.children) {
+                    d._children = d.children;
+                    d.children = null;
+                } else if (d._children) {
+                    if (d.parent) {
+                        d.parent.children.forEach(sibling => {
+                            if (sibling !== d) collapse(sibling);
+                        });
+                    }
+                    d.children = d._children;
+                    d._children = null;
+                }
+                update(d);
+
+                if (isFirstRootExpand) {
+                    rootFirstExpandZoomDone = true;
+                    zoomRootFirstExpand(d);
+                }
+            });
+
+        // Shape node
+        nodeEnter.append('path')
+            .attr('class', 'node-shape')
+            .attr('d', d => {
+                const { w, h } = cardDims(d);
+                return batteryPath(w, h);
+            });
+
+        
+        
+
+
+        // Bar indikator baterai (aksen warna per generasi, transparan di belakang teks)
+        nodeEnter.append('g')
+            .attr('class', 'battery-bars')
+            .each(function(d) {
+                const { w, h } = cardDims(d);
+                const tubeTypes = ['root', 'wife', 'gen1', 'gen2', 'gen3', 'gen4', 'gen5'];
+                const isTube = tubeTypes.includes(d.data.type);
+                const forceCount = isTube ? 1 : undefined;
+                const pad = isTube ? { x: 4, y: 4 } : undefined;
+                const shapeR = Math.min(14, h / 2, w / 2);
+                const barRx = isTube ? Math.max(shapeR - 4, 0) : 4;
+                const bars = batteryBars(w, h, forceCount, pad);
+                const g = d3.select(this);
+                g.selectAll('.battery-bar')
+                    .data(bars)
+                    .enter()
+                    .append('rect')
+                    .attr('class', 'battery-bar')
+                    .attr('x', b => b.x)
+                    .attr('y', b => b.y)
+                    .attr('width', b => b.w)
+                    .attr('height', b => b.h)
+                    .attr('rx', barRx);
+                // Overlay garis diagonal putih di atas tiap bar (motif seperti indikator baterai)
+                g.selectAll('.battery-bar-stripe')
+                    .data(bars)
+                    .enter()
+                    .append('rect')
+                    .attr('class', 'battery-bar-stripe')
+                    .attr('x', b => b.x)
+                    .attr('y', b => b.y)
+                    .attr('width', b => b.w)
+                    .attr('height', b => b.h)
+                    .attr('rx', barRx)
+                    .attr('fill', 'url(#diag-stripes)')
+                    .attr('pointer-events', 'none');
+                // Overlay kilap kaca vertikal khusus root (warna dasarnya pelangi horizontal,
+                // overlay ini memberi kesan terang di atas - gelap di bawah seperti pipa 3D)
+                if (d.data.type === 'root') {
+                    g.selectAll('.battery-bar-gloss')
+                        .data(bars)
+                        .enter()
+                        .append('rect')
+                        .attr('class', 'battery-bar-gloss')
+                        .attr('x', b => b.x)
+                        .attr('y', b => b.y)
+                        .attr('width', b => b.w)
+                        .attr('height', b => b.h)
+                        .attr('rx', barRx)
+                        .attr('fill', 'url(#grad-glass-gloss)')
+                        .attr('pointer-events', 'none');
+                }
+            });
+
+        
+        // ========== BADGE BUNGA BESAR (AMIRUL MUKMININ) - IN FRONT OF SHAPE ==========
+        nodeEnter.filter(d => d.data.specialBadge === 'flower')
+            .append('use')
+            .attr('href', '#big-flower-badge')
+            .attr('class', 'special-flower-badge')
+            .attr('transform', d => {
+                const { w, h } = cardDims(d);
+                return `translate(${w - 2},${-h / 2 - 2}) scale(1.1)`;
+            })
+            .style('pointer-events', 'none')
+            .style('filter', 'drop-shadow(0 3px 6px rgba(0,0,0,0.35))')
+            .raise();
+
+        // ========== BADGE BUNGA MERAH (DECEASED / FARATH) - IN FRONT OF SHAPE ==========
+        nodeEnter.filter(d => d.data.deceased || (d.data.name && d.data.name.toUpperCase().includes('FARATH')) || (d.data.extraName && d.data.extraName.toUpperCase().includes('FARATH')))
+            .append('use')
+            .attr('href', '#big-flower-badge-red')
+            .attr('class', 'deceased-flower-badge')
+            .attr('transform', d => {
+                const { w, h } = cardDims(d);
+                return `translate(${w - 2},${-h / 2 - 2}) scale(1.15)`;
+            })
+            .style('pointer-events', 'none')
+            .style('filter', 'drop-shadow(0 3px 7px rgba(185,28,28,0.45))')
+            .raise();
+
+
+        // ========== GARIS PEMBATAS UNTUK ROOT ==========
+        nodeEnter.filter(d => d.data.name === 'MUBANAN BIN H. TAMYIS')
+            .append('line')
+            .attr('class', 'separator-line')
+            .attr('x1', 20)
+            .attr('x2', founderCardWidth - 20)
+            .attr('y1', 10)
+            .attr('y2', 10)
+            .style('stroke', '#15803d')
+            .style('stroke-width', 2)
+            .style('stroke-dasharray', '6,4');
+
+        // ========== NAMA ISTRI UNTUK ROOT (di bawah garis) ==========
+        nodeEnter.filter(d => d.data.name === 'MUBANAN BIN H. TAMYIS')
+            .append('text')
+            .attr('class', 'spouse-name-root')
+            .attr('x', founderCardWidth / 2)
+            .attr('y', 30)
+            .attr('text-anchor', 'middle')
+            .style('font-size', '18px')
+            .style('font-weight', '700')
+            .style('fill', '#0f172a')
+            .style('text-transform', 'uppercase')
+            .text(d => d.data.spouse || '');
+
+        // Indicator "+"
+        const toggleIndicator = nodeEnter.append('g')
+            .attr('class', 'toggle-indicator')
+            .attr('transform', d => {
+                const { w } = cardDims(d);
+                return `translate(${w + 10},0)`;
+            })
+            .style('display', d => (d.children || d._children) ? null : 'none');
+        toggleIndicator.append('circle')
+            .attr('r', 9);
+        toggleIndicator.append('path')
+            .attr('class', 'toggle-icon')
+            .attr('d', d => d._children ? 'M -4,0 L 4,0 M 0,-4 L 0,4' : 'M -4,0 L 4,0');
+
+        const hasSpouseLine = d => {
+            if (!d.data.spouse) return false;
+            if (d.data.type === 'root' || d.data.type === 'wife') return false;
+            const hasWifeBranch = Array.isArray(d.data.children) && d.data.children.some(c => c.type === 'wife');
+            return !hasWifeBranch;
+        };
+        const TEXT_PAD_X = 14;
+
+        function autoFitText(textEl, maxWidth, minFontSize, maxFontSize) {
+            let fontSize = maxFontSize;
+            textEl.style('font-size', fontSize + 'px');
+            while (fontSize > minFontSize && textEl.node().getComputedTextLength() > maxWidth) {
+                fontSize -= 1;
+                textEl.style('font-size', fontSize + 'px');
+            }
+            return fontSize;
+        }
+
+        // ========== NAMA + TAHUN UNTUK ROOT ==========
+        nodeEnter.filter(d => d.data.name === 'MUBANAN BIN H. TAMYIS')
+            .append('text')
+            .attr('class', 'name-life')
+            .attr('x', founderCardWidth / 2)
+            .attr('y', -22)
+            .attr('text-anchor', 'middle')
+            .attr('dominant-baseline', 'middle')
+            .style('text-transform', 'uppercase')
+            .style('font-weight', '900')
+            .style('font-size', '20px')
+            .style('fill', '#0f172a')
+            .text(d => d.data.name);
+
+        // ========== TAHUN UNTUK ROOT ==========
+        nodeEnter.filter(d => d.data.name === 'MUBANAN BIN H. TAMYIS')
+            .append('text')
+            .attr('class', 'spouse-info')
+            .attr('x', founderCardWidth / 2)
+            .attr('y', 0)
+            .attr('text-anchor', 'middle')
+            .style('font-size', '14px')
+            .style('font-weight', '600')
+            .style('fill', '#475569')
+            .text(d => d.data.life || '');
+
+        // ========== NAMA UNTUK NODE LAINNYA ==========
+        nodeEnter.filter(d => d.data.name !== 'MUBANAN BIN H. TAMYIS')
+            .append('text')
+            .attr('class', 'name-life')
+            .attr('x', d => d.data.type === 'wife' ? cardDims(d).w / 2 : TEXT_PAD_X)
+            .attr('y', d => {
+                const order = d.data.partnerOrder;
+                const hasExtra = d.data.extraName ? true : false;
+                const hasAddress = d.data.address ? true : false;
+                const offset = (hasExtra ? extraNameHeight : 0) + (hasAddress ? extraNameHeight : 0);
+                if (order) return hasExtra || hasAddress ? -6 - offset/2 : 0;
+                if (hasExtra || hasAddress) return -6 - offset/2;
+                return hasSpouseLine(d) ? -6 : 2;
+            })
+            .attr('text-anchor', d => d.data.type === 'wife' ? 'middle' : 'start')
+            .attr('dominant-baseline', 'middle')
+            .style('text-transform', 'uppercase')
+            .style('font-weight', '700')
+            .style('font-size', '14px')
+            .style('fill', '#0f172a')
+            .text(d => {
+                let lifeStr = d.data.life ? ` (${d.data.life})` : '';
+                return `${d.data.name}${lifeStr}`;
+            })
+            .each(function(d) {
+                const { w } = cardDims(d);
+                const maxWidth = w - TEXT_PAD_X * 2;
+                autoFitText(d3.select(this), maxWidth, 10, 16);
+            });
+
+        // ========== EXTRA NAME UNTUK SEMUA NODE ==========
+        nodeEnter.append('text')
+            .attr('class', 'extra-name')
+            .attr('x', TEXT_PAD_X)
+            .attr('y', d => {
+                if (d.data.extraName && d.data.name !== 'MUBANAN BIN H. TAMYIS') {
+                    const hasAddress = d.data.address ? true : false;
+                    const baseY = 2;
+                    return baseY + 16 + (hasAddress ? 0 : 0);
+                }
+                return 0;
+            })
+            .attr('text-anchor', 'start')
+            .style('text-transform', 'uppercase')
+            .style('font-weight', '700')
+            .style('font-size', '13px')
+            .style('fill', '#0f172a')
+            .text(d => {
+                if (d.data.name === 'MUBANAN BIN H. TAMYIS') return '';
+                return d.data.extraName || '';
+            })
+            .each(function(d) {
+                if (d.data.extraName && d.data.name !== 'MUBANAN BIN H. TAMYIS') {
+                    const maxWidth = cardWidth - TEXT_PAD_X * 2;
+                    autoFitText(d3.select(this), maxWidth, 9, 14);
+                }
+            });
+
+        // ========== ADDRESS UNTUK SEMUA NODE ==========
+        nodeEnter.append('text')
+            .attr('class', 'address-info')
+            .attr('x', TEXT_PAD_X)
+            .attr('y', d => {
+                if (d.data.address && d.data.name !== 'MUBANAN BIN H. TAMYIS') {
+                    const hasExtra = d.data.extraName ? true : false;
+                    const baseY = 16;
+                    return baseY + (hasExtra ? extraNameHeight : 0);
+                }
+                return 0;
+            })
+            .attr('text-anchor', 'start')
+            .style('font-weight', '400')
+            .style('font-size', '9px')
+            .style('fill', '#64748b')
+            .style('font-style', 'italic')
+            .text(d => d.data.address || '');
+
+        // ========== SPOUSE INFO UNTUK NODE LAINNYA ==========
+        nodeEnter.filter(d => d.data.name !== 'MUBANAN BIN H. TAMYIS')
+            .append('text')
+            .attr('class', 'spouse-info')
+            .attr('x', TEXT_PAD_X)
+            .attr('y', d => {
+                const wifeOrder = d.data.partnerOrder;
+                const hasExtra = d.data.extraName ? true : false;
+                const hasAddress = d.data.address ? true : false;
+                const offset = (hasExtra ? extraNameHeight : 0) + (hasAddress ? extraNameHeight : 0);
+                if (wifeOrder) return hasExtra || hasAddress ? 24 - offset/2 : 24;
+                if (hasExtra || hasAddress) return 14 - offset/2;
+                return 14;
+            })
+            .attr('text-anchor', 'start')
+            .style('text-transform', 'uppercase')
+            .style('font-size', '10px')
+            .style('font-weight', '500')
+            .style('fill', '#475569')
+            .text(d => {
+                if (!hasSpouseLine(d)) return '';
+                let sLife = d.data.spouse_life ? ` (${d.data.spouse_life})` : '';
+                let flowerStr = d.data.spouseDeceased ? '\uD83C\uDF39 ' : '';
+                return `${flowerStr}${d.data.spouse}${sLife}`;
+            });
+
+        const nodeUpdate = nodeEnter.merge(node);
+
+        nodeUpdate.transition()
+            .duration(duration)
+            .attr("transform", d => `translate(${d.y},${d.x})`);
+
+        nodeUpdate.select('.toggle-indicator')
+            .style('display', d => (d.children || d._children) ? null : 'none');
+        nodeUpdate.select('.toggle-icon')
+            .attr('d', d => d._children ? 'M -4,0 L 4,0 M 0,-4 L 0,4' : 'M -4,0 L 4,0');
+
+        const nodeExit = node.exit().transition()
+            .duration(duration)
+            .attr("transform", d => `translate(${source.y},${source.x})`)
+            .remove();
+
+        nodeExit.selectAll('.node-shape')
+            .attr('d', batteryPath(0, 0));
+
+        const link = gContainer.selectAll('path.link')
+            .data(links, d => d.target.id);
+
+        const linkEnter = link.enter().insert('path', "g")
+            .attr("class", "link")
+            .attr('d', d => {
+                const o = { x: source.x0, y: source.y0 };
+                return diagonal(o, o);
+            });
+
+        const linkUpdate = linkEnter.merge(link);
+
+        linkUpdate.transition()
+            .duration(duration)
+            .attr('d', d => diagonal(d.source, d.target));
+
+        link.exit().transition()
+            .duration(duration)
+            .attr('d', d => {
+                const o = { x: source.x, y: source.y };
+                return diagonal(o, o);
+            })
+            .remove();
+
+        nodes.forEach(d => {
+            d.x0 = d.x;
+            d.y0 = d.y;
+        });
+    }
+
+    function diagonal(s, d) {
+        const w1 = s.data ? cardDims(s).w : cardWidth;
+        return `M ${s.y + w1} ${s.x}
+                    C ${(s.y + w1 + d.y) / 2} ${s.x},
+                      ${(s.y + w1 + d.y) / 2} ${d.x},
+                      ${d.y} ${d.x}`;
+    }
+
+    function toggleGenLegend() {
+        const el = document.getElementById('gen-legend');
+        const toggleIcon = document.getElementById('gen-legend-toggle');
+        el.classList.toggle('collapsed');
+        toggleIcon.textContent = el.classList.contains('collapsed') ? '▼' : '▲';
+    }
+
+    let currentSide = localStorage.getItem('bani_isbadar_side') || 'generasi';
+    function switchSide(mode) {
+        currentSide = mode;
+        localStorage.setItem('bani_isbadar_side', mode);
+        const gen = document.getElementById('gen-legend');
+        const chat = document.getElementById('chat-panel');
+        const tabGen = document.getElementById('tab-generasi');
+        const tabChat = document.getElementById('tab-chat');
+        if (mode === 'generasi') {
+            gen.style.display = 'block';
+            gen.classList.remove('chat-hidden');
+            chat.classList.remove('active');
+            tabGen.classList.add('active');
+            tabChat.classList.remove('active');
+        } else {
+            gen.style.display = 'none';
+            gen.classList.add('chat-hidden');
+            chat.classList.add('active');
+            tabGen.classList.remove('active');
+            tabChat.classList.add('active');
+            // render ulang saat dibuka
+            setTimeout(renderMessages, 50);
+            // tandai semua pesan sebagai sudah dibaca -> sembunyikan badge notif
+            markChatAsRead();
+        }
+    }
+    // Init panel sesuai localStorage
+    setTimeout(() => switchSide(currentSide), 100);
+
+    // Klik di luar area chat -> otomatis kembali ke tampilan diagram (generasi)
+    document.addEventListener('click', function(e) {
+        if (currentSide !== 'chat') return;
+        const chatPanel = document.getElementById('chat-panel');
+        const switcher = document.getElementById('panel-switcher');
+        const lightbox = document.getElementById('photo-lightbox-modal');
+        if (chatPanel && chatPanel.contains(e.target)) return;
+        if (switcher && switcher.contains(e.target)) return;
+        // Klik pada lightbox foto profil (buka/tutup) tidak boleh menutup panel chat
+        if (lightbox && lightbox.contains(e.target)) return;
+        switchSide('generasi');
+    }, true);
+
+    // =====================================================================
+    // CHAT BANI - NAMA + EMAIL + PILIH BANI (15 BANI)
+    // =====================================================================
+    const FIREBASE_CONFIG = {
+        apiKey: "AIzaSyCnKGsdzEhzAn14gnrkUXYNI9DaiVoHrmA",
+        authDomain: "silsilah-bani-isbadar.firebaseapp.com",
+        projectId: "silsilah-bani-isbadar",
+        storageBucket: "silsilah-bani-isbadar.firebasestorage.app",
+        messagingSenderId: "326009301510",
+        appId: "1:326009301510:web:5539de5cf3df30fdc2b187"
+    };
+    const USE_FIREBASE = true; // sudah diisi config asli
+
+    const ADMIN_CONFIG = {
+        names: ['mannixs-21'],
+        emails: ['ayamkurin000@gmail.com'],
+        secretCode: null
+    };
+    function isAdminUser(user) {
+        if (!user) return false;
+        const name = (user.name||'').toLowerCase().trim();
+        const email = (user.email||'').toLowerCase().trim();
+        if (email === 'ayamkurin000@gmail.com') return true;
+        if (name === 'mannixs-21') return true;
+        if (name === 'mannixs21') return true;
+        return false;
+    }
+
+    const BANI_LIST = [
+        { name: 'Anak ke-1', ibu: 'MUBANAN BIN H. TAMYIS' },
+        { name: 'Anak ke-2', ibu: 'MUBANAN BIN H. TAMYIS' },
+        { name: 'Anak ke-3', ibu: 'MUBANAN BIN H. TAMYIS' },
+        { name: 'Anak ke-4', ibu: 'MUBANAN BIN H. TAMYIS' },
+        { name: 'Anak ke-5', ibu: 'MUBANAN BIN H. TAMYIS' },
+        { name: 'Anak ke-6', ibu: 'MUBANAN BIN H. TAMYIS' },
+        { name: 'Anak ke-7', ibu: 'MUBANAN BIN H. TAMYIS' },
+        { name: 'Anak ke-8', ibu: 'MUBANAN BIN H. TAMYIS' },
+    ];
+    let db = null, auth = null, firebaseApp = null;
+    let useFirebase = false;
+    let allMessagesCache = [];
+    let fsFns = null; // { collection, addDoc, serverTimestamp, doc, deleteDoc }
+    let firebaseInitStarted = false;
+    async function initFirebase() {
+        if (firebaseInitStarted) return useFirebase;
+        firebaseInitStarted = true;
+        if (typeof USE_FIREBASE === 'undefined' || !USE_FIREBASE) return false;
+        try {
+            const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");
+            const { getFirestore, collection, query, orderBy, onSnapshot, addDoc, serverTimestamp, doc, deleteDoc, getDocs, setDoc } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
+            const { getAuth, signInAnonymously } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js");
+            firebaseApp = initializeApp(FIREBASE_CONFIG);
+            db = getFirestore(firebaseApp);
+            auth = getAuth(firebaseApp);
+            await signInAnonymously(auth);
+            useFirebase = true;
+            fsFns = { collection, addDoc, serverTimestamp, doc, deleteDoc, getDocs, setDoc };
+            const q = query(collection(db, 'bani_isbadar_chat'), orderBy('ts','asc'));
+            onSnapshot(q, (snap)=>{
+                const msgs = [];
+                snap.forEach(d=>{
+                    const data = d.data();
+                    msgs.push({ id: d.id, ...data, ts: data.ts || (data.createdAt ? data.createdAt.seconds*1000 : Date.now()) });
+                });
+                allMessagesCache = msgs;
+                if (typeof renderMessages === 'function') renderMessages();
+            });
+            onSnapshot(collection(db, 'bani_isbadar_profiles'), (snap)=>{
+                snap.forEach(d=>{
+                    const data = d.data();
+                    profilePhotoMap[d.id] = data.photoUrl || null;
+                });
+                if (typeof renderMessages === 'function') renderMessages();
+            }, (err)=>{
+                console.error('❌ Gagal baca koleksi bani_isbadar_profiles dari Firestore. Kemungkinan besar Security Rules belum mengizinkan koleksi ini. Detail:', err);
+            });
+            return true;
+        } catch(e) { console.warn('Firebase gagal', e); useFirebase = false; return false; }
+    }
+
+    let chatUser = null;
+    let replyToId = null;
+    let profilePhotoMap = {}; // email -> photoUrl terbaru (biar pesan lama ikut update kalau foto profil diganti)
+
+    function getEffectivePhoto(email, fallbackPhoto) {
+        const key = String(email || '').toLowerCase();
+        if (chatUser && chatUser.email === key) return chatUser.photoUrl || null;
+        if (Object.prototype.hasOwnProperty.call(profilePhotoMap, key)) return profilePhotoMap[key];
+        return fallbackPhoto || null;
+    }
+
+    function saveProfilePhoto(email, name, photoUrl) {
+        const key = String(email || '').toLowerCase();
+        if (!key) return;
+        profilePhotoMap[key] = photoUrl;
+        if (typeof useFirebase !== 'undefined' && useFirebase && db && fsFns && fsFns.setDoc && fsFns.doc) {
+            fsFns.setDoc(fsFns.doc(db, 'bani_isbadar_profiles', key), { name, photoUrl, updatedAt: Date.now() }).catch(e => console.error('❌ Gagal simpan foto profil ke Firestore (bani_isbadar_profiles). Kemungkinan besar Security Rules belum mengizinkan koleksi ini. Detail:', e));
+        }
+        if (typeof renderMessages === 'function') renderMessages();
+    }
+
+    function openPhotoLightbox(url, name) {
+        const modal = document.getElementById('photo-lightbox-modal');
+        const img = document.getElementById('lightbox-photo-img');
+        const nameEl = document.getElementById('lightbox-photo-name');
+        if (!modal || !img || !url) return;
+        img.src = url;
+        if (nameEl) nameEl.textContent = name || '';
+        modal.style.display = 'flex';
+    }
+    function closePhotoLightbox() {
+        const modal = document.getElementById('photo-lightbox-modal');
+        if (modal) modal.style.display = 'none';
+    }
+    // Klik pada avatar pesan chat (foto profil) -> buka lightbox perbesar foto
+    document.addEventListener('click', function(e) {
+        const avatar = e.target.closest ? e.target.closest('.avatar-clickable') : null;
+        if (!avatar) return;
+        const img = avatar.querySelector('img');
+        if (!img || !img.src) return;
+        openPhotoLightbox(img.src, avatar.getAttribute('data-avatar-name') || '');
+    });
+
+    function escapeHtml(s) {
+        return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+    function formatChatTime(ts) {
+        if (!ts) return '';
+        try {
+            const d = new Date(ts);
+            const tgl = d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Asia/Jakarta' });
+            const jam = d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jakarta' });
+            return tgl + ', ' + jam + ' WIB';
+        } catch(e) { return ''; }
+    }
+    function formatRelativeTime(ts) {
+        if (!ts) return '';
+        const diffSec = Math.floor((Date.now() - ts) / 1000);
+        if (diffSec < 10) return 'Baru saja';
+        if (diffSec < 60) return diffSec + ' detik yang lalu';
+        const diffMin = Math.floor(diffSec / 60);
+        if (diffMin < 60) return diffMin + ' menit yang lalu';
+        const diffHour = Math.floor(diffMin / 60);
+        if (diffHour < 24) return diffHour + ' jam yang lalu';
+        const diffDay = Math.floor(diffHour / 24);
+        if (diffDay < 30) return diffDay + ' hari yang lalu';
+        const diffMonth = Math.floor(diffDay / 30);
+        if (diffMonth < 12) return diffMonth + ' bulan yang lalu';
+        const diffYear = Math.floor(diffDay / 365);
+        return diffYear + ' tahun yang lalu';
+    }
+    function refreshRelativeTimes() {
+        document.querySelectorAll('.msg-time-relative').forEach(el => {
+            const ts = parseInt(el.getAttribute('data-ts'), 10);
+            if (ts) el.textContent = formatRelativeTime(ts);
+        });
+    }
+    setInterval(refreshRelativeTimes, 30000);
+
+    // ===== AVATAR OTOMATIS (INISIAL + WARNA KONSISTEN PER USER) =====
+    const AVATAR_PALETTE = ['#ef4444','#f97316','#f59e0b','#84cc16','#10b981','#14b8a6','#06b6d4','#3b82f6','#6366f1','#8b5cf6','#d946ef','#ec4899'];
+    function hashStr(str) {
+        let h = 0;
+        for (let i = 0; i < str.length; i++) { h = (h * 31 + str.charCodeAt(i)) >>> 0; }
+        return h;
+    }
+    function getAvatarColor(key) {
+        const idx = hashStr(String(key||'')) % AVATAR_PALETTE.length;
+        return AVATAR_PALETTE[idx];
+    }
+    function getInitials(name) {
+        if (!name) return '?';
+        const parts = name.trim().split(/\s+/).filter(Boolean);
+        if (parts.length === 0) return '?';
+        if (parts.length === 1) return parts[0].slice(0,2).toUpperCase();
+        return (parts[0][0] + parts[1][0]).toUpperCase();
+    }
+    function renderAvatarHtml(name, key, photoUrl) {
+        if (photoUrl) {
+            const safeName = escapeHtml(name || '');
+            return `<div class="msg-avatar avatar-clickable" data-avatar-name="${safeName}" style="width:32px; height:32px; min-width:32px; border-radius:50%; overflow:hidden; flex-shrink:0; background:#e2e8f0; cursor:pointer;" title="Ketuk untuk perbesar"><img src="${photoUrl}" style="width:100%; height:100%; object-fit:cover; display:block; pointer-events:none;" alt=""></div>`;
+        }
+        const initials = getInitials(name);
+        const color = getAvatarColor(key || name);
+        return `<div class="msg-avatar" style="width:32px; height:32px; min-width:32px; border-radius:50%; background:${color}; color:#ffffff; display:flex; align-items:center; justify-content:center; font-size:0.72rem; font-weight:800; flex-shrink:0; user-select:none;">${escapeHtml(initials)}</div>`;
+    }
+    function renderHeaderAvatarHtml(name, key, photoUrl) {
+        if (photoUrl) {
+            return `<img src="${photoUrl}" style="width:100%; height:100%; object-fit:cover; display:block;" alt="">`;
+        }
+        const initials = getInitials(name);
+        const color = getAvatarColor(key || name);
+        return `<div style="width:100%; height:100%; background:${color}; color:#ffffff; display:flex; align-items:center; justify-content:center; font-size:0.72rem; font-weight:800; user-select:none;">${escapeHtml(initials)}</div>`;
+    }
+    function renderHeaderAvatar() {
+        const el = document.getElementById('chat-header-avatar');
+        if (!el || !chatUser) return;
+        el.innerHTML = renderHeaderAvatarHtml(chatUser.name, chatUser.email, chatUser.photoUrl);
+    }
+
+    // ===== BADGE NOTIF PESAN BELUM DIBUKA =====
+    function getLastReadTs() {
+        return parseInt(localStorage.getItem('bani_isbadar_chat_last_read') || '0', 10);
+    }
+    function markChatAsRead() {
+        localStorage.setItem('bani_isbadar_chat_last_read', String(Date.now()));
+        updateChatNotifBadge();
+    }
+    function updateChatNotifBadge() {
+        const badge = document.getElementById('chat-notif-badge');
+        if (!badge) return;
+        // selama tab CHAT BANI sedang dibuka, anggap semua pesan yang masuk langsung terbaca
+        if (typeof currentSide !== 'undefined' && currentSide === 'chat') {
+            localStorage.setItem('bani_isbadar_chat_last_read', String(Date.now()));
+            badge.style.display = 'none';
+            return;
+        }
+        const lastRead = getLastReadTs();
+        let msgs = typeof getAllMessages === 'function' ? getAllMessages() : (typeof getMessages === 'function' ? getMessages() : []);
+        msgs = msgs.filter(m => !m.sys && m.ts > lastRead);
+        // jangan hitung pesan milik sendiri sebagai belum dibaca
+        if (chatUser && chatUser.email) {
+            msgs = msgs.filter(m => m.email !== chatUser.email);
+        }
+        const count = msgs.length;
+        if (count > 0) {
+            badge.textContent = count > 99 ? '99+' : String(count);
+            badge.style.display = 'inline-flex';
+            badge.style.alignItems = 'center';
+            badge.style.justifyContent = 'center';
+        } else {
+            badge.style.display = 'none';
+        }
+    }
+    function loadUserSession() {
+        // Pesan selalu dirender, siapapun (belum login) tetap bisa membaca chat.
+        try {
+            const u = JSON.parse(localStorage.getItem('bani_isbadar_chat_user')||'null');
+            if (u && u.name && u.bani) {
+                // User sudah pernah login sebelumnya -> langsung masuk, TIDAK perlu login ulang.
+                chatUser = u;
+                document.getElementById('chat-login-form').style.display = 'none';
+                document.getElementById('chat-guest-bar').style.display = 'none';
+                document.getElementById('chat-main').style.display = 'flex';
+                document.getElementById('chat-user-name').textContent = u.name;
+                document.getElementById('chat-user-bani').textContent = u.bani;
+                document.getElementById('chat-user-ibu').textContent = 'dari Ibu ' + (u.ibu || '');
+                const admBadge = document.getElementById('admin-badge');
+                if (admBadge) admBadge.style.display = isAdminUser(u) ? 'inline-block' : 'none';
+                if (isAdminUser(u)) {
+                    document.getElementById('chat-user-name').style.color = '#7c3aed';
+                    const ac = document.getElementById('admin-clear-all');
+                    if (ac) ac.style.display = 'inline-block';
+                }
+                renderHeaderAvatar();
+            } else {
+                // Belum pernah login -> tampilkan mode tamu (baca saja), form login disembunyikan dulu.
+                document.getElementById('chat-main').style.display = 'none';
+                document.getElementById('chat-login-form').style.display = 'none';
+                document.getElementById('chat-guest-bar').style.display = 'block';
+            }
+        } catch(e){}
+        renderMessages();
+    }
+    function showLoginForm() {
+        const guestBar = document.getElementById('chat-guest-bar');
+        const form = document.getElementById('chat-login-form');
+        if (guestBar) guestBar.style.display = 'none';
+        if (form) form.style.display = 'flex';
+    }
+    function hideLoginForm() {
+        const guestBar = document.getElementById('chat-guest-bar');
+        const form = document.getElementById('chat-login-form');
+        if (form) form.style.display = 'none';
+        if (!chatUser && guestBar) guestBar.style.display = 'block';
+    }
+    function loginChat() {
+        const name = document.getElementById('chat-name').value.trim();
+        const emailEl = document.getElementById('chat-email');
+        const email = emailEl ? emailEl.value.trim() : '';
+        const baniVal = document.getElementById('chat-bani').value;
+        if (!name || name.length < 3) { alert('Nama minimal 3 huruf ya'); return; }
+        // Admin wajib pakai email ayamkurin000@gmail.com
+        if (name.toLowerCase() === 'mannixs-21' && email.toLowerCase() !== 'ayamkurin000@gmail.com') {
+            alert('Untuk login sebagai MANNIXS-21 harus pakai email ayamkurin000@gmail.com');
+            return;
+        }
+        if (!baniVal) { alert('Pilih Bani dulu'); return; }
+        const [bani, ibu] = baniVal.split('|');
+        const user = { name, email: (email||name.toLowerCase().replace(/\s+/g,'_')+'@bani.local').toLowerCase(), bani, ibu, loginAt: new Date().toISOString(), photoUrl: pendingProfilePhoto || null };
+        localStorage.setItem('bani_isbadar_chat_user', JSON.stringify(user));
+        chatUser = user;
+        pendingProfilePhoto = null;
+        document.getElementById('chat-login-form').style.display = 'none';
+        document.getElementById('chat-guest-bar').style.display = 'none';
+        document.getElementById('chat-main').style.display = 'flex';
+        document.getElementById('chat-user-name').textContent = user.name;
+        document.getElementById('chat-user-bani').textContent = user.bani;
+        document.getElementById('chat-user-ibu').textContent = 'dari Ibu ' + ibu;
+        const admBadge = document.getElementById('admin-badge');
+        if (admBadge) admBadge.style.display = isAdminUser(user) ? 'inline-block' : 'none';
+        if (isAdminUser(user)) { 
+            document.getElementById('chat-user-name').style.color = '#7c3aed';
+            const ac = document.getElementById('admin-clear-all');
+            if (ac) ac.style.display = 'inline-block';
+        }
+        renderHeaderAvatar();
+        if (user.photoUrl) saveProfilePhoto(user.email, user.name, user.photoUrl);
+        const msgs = getMessages();
+        if (false && msgs.length === 0) { // disabled welcome
+            // welcome disabled - fokus chat saja
+        }
+        renderMessages();
+    }
+    function logoutChat() {
+        if (!confirm('Keluar dari chat?')) return;
+        localStorage.removeItem('bani_isbadar_chat_user');
+        chatUser = null;
+        document.getElementById('chat-main').style.display = 'none';
+        document.getElementById('chat-login-form').style.display = 'none';
+        document.getElementById('chat-guest-bar').style.display = 'block';
+        document.getElementById('chat-name').value = '';
+        document.getElementById('chat-email').value = '';
+        document.getElementById('chat-bani').value = '';
+        pendingProfilePhoto = null;
+        const photoPreview = document.getElementById('profile-photo-preview');
+        if (photoPreview) photoPreview.innerHTML = '📷';
+        if (typeof updateLoginButtonState === 'function') updateLoginButtonState();
+        renderMessages();
+    }
+    function getMessages() {
+        try { return JSON.parse(localStorage.getItem('bani_isbadar_chat_messages')||'[]'); } catch(e){ return []; }
+    }
+    function getAllMessages() {
+        if (typeof useFirebase !== 'undefined' && useFirebase) return allMessagesCache;
+        return getMessages();
+    }
+    function saveMessages(arr) {
+        localStorage.setItem('bani_isbadar_chat_messages', JSON.stringify(arr));
+        const el = document.getElementById('chat-count');
+        if (el) el.textContent = arr.length + ' pesan';
+    }
+    function addSystemMessage(text) {
+        const arr = getMessages();
+        arr.push({ id: 'sys_'+Date.now(), name: 'Sistem', bani: 'Bani Mbah Kung', ibu: 'Panitia', text, ts: Date.now(), sys: true });
+        saveMessages(arr);
+    }
+    
+    // ===== FILE / PHOTO ATTACHMENT =====
+    let pendingFileData = null;
+    let pendingFileName = null;
+    let pendingFileType = null;
+    let pendingProfilePhoto = null;
+
+    function clearFilePreview() {
+        pendingFileData = null;
+        pendingFileName = null;
+        pendingFileType = null;
+        const preview = document.getElementById('file-preview');
+        const img = document.getElementById('file-preview-img');
+        const nameEl = document.getElementById('file-preview-name');
+        const fileInput = document.getElementById('chat-file-input');
+        if (preview) preview.style.display = 'none';
+        if (img) { img.style.display = 'none'; img.src = ''; }
+        if (nameEl) nameEl.textContent = '';
+        if (fileInput) fileInput.value = '';
+    }
+
+    function compressImage(dataUrl, maxWidth, callback) {
+        const img = new Image();
+        img.onload = function() {
+            let width = img.width;
+            let height = img.height;
+            if (width > maxWidth) {
+                height = height * (maxWidth / width);
+                width = maxWidth;
+            }
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+            const compressed = canvas.toDataURL('image/jpeg', 0.7);
+            callback(compressed);
+        };
+        img.onerror = function() { callback(dataUrl); };
+        img.src = dataUrl;
+    }
+
+    // ===== CROP FOTO PROFIL (geser + zoom) =====
+    const CROP_VP = 240; // ukuran viewport lingkaran (px)
+    let cropTargetContext = null; // 'login' atau 'header'
+    let cropMinScale = 1;
+    let cropScale = 1;
+    let cropImgX = 0, cropImgY = 0;
+    let cropNaturalW = 0, cropNaturalH = 0;
+    let cropDragging = false;
+    let cropDragStartX = 0, cropDragStartY = 0, cropStartImgX = 0, cropStartImgY = 0;
+
+    function openCropModal(dataUrl, context) {
+        cropTargetContext = context;
+        const modal = document.getElementById('photo-crop-modal');
+        const imgEl = document.getElementById('crop-image');
+        const zoomSlider = document.getElementById('crop-zoom');
+        if (!modal || !imgEl) return;
+        imgEl.onload = function() {
+            cropNaturalW = imgEl.naturalWidth;
+            cropNaturalH = imgEl.naturalHeight;
+            cropMinScale = Math.max(CROP_VP / cropNaturalW, CROP_VP / cropNaturalH);
+            cropScale = cropMinScale;
+            cropImgX = (CROP_VP - cropNaturalW * cropScale) / 2;
+            cropImgY = (CROP_VP - cropNaturalH * cropScale) / 2;
+            if (zoomSlider) zoomSlider.value = 100;
+            applyCropTransform();
+        };
+        imgEl.src = dataUrl;
+        modal.style.display = 'flex';
+    }
+
+    function applyCropTransform() {
+        const imgEl = document.getElementById('crop-image');
+        if (!imgEl) return;
+        imgEl.style.width = (cropNaturalW * cropScale) + 'px';
+        imgEl.style.height = (cropNaturalH * cropScale) + 'px';
+        imgEl.style.transform = `translate(${cropImgX}px, ${cropImgY}px)`;
+    }
+
+    function clampCropPosition() {
+        const dispW = cropNaturalW * cropScale;
+        const dispH = cropNaturalH * cropScale;
+        const minX = CROP_VP - dispW;
+        const minY = CROP_VP - dispH;
+        cropImgX = Math.min(0, Math.max(minX, cropImgX));
+        cropImgY = Math.min(0, Math.max(minY, cropImgY));
+    }
+
+    function cancelCrop() {
+        const modal = document.getElementById('photo-crop-modal');
+        if (modal) modal.style.display = 'none';
+        cropTargetContext = null;
+    }
+
+    function confirmCrop() {
+        const EXPORT_SIZE = 320; // resolusi hasil akhir foto profil (lebih tajam dari viewport 240px)
+        const ratio = EXPORT_SIZE / CROP_VP;
+        const canvas = document.createElement('canvas');
+        canvas.width = EXPORT_SIZE;
+        canvas.height = EXPORT_SIZE;
+        const ctx = canvas.getContext('2d');
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+        const imgEl = document.getElementById('crop-image');
+        ctx.drawImage(
+            imgEl,
+            cropImgX * ratio,
+            cropImgY * ratio,
+            cropNaturalW * cropScale * ratio,
+            cropNaturalH * cropScale * ratio
+        );
+        // Satu kali kompresi saja (kualitas 0.9) - tidak dikompres ulang lagi biar tidak makin kasar
+        const finalPhoto = canvas.toDataURL('image/jpeg', 0.9);
+        if (cropTargetContext === 'login') {
+            pendingProfilePhoto = finalPhoto;
+            const preview = document.getElementById('profile-photo-preview');
+            if (preview) preview.innerHTML = `<img src="${finalPhoto}" style="width:100%; height:100%; object-fit:cover; display:block;" alt="">`;
+        } else if (cropTargetContext === 'header' && chatUser) {
+            chatUser.photoUrl = finalPhoto;
+            localStorage.setItem('bani_isbadar_chat_user', JSON.stringify(chatUser));
+            saveProfilePhoto(chatUser.email, chatUser.name, finalPhoto);
+            renderHeaderAvatar();
+        }
+        cancelCrop();
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const viewport = document.getElementById('crop-viewport');
+        const zoomSlider = document.getElementById('crop-zoom');
+        if (!viewport) return;
+
+        function startDrag(clientX, clientY) {
+            cropDragging = true;
+            cropDragStartX = clientX;
+            cropDragStartY = clientY;
+            cropStartImgX = cropImgX;
+            cropStartImgY = cropImgY;
+            viewport.style.cursor = 'grabbing';
+        }
+        function moveDrag(clientX, clientY) {
+            if (!cropDragging) return;
+            cropImgX = cropStartImgX + (clientX - cropDragStartX);
+            cropImgY = cropStartImgY + (clientY - cropDragStartY);
+            clampCropPosition();
+            applyCropTransform();
+        }
+        function endDrag() {
+            cropDragging = false;
+            viewport.style.cursor = 'grab';
+        }
+
+        viewport.addEventListener('pointerdown', (e) => {
+            viewport.setPointerCapture(e.pointerId);
+            startDrag(e.clientX, e.clientY);
+        });
+        viewport.addEventListener('pointermove', (e) => moveDrag(e.clientX, e.clientY));
+        viewport.addEventListener('pointerup', endDrag);
+        viewport.addEventListener('pointercancel', endDrag);
+
+        if (zoomSlider) {
+            zoomSlider.addEventListener('input', () => {
+                const oldScale = cropScale;
+                const newScale = cropMinScale * (parseFloat(zoomSlider.value) / 100);
+                // jaga titik tengah viewport tetap fokus pada konten yang sama saat zoom
+                const cx = (CROP_VP / 2 - cropImgX) / oldScale;
+                const cy = (CROP_VP / 2 - cropImgY) / oldScale;
+                cropScale = newScale;
+                cropImgX = CROP_VP / 2 - cx * cropScale;
+                cropImgY = CROP_VP / 2 - cy * cropScale;
+                clampCropPosition();
+                applyCropTransform();
+            });
+        }
+    });
+
+    document.addEventListener('DOMContentLoaded', ()=>{
+        const fileInput = document.getElementById('chat-file-input');
+        if (fileInput) {
+            fileInput.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (!file) return;
+                if (file.size > 5 * 1024 * 1024) { alert('File terlalu besar, maksimal 5MB ya'); fileInput.value = ''; return; }
+                pendingFileName = file.name;
+                pendingFileType = file.type;
+                const preview = document.getElementById('file-preview');
+                const nameEl = document.getElementById('file-preview-name');
+                const imgEl = document.getElementById('file-preview-img');
+                if (nameEl) nameEl.textContent = '📎 ' + file.name + ' (' + (file.size/1024).toFixed(0) + 'KB)';
+                if (preview) preview.style.display = 'block';
+                const reader = new FileReader();
+                reader.onload = function(ev) {
+                    const dataUrl = ev.target.result;
+                    if (file.type.startsWith('image/')) {
+                        compressImage(dataUrl, 800, function(compressed) {
+                            pendingFileData = compressed;
+                            if (imgEl) { imgEl.src = compressed; imgEl.style.display = 'block'; }
+                        });
+                    } else {
+                        pendingFileData = dataUrl;
+                        if (imgEl) imgEl.style.display = 'none';
+                    }
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        // ===== Upload foto profil (di form login) =====
+        const profilePhotoInput = document.getElementById('chat-profile-photo-input');
+        if (profilePhotoInput) {
+            profilePhotoInput.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (!file) return;
+                if (!file.type.startsWith('image/')) { alert('File harus berupa gambar/foto'); profilePhotoInput.value = ''; return; }
+                if (file.size > 5 * 1024 * 1024) { alert('Foto terlalu besar, maksimal 5MB ya'); profilePhotoInput.value = ''; return; }
+                const reader = new FileReader();
+                reader.onload = function(ev) {
+                    openCropModal(ev.target.result, 'login');
+                    profilePhotoInput.value = '';
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        // ===== Ganti foto profil (dari header, saat sudah login) =====
+        const profilePhotoEditInput = document.getElementById('chat-profile-photo-edit-input');
+        if (profilePhotoEditInput) {
+            profilePhotoEditInput.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (!file) return;
+                if (!file.type.startsWith('image/')) { alert('File harus berupa gambar/foto'); profilePhotoEditInput.value = ''; return; }
+                if (file.size > 5 * 1024 * 1024) { alert('Foto terlalu besar, maksimal 5MB ya'); profilePhotoEditInput.value = ''; return; }
+                if (!chatUser) return;
+                const reader = new FileReader();
+                reader.onload = function(ev) {
+                    openCropModal(ev.target.result, 'header');
+                    profilePhotoEditInput.value = '';
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        // Tombol MASUK CHAT aktif (biru) hanya kalau Nama & Bani sudah diisi
+        const nameInput = document.getElementById('chat-name');
+        const baniSelect = document.getElementById('chat-bani');
+        if (nameInput) nameInput.addEventListener('input', updateLoginButtonState);
+        if (baniSelect) baniSelect.addEventListener('change', updateLoginButtonState);
+        updateLoginButtonState();
+    });
+
+    function updateLoginButtonState() {
+        const nameInput = document.getElementById('chat-name');
+        const baniSelect = document.getElementById('chat-bani');
+        const btn = document.getElementById('login-submit-btn');
+        if (!nameInput || !baniSelect || !btn) return;
+        const nameOk = nameInput.value.trim().length >= 3;
+        const baniOk = !!baniSelect.value;
+        btn.disabled = !(nameOk && baniOk);
+    }
+
+    async function sendMessage() {
+        if (!chatUser) { showLoginForm(); return; }
+        const input = document.getElementById('chat-input');
+        const text = input.value.trim();
+        if (!text && !pendingFileData) return;
+        if (text.length < 2 && !pendingFileData) { alert('Pesan terlalu pendek'); return; }
+        const msg = {
+            id: 'msg_'+Date.now()+'_'+Math.random().toString(36).slice(2,6),
+            parentId: replyToId,
+            name: chatUser.name,
+            email: chatUser.email,
+            bani: chatUser.bani,
+            ibu: chatUser.ibu,
+            // Foto profil TIDAK lagi ditempel di setiap pesan baru (biar tidak menumpuk).
+            // Avatar tetap muncul karena diambil live dari data profil terpusat (getEffectivePhoto).
+            text,
+            ts: Date.now()
+        };
+        if (pendingFileData) { msg.image = pendingFileData; msg.fileName = pendingFileName; }
+        if (typeof useFirebase !== 'undefined' && useFirebase && db && fsFns) {
+            try {
+                const { id, ...msgData } = msg;
+                await fsFns.addDoc(fsFns.collection(db, 'bani_isbadar_chat'), msgData);
+            } catch (e) {
+                console.warn('Gagal kirim ke Firebase, simpan lokal saja', e);
+                const arr = getMessages();
+                arr.push(msg);
+                saveMessages(arr);
+            }
+        } else {
+            const arr = getMessages();
+            arr.push(msg);
+            saveMessages(arr);
+        }
+        input.value = '';
+        clearFilePreview();
+        cancelReply();
+        renderMessages();
+        // auto scroll
+        setTimeout(()=>{ const c=document.getElementById('chat-messages'); c.scrollTop=c.scrollHeight; }, 60);
+    }
+        function renderMessages() {
+        const container = document.getElementById('chat-messages');
+        if (!container) return;
+        let msgs = typeof getAllMessages === 'function' ? getAllMessages() : (typeof getMessages === 'function' ? getMessages() : []);
+        if (typeof updateChatNotifBadge === 'function') updateChatNotifBadge();
+        // hapus sys messages biar fokus chat user saja
+        msgs = msgs.filter(m => !m.sys);
+        msgs.sort((a,b)=>a.ts-b.ts);
+        // batasi 100 terakhir biar tidak macet
+        if (msgs.length > 100) msgs = msgs.slice(msgs.length-100);
+        if (msgs.length === 0) {
+            container.innerHTML = '<div style="text-align:center; padding:20px; color:#94a3b8; font-size:0.72rem;">Belum ada chat.<br>Tulis pesan pertama! 💬</div>';
+            const ce = document.getElementById('chat-count');
+            if (ce) ce.textContent = '0 pesan';
+            return;
+        }
+        const map = {};
+        (typeof getAllMessages === 'function' ? getAllMessages() : msgs).forEach(m=>map[m.id]=m);
+        let htmlOut = '';
+        msgs.forEach(m=>{
+            const isMe = chatUser && m.email && chatUser.email === m.email;
+            const isAdmin = typeof isAdminUser === 'function' ? isAdminUser(chatUser) : false;
+            let parentHtml = '';
+            if (m.parentId && map[m.parentId]) {
+                const p = map[m.parentId];
+                parentHtml = `<div class="reply-preview">↳ ${escapeHtml(p.name)}: ${escapeHtml(p.text.slice(0,50))}</div>`;
+            }
+            // SIMPLE: avatar di kiri, nama + waktu relatif, bani di kanan
+            htmlOut += `<div class="chat-msg ${m.parentId?'reply':''}" style="${isMe?'border-color:#93c5fd; background:#eff6ff;':''}">
+                ${parentHtml}
+                <div style="display:flex; gap:8px; align-items:flex-start;">
+                    ${renderAvatarHtml(m.name, m.email, getEffectivePhoto(m.email, m.photoUrl))}
+                    <div style="flex:1; min-width:0;">
+                        <div class="msg-head" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; gap:6px;">
+                            <span class="msg-name" style="font-weight:800; color:#0f172a; font-size:0.8rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:60%;">${escapeHtml(m.name)}</span>
+                            <span class="chat-bani-badge" style="background:#dbeafe; color:#1e40af; padding:2px 8px; border-radius:20px; font-size:0.65rem; font-weight:800; flex-shrink:0;">${escapeHtml(m.bani)}</span>
+                        </div>
+                        <div class="msg-text" style="color:#334155; font-size:0.82rem; line-height:1.4; white-space:pre-wrap; word-break:break-word;">${escapeHtml(m.text)}</div>${m.image ? `<div style="margin-top:8px;"><img src="${m.image}" style="max-width:220px; max-height:220px; border-radius:10px; border:1px solid #e2e8f0; cursor:pointer;" onclick="window.open(this.src, '_blank')"><div style="font-size:0.6rem; color:#64748b; margin-top:2px;">📎 ${escapeHtml(m.fileName||'file')}</div></div>` : ''}
+                        <div class="msg-actions" style="margin-top:6px; display:flex; justify-content:flex-end; align-items:center; gap:10px;">
+                            <button onclick="replyMessage('${m.id}')" style="background:none; border:none; font-size:0.68rem; font-weight:700; color:#3b82f6; cursor:pointer;">↩️ Balas</button>
+                            ${(isMe||isAdmin)?`<button onclick="deleteMessage('${m.id}')" style="background:none; border:none; font-size:0.68rem; font-weight:700; color:${isAdmin && !isMe ? '#7c3aed' : '#dc2626'}; cursor:pointer;">${isAdmin && !isMe ? '🛡️ Hapus' : '🗑️ Hapus'}</button>`:''}
+                            <span class="msg-time-relative" data-ts="${m.ts}" title="${formatChatTime(m.ts)}" style="font-size:0.62rem; color:#94a3b8; font-weight:600; white-space:nowrap; margin-left:auto;">${formatRelativeTime(m.ts)}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>`;
+        });
+        container.innerHTML = htmlOut;
+        container.scrollTop = container.scrollHeight;
+        const ce = document.getElementById('chat-count');
+        if (ce) ce.textContent = msgs.length + ' pesan';
+    }
+    function replyMessage(id) {
+        if (!chatUser) { showLoginForm(); return; }
+        const msgs = getMessages();
+        const m = msgs.find(x=>x.id===id);
+        if (!m) return;
+        replyToId = id;
+        const preview = document.getElementById('reply-preview');
+        const txt = document.getElementById('reply-text');
+        txt.textContent = 'Membalas ' + m.name + ': ' + m.text.slice(0,50);
+        preview.style.display = 'flex';
+        document.getElementById('chat-input').focus();
+    }
+    function cancelReply() {
+        replyToId = null;
+        const preview = document.getElementById('reply-preview');
+        if (preview) preview.style.display = 'none';
+    }
+    async function deleteMessage(id) {
+        if (!confirm('Hapus pesan ini?')) return;
+        if (typeof useFirebase !== 'undefined' && useFirebase && db && fsFns) {
+            try {
+                await fsFns.deleteDoc(fsFns.doc(db, 'bani_isbadar_chat', id));
+            } catch (e) {
+                console.warn('Gagal hapus di Firebase', e);
+                alert('Gagal menghapus pesan, coba lagi.');
+            }
+        } else {
+            let arr = getMessages();
+            arr = arr.filter(m=>m.id!==id);
+            saveMessages(arr);
+            renderMessages();
+        }
+    }
+    async function adminClearAll() {
+        if (!isAdminUser(chatUser)) { alert('Hanya MANNIXS-21 yang bisa hapus semua!'); return; }
+        if (!confirm('ADMIN FULL CONTROL: Hapus SEMUA pesan? Tidak bisa dibatalkan!')) return;
+        if (typeof useFirebase !== 'undefined' && useFirebase && typeof db !== 'undefined' && db) {
+            const { collection, getDocs, deleteDoc, doc } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
+            const snap = await getDocs(collection(db, 'bani_isbadar_chat'));
+            for (const d of snap.docs) { await deleteDoc(doc(db, 'bani_isbadar_chat', d.id)); }
+            alert('Semua pesan Firebase dihapus oleh Admin');
+        } else {
+            localStorage.removeItem('bani_isbadar_chat_messages');
+            localStorage.removeItem('bani_isbadar_chat_messages');
+            if (typeof allMessagesCache !== 'undefined') allMessagesCache = [];
+            if (typeof renderMessages === 'function') renderMessages();
+            alert('Semua pesan lokal dihapus oleh Admin');
+        }
+    }
+    function clearChatLocal() {
+        if (!confirm('Hapus semua pesan chat di browser ini? (hanya lokal)')) return;
+        localStorage.removeItem('bani_isbadar_chat_messages');
+        renderMessages();
+    }
+    // Enter to send, Shift+Enter new line
+    document.addEventListener('DOMContentLoaded', ()=>{
+        initFirebase();
+        loadUserSession();
+        const ta = document.getElementById('chat-input');
+        if (ta) {
+            ta.addEventListener('keydown', (e)=>{
+                if (e.key==='Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendMessage();
+                }
+            });
+        }
+        // auto init switch
+        setTimeout(()=>switchSide(currentSide), 200);
+    });
+    // Fallback if DOMContentLoaded already fired
+    initFirebase();
+    loadUserSession();
+
+
+
+    // =====================================================================
+    // FUNGSI NAVIGASI
+    // =====================================================================
+
+    function resetZoom() {
+        fitToView(500);
+    }
+
+    function collapse(d) {
+        if (d.children) {
+            d._children = d.children;
+            d._children.forEach(collapse);
+            d.children = null;
+        }
+    }
+
+    function expand(d) {
+        if (d._children) {
+            d.children = d._children;
+            d._children = null;
+        }
+        if (d.children) {
+            d.children.forEach(expand);
+        }
+    }
+
+    function expandAll() {
+        expand(root);
+        update(root);
+    }
+
+    let featureDisabledTimer = null;
+    function showFeatureDisabledNotice(customMessage) {
+        const toast = document.getElementById('feature-disabled-toast');
+        if (!toast) return;
+        toast.textContent = customMessage || 'Fitur ini dinonaktifkan';
+        // reset ke posisi default (tengah atas layar)
+        toast.style.left = '50%';
+        toast.style.top = '90px';
+        toast.style.transform = 'translateX(-50%) translateY(-12px)';
+        toast.classList.add('show');
+        clearTimeout(featureDisabledTimer);
+        featureDisabledTimer = setTimeout(() => {
+            toast.classList.remove('show');
+        }, 2200);
+    }
+
+    // Nama-nama node yang belum ada data keturunan/pasangan lengkap: tampilkan notif saat diketuk
+    const NO_DATA_NODES = ['Bapak Huda', 'SOFIATUN'];
+    function showNoDataNotice(targetEl) {
+        const toast = document.getElementById('feature-disabled-toast');
+        if (!toast) return;
+        toast.textContent = 'Belum ada Data';
+        if (targetEl) {
+            const rect = targetEl.getBoundingClientRect();
+            toast.style.left = rect.left + 'px';
+            toast.style.top = (rect.top - 12) + 'px';
+            toast.style.transform = 'translate(-100%, -100%)';
+        } else {
+            toast.style.left = '50%';
+            toast.style.top = '90px';
+            toast.style.transform = 'translateX(-50%) translateY(-12px)';
+        }
+        toast.classList.add('show');
+        clearTimeout(featureDisabledTimer);
+        featureDisabledTimer = setTimeout(() => {
+            toast.classList.remove('show');
+        }, 2200);
+    }
+
+    // =====================================================================
+    // FITUR PENCARIAN
+    // =====================================================================
+
+    function collectAllNames(node, list) {
+        if (node.name) list.push(node.name);
+        if (node.extraName) list.push(node.extraName);
+        if (Array.isArray(node.children)) {
+            node.children.forEach(c => collectAllNames(c, list));
+        }
+    }
+    const allPersonNames = (function() {
+        const raw = [];
+        collectAllNames(treeData, raw);
+        return Array.from(new Set(raw)).sort((a, b) => a.localeCompare(b, 'id'));
+    })();
+
+    const searchInputEl = document.getElementById('search-input');
+    const searchResultsEl = document.getElementById('search-results');
+    let searchActiveIndex = -1;
+    let searchCurrentMatches = [];
+
+    function closeSearchResults() {
+        searchResultsEl.classList.remove('active');
+        searchResultsEl.innerHTML = '';
+        searchActiveIndex = -1;
+        searchCurrentMatches = [];
+    }
+
+    function renderSearchResults(matches) {
+        searchResultsEl.innerHTML = '';
+        searchCurrentMatches = matches;
+        searchActiveIndex = -1;
+        if (matches.length === 0) {
+            const div = document.createElement('div');
+            div.className = 'search-no-result';
+            div.textContent = 'NAMA TIDAK DITEMUKAN';
+            searchResultsEl.appendChild(div);
+        } else {
+            matches.slice(0, 25).forEach(name => {
+                const item = document.createElement('div');
+                item.className = 'search-result-item';
+                item.textContent = name;
+                item.addEventListener('click', () => selectSearchResult(name));
+                searchResultsEl.appendChild(item);
+            });
+        }
+        searchResultsEl.classList.add('active');
+    }
+
+    searchInputEl.addEventListener('input', () => {
+        const q = searchInputEl.value.trim().toLowerCase();
+        if (q.length < 3) {
+            closeSearchResults();
+            return;
+        }
+        const matches = allPersonNames.filter(n => n.toLowerCase().includes(q));
+        renderSearchResults(matches);
+    });
+
+    searchInputEl.addEventListener('keydown', (e) => {
+        const items = Array.from(searchResultsEl.querySelectorAll('.search-result-item'));
+        if (e.key === 'Escape') {
+            closeSearchResults();
+            searchInputEl.blur();
+        } else if (e.key === 'ArrowDown' && items.length) {
+            e.preventDefault();
+            searchActiveIndex = Math.min(searchActiveIndex + 1, items.length - 1);
+            items.forEach((it, idx) => it.classList.toggle('kbd-active', idx === searchActiveIndex));
+            items[searchActiveIndex].scrollIntoView({ block: 'nearest' });
+        } else if (e.key === 'ArrowUp' && items.length) {
+            e.preventDefault();
+            searchActiveIndex = Math.max(searchActiveIndex - 1, 0);
+            items.forEach((it, idx) => it.classList.toggle('kbd-active', idx === searchActiveIndex));
+            items[searchActiveIndex].scrollIntoView({ block: 'nearest' });
+        } else if (e.key === 'Enter') {
+            if (searchActiveIndex >= 0 && searchCurrentMatches[searchActiveIndex]) {
+                selectSearchResult(searchCurrentMatches[searchActiveIndex]);
+            } else if (searchCurrentMatches.length === 1) {
+                selectSearchResult(searchCurrentMatches[0]);
+            }
+        }
+    });
+
+    document.addEventListener('click', (e) => {
+        const container = document.getElementById('search-container');
+        if (container && !container.contains(e.target)) {
+            closeSearchResults();
+        }
+    });
+
+    function getAncestorPath(node) {
+        const ancestors = [];
+        let n = node.parent;
+        while (n) { ancestors.unshift(n);
+            n = n.parent; }
+        return ancestors;
+    }
+
+    function revealNode(target) {
+        const ancestors = getAncestorPath(target);
+        ancestors.forEach((node, i) => {
+            const nextInPath = (i + 1 < ancestors.length) ? ancestors[i + 1] : target;
+            if (node._children) {
+                node.children = node._children;
+                node._children = null;
+            }
+            if (node.children) {
+                node.children.forEach(child => {
+                    if (child !== nextInPath) collapse(child);
+                });
+            }
+        });
+    }
+
+    function centerOnNode(node, dur) {
+        dur = (dur === undefined) ? 750 : dur;
+        let w = cardWidth;
+        if (node.data.name === 'MUBANAN BIN H. TAMYIS') w = founderCardWidth;
+        const targetX = node.y + w / 2;
+        const targetY = node.x;
+        const curW = window.innerWidth;
+        const curH = window.innerHeight;
+        const headerOffset = 70;
+        const currentK = d3.zoomTransform(svg.node()).k || 1;
+        const scale = Math.min(1, Math.max(0.6, currentK));
+        const tx = curW / 2 - targetX * scale;
+        const ty = headerOffset + (curH - headerOffset) / 2 - targetY * scale;
+        svg.transition().duration(dur).call(zoom.transform, d3.zoomIdentity.translate(tx, ty).scale(scale));
+    }
+
+    function highlightFoundNode(node) {
+        gContainer.selectAll('g.node')
+            .filter(d => d.id === node.id)
+            .classed('search-highlight', true)
+            .each(function() {
+                const el = this;
+                setTimeout(() => d3.select(el).classed('search-highlight', false), 2700);
+            });
+    }
+
+    function selectSearchResult(name) {
+        let target = findNodeByName(root, name);
+        if (!target) {
+            const allNodes = root.descendants();
+            for (const n of allNodes) {
+                if (n.data.extraName === name) {
+                    target = n;
+                    break;
+                }
+            }
+        }
+        closeSearchResults();
+        searchInputEl.value = '';
+        if (!target) return;
+        revealNode(target);
+        update(root);
+        setTimeout(() => {
+            centerOnNode(target, 700);
+            highlightFoundNode(target);
+        }, 60);
+    }
+
+    // =====================================================================
+    // DETEKSI MOBILE & EFEK KURSOR
+    // =====================================================================
+
+    let perfMode = localStorage.getItem('perfMode') || 'on';
+    function togglePerf() {
+        perfMode = perfMode === 'on' ? 'off' : 'on';
+        localStorage.setItem('perfMode', perfMode);
+        const btn = document.getElementById('perf-btn');
+        const canvas = document.getElementById('cursor-fx');
+        if (perfMode === 'off') {
+            if (canvas) canvas.style.display = 'none';
+            if (btn) { btn.textContent = '⚡ EFEK: OFF'; btn.style.background = '#dc2626'; }
+        } else {
+            if (canvas) canvas.style.display = 'block';
+            if (btn) { btn.textContent = '⚡ EFEK: ON'; btn.style.background = '#64748b'; }
+        }
+    }
+    setTimeout(()=>{
+        const btn = document.getElementById('perf-btn');
+        const canvas = document.getElementById('cursor-fx');
+        if (perfMode === 'off') {
+            if (canvas) canvas.style.display = 'none';
+            if (btn) { btn.textContent = '⚡ EFEK: OFF'; btn.style.background = '#dc2626'; }
+        }
+    }, 400);
+
+    const isMobileDevice = window.matchMedia('(pointer: coarse)').matches || 'ontouchstart' in window || navigator
+        .maxTouchPoints > 0;
+
+    if (!isMobileDevice && perfMode !== 'off')(function initCursorFX() {
+        const canvas = document.getElementById('cursor-fx');
+        const ctx = canvas.getContext('2d');
+        let w, h;
+
+        function resizeCanvas() {
+            w = canvas.width = window.innerWidth;
+            h = canvas.height = window.innerHeight;
+        }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
+        const palette = ['#93c5fd', '#f9a8d4', '#a5b4fc', '#86efac', '#c4b5fd', '#fde68a', '#fbcfe8', '#bfdbfe'];
+
+        let mouseX = w / 2,
+            mouseY = h / 2;
+        let lastX = mouseX,
+            lastY = mouseY;
+        let hasMoved = false;
+        const particles = [];
+        const MAX_PARTICLES = 70;
+
+        function spawnParticle(x, y, speed) {
+            const angle = Math.random() * Math.PI * 2;
+            const dist = Math.random() * 2.4 + 0.3;
+            particles.push({
+                x: x + (Math.random() - 0.5) * 10,
+                y: y + (Math.random() - 0.5) * 10,
+                vx: Math.cos(angle) * dist + (Math.random() - 0.5) * 0.6,
+                vy: Math.sin(angle) * dist + (Math.random() - 0.5) * 0.6,
+                life: 1,
+                decay: 0.012 + Math.random() * 0.022,
+                size: 1.5 + Math.random() * (2.5 + Math.min(speed, 25) * 0.2),
+                color: palette[Math.floor(Math.random() * palette.length)],
+                twinklePhase: Math.random() * Math.PI * 2,
+                twinkleSpeed: 0.15 + Math.random() * 0.25
+            });
+            while (particles.length > MAX_PARTICLES) particles.shift();
+        }
+
+        window.addEventListener('mousemove', (e) => {
+            mouseX = e.clientX;
+            mouseY = e.clientY;
+            const dx = mouseX - lastX;
+            const dy = mouseY - lastY;
+            const speed = Math.sqrt(dx * dx + dy * dy);
+            hasMoved = true;
+
+            const count = Math.min(3, 1 + Math.floor(speed / 15));
+            for (let i = 0; i < count; i++) {
+                spawnParticle(mouseX, mouseY, speed);
+            }
+            lastX = mouseX;
+            lastY = mouseY;
+        });
+
+        setInterval(() => {
+            if (hasMoved) spawnParticle(mouseX, mouseY, 1);
+        }, 180);
+
+        function draw() {
+            ctx.clearRect(0, 0, w, h);
+
+            if (hasMoved) {
+                const glow = ctx.createRadialGradient(mouseX, mouseY, 0, mouseX, mouseY, 30);
+                glow.addColorStop(0, 'rgba(147,197,253,0.25)');
+                glow.addColorStop(0.5, 'rgba(196,181,253,0.15)');
+                glow.addColorStop(1, 'rgba(253,251,247,0)');
+                ctx.fillStyle = glow;
+                ctx.beginPath();
+                ctx.arc(mouseX, mouseY, 30, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            for (let i = particles.length - 1; i >= 0; i--) {
+                const p = particles[i];
+                p.x += p.vx;
+                p.y += p.vy;
+                p.vx *= 0.97;
+                p.vy *= 0.97;
+                p.life -= p.decay;
+                p.twinklePhase += p.twinkleSpeed;
+
+                if (p.life <= 0) {
+                    particles.splice(i, 1);
+                    continue;
+                }
+
+                const twinkle = 0.55 + 0.45 * Math.sin(p.twinklePhase);
+                ctx.globalAlpha = Math.max(p.life * twinkle, 0);
+                ctx.beginPath();
+                ctx.fillStyle = p.color;
+                ctx.shadowColor = p.color;
+                ctx.shadowBlur = 4;
+                ctx.arc(p.x, p.y, p.size * p.life, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            ctx.globalAlpha = 1;
+            ctx.shadowBlur = 0;
+
+            requestAnimationFrame(draw);
+        }
+        draw();
+    })();
+    </script>
+</body>
+</html>
