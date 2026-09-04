@@ -978,6 +978,51 @@
         .node-founder.pressed .node-shape-second {
             fill: #b91c1c !important; /* merah lebih gelap saat diklik */
         }
+        
+        /* FIX: HOVER DI SHAPE MUBANAN & SITI ABIDAH WARNA TIDAK BERUBAH */
+        .node-founder .node-shape,
+        .node-founder .node-shape-second {
+            transition: none !important;
+        }
+        .node.node-founder:hover .node-shape,
+        .node.node-founder:hover .node-shape-second,
+        .node-founder:hover .node-shape,
+        .node-founder:hover .node-shape-second,
+        .node-founder .node-shape:hover,
+        .node-founder .node-shape-second:hover {
+            fill: url(#grad-love-green) !important;
+            transform: none !important;
+            filter: none !important;
+            stroke-width: 3.5px !important;
+            stroke: #000000 !important;
+            opacity: 1 !important;
+            fill-opacity: 1 !important;
+            brightness: 1 !important;
+        }
+        .node.node-founder:hover .node-shape-second,
+        .node-founder:hover .node-shape-second {
+            fill: url(#grad-love-green-2) !important;
+        }
+        /* Disable pressed & shake highlight untuk founder */
+        .node-founder.pressed .node-shape,
+        .node-founder.pressed .node-shape-second,
+        .node.node-founder.pressed .node-shape,
+        .node.node-founder.pressed .node-shape-second,
+        .node-founder.shake-highlight .node-shape,
+        .node-founder.shake-highlight .node-shape-second {
+            animation: none !important;
+            transform: none !important;
+            filter: none !important;
+            opacity: 1 !important;
+            fill-opacity: 1 !important;
+        }
+        .node-founder.pressed .node-shape {
+            fill: url(#grad-love-green) !important;
+        }
+        .node-founder.pressed .node-shape-second {
+            fill: url(#grad-love-green-2) !important;
+        }
+
         </style>
 </head>
 <body>
