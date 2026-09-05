@@ -1978,6 +1978,8 @@
             // event.sourceEvent hanya terisi kalau perubahan ini berasal dari aksi nyata
             // user (drag/geser, scroll, atau cubit 2 jari) - bukan animasi transisi otomatis.
             if (event.sourceEvent) {
+                // Hapus notif "Ketuk di sini" kalau user sudah geser layar / interaksi pertama
+                hideRootTapHint();
                 dismissPanHintIfNeeded();
             }
         });
@@ -3711,6 +3713,8 @@
     }
 
     searchInputEl.addEventListener('input', () => {
+        // Hapus notif "Ketuk di sini" kalau user sudah mulai ngetik pencarian (misal: mama)
+        hideRootTapHint();
         const q = searchInputEl.value.trim().toLowerCase();
         if (q.length < 3) {
             closeSearchResults();
@@ -3720,7 +3724,11 @@
         renderSearchResults(matches);
     });
 
-    searchInputEl.addEventListener('keydown', (e) => {
+    
+    searchInputEl.addEventListener('focus', () => {
+        hideRootTapHint();
+    });
+searchInputEl.addEventListener('keydown', (e) => {
         const items = Array.from(searchResultsEl.querySelectorAll('.search-result-item'));
         if (e.key === 'Escape') {
             closeSearchResults();
