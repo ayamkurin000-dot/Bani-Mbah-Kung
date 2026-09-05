@@ -1400,9 +1400,45 @@
         const hasWifeBranch = Array.isArray(d.data.children) && d.data.children.some(c => c.type === 'wife');
         return !hasWifeBranch;
     }
+    function formatLifeDisplay(life) {
+        if (!life) return '';
+        const raw = life.trim();
+        if (!raw) return '';
+        const parts = raw.split('-');
+        if (parts.length === 1) {
+            const b = parts[0].trim();
+            if (!b || b === '....' || b === '...' || b === '..' || b === '.') return '';
+            return ` (${b})`;
+        }
+        const birth = parts[0].trim();
+        const death = parts.slice(1).join('-').trim();
+        if (!death || death === '....' || death === '...' || death === '..' || death === '.' || death === '') {
+            if (!birth || birth === '....') return '';
+            return ` (${birth})`;
+        }
+        return ` (${raw})`;
+    }
+    function formatSpouseLifeDisplay(life) {
+        if (!life) return '';
+        const raw = life.trim();
+        if (!raw) return '';
+        const parts = raw.split('-');
+        if (parts.length === 1) {
+            const b = parts[0].trim();
+            if (!b || b === '....') return '';
+            return ` (${b})`;
+        }
+        const birth = parts[0].trim();
+        const death = parts.slice(1).join('-').trim();
+        if (!death || death === '....' || death === '...' || death === '..' || death === '') {
+            if (!birth || birth === '....') return '';
+            return ` (${birth})`;
+        }
+        return ` (${raw})`;
+    }
     function buildSpouseText(d) {
         if (!nodeHasSpouseLine(d)) return '';
-        let sLife = d.data.spouse_life ? ` (${d.data.spouse_life})` : '';
+        let sLife = formatSpouseLifeDisplay(d.data.spouse_life || '');
         let flowerStr = d.data.spouseDeceased ? '\uD83C\uDF39 ' : '';
         return `${flowerStr}${d.data.spouse}${sLife}`;
     }
@@ -2163,13 +2199,14 @@
             .style('fill', '#475569')
             .text(d => d.data.life || '');
 
-        // ========== NAMA UNTUK NODE LAINNYA - KHUSUS GEN1: NAMA PALING BESAR HITAM ==========
+                // ========== NAMA UNTUK NODE LAINNYA - RATA KIRI + AUTO CENTER VERTIKAL + TAHUN BERSIH ==========
         nodeEnter.filter(d => d.data.name !== 'MUBANAN BIN H. AHMAD TAMYIZ')
             .append('text')
             .attr('class', 'name-life')
-            .attr('x', d => d.data.type === 'wife' ? cardDims(d).w / 2 : TEXT_PAD_X)
+            .attr('x', TEXT_PAD_X)
             .attr('y', d => {
-                if (d.data.type === 'gen1') return -12;
+                // gen1 akan di-auto-center nanti, beri nilai awal
+                if (d.data.type === 'gen1') return -14;
                 const order = d.data.partnerOrder;
                 const hasExtra = d.data.extraName ? true : false;
                 const hasAddress = d.data.address ? true : false;
@@ -2178,15 +2215,14 @@
                 if (hasExtra || hasAddress) return -6 - offset/2;
                 return hasSpouseLine(d) ? -6 : 2;
             })
-            .attr('text-anchor', d => d.data.type === 'wife' ? 'middle' : 'start')
+            .attr('text-anchor', 'start')
             .attr('dominant-baseline', 'middle')
             .style('text-transform', 'uppercase')
             .style('font-weight', d => d.data.type === 'gen1' ? '900' : '700')
             .style('font-size', d => d.data.type === 'gen1' ? '17px' : '14px')
             .style('fill', d => d.data.type === 'gen1' ? '#000000' : '#0f172a')
             .text(d => {
-                if (d.data.type === 'gen1') return d.data.name;
-                let lifeStr = d.data.life ? ` (${d.data.life})` : '';
+                const lifeStr = formatLifeDisplay(d.data.life || '');
                 return `${d.data.name}${lifeStr}`;
             })
             .each(function(d) {
@@ -2199,13 +2235,13 @@
                 }
             });
 
-        // ========== EXTRA NAME UNTUK SEMUA NODE - KHUSUS GEN1: PALING KECIL DI BAWAH HITAM ==========
+        // ========== EXTRA NAME - RATA KIRI + AUTO CENTER VERTIKAL + GEN1 PALING KECIL HITAM ==========
         nodeEnter.append('text')
             .attr('class', 'extra-name')
             .attr('x', TEXT_PAD_X)
             .attr('y', d => {
                 if (d.data.type === 'gen1' && d.data.extraName) {
-                    return 28 + spouseWrapExtraHeight(d);
+                    return 24 + spouseWrapExtraHeight(d);
                 }
                 if (d.data.extraName && d.data.name !== 'MUBANAN BIN H. AHMAD TAMYIZ') {
                     const hasAddress = d.data.address ? true : false;
@@ -2215,6 +2251,7 @@
                 return 0;
             })
             .attr('text-anchor', 'start')
+            .attr('dominant-baseline', 'middle')
             .style('text-transform', 'uppercase')
             .style('font-weight', d => d.data.type === 'gen1' ? '800' : '700')
             .style('font-size', d => d.data.type === 'gen1' ? '8.5px' : '13px')
@@ -2235,7 +2272,7 @@
                 }
             });
 
-        // ========== ADDRESS UNTUK SEMUA NODE ==========
+// ========== ADDRESS UNTUK SEMUA NODE ==========
         nodeEnter.append('text')
             .attr('class', 'address-info')
             .attr('x', TEXT_PAD_X)
@@ -2254,13 +2291,13 @@
             .style('font-style', 'italic')
             .text(d => d.data.address || '');
 
-        // ========== SPOUSE INFO UNTUK NODE LAINNYA - KHUSUS GEN1: AGAK KECIL DI TENGAH HITAM ==========
+                // ========== SPOUSE INFO - RATA KIRI + AUTO CENTER VERTIKAL + GEN1 HITAM + TAHUN BERSIH ==========
         nodeEnter.filter(d => d.data.name !== 'MUBANAN BIN H. AHMAD TAMYIZ')
             .append('text')
             .attr('class', 'spouse-info')
             .attr('x', TEXT_PAD_X)
             .attr('y', d => {
-                if (d.data.type === 'gen1') return 10;
+                if (d.data.type === 'gen1') return 5;
                 const wifeOrder = d.data.partnerOrder;
                 const hasExtra = d.data.extraName ? true : false;
                 const hasAddress = d.data.address ? true : false;
@@ -2270,6 +2307,7 @@
                 return 14;
             })
             .attr('text-anchor', 'start')
+            .attr('dominant-baseline', 'middle')
             .style('text-transform', 'uppercase')
             .style('font-size', d => d.data.type === 'gen1' ? '11px' : '10px')
             .style('font-weight', d => d.data.type === 'gen1' ? '600' : '500')
@@ -2285,9 +2323,52 @@
                     textEl.append('tspan')
                         .attr('x', TEXT_PAD_X)
                         .attr('y', baseY + idx * SPOUSE_LINE_HEIGHT)
+                        .attr('text-anchor', 'start')
                         .text(line);
                 });
             });
+
+        // ========== AUTO CENTER VERTIKAL KHUSUS GEN1 - RATA KIRI TETAP, TAPI TENGAH ATAS-BAWAH ==========
+        nodeEnter.filter(d => d.data.type === 'gen1').each(function(d) {
+            const g = d3.select(this);
+            const hasExtra = !!d.data.extraName;
+            // hitung jumlah baris pasangan
+            let spouseLines = 0;
+            if (hasSpouseLine(d)) {
+                const w = cardDims(d).w;
+                const maxW = w - TEXT_PAD_X * 2;
+                spouseLines = wrapSpouseLines(d, maxW).length;
+                if (spouseLines === 0) spouseLines = 1;
+            }
+            const nameH = 16;
+            const spouseH = spouseLines * SPOUSE_LINE_HEIGHT;
+            const extraH = hasExtra ? 10 : 0;
+            const gap = 7;
+            let total = nameH;
+            if (spouseLines) total += gap + spouseH;
+            if (hasExtra) total += gap + extraH;
+            // posisi tengah 0, jadi start = -total/2 + nameH/2
+            const startY = -total/2 + nameH/2;
+            // set nama
+            g.select('text.name-life').attr('y', startY);
+            if (spouseLines) {
+                const spouseBase = startY + nameH/2 + gap + SPOUSE_LINE_HEIGHT/2;
+                const spouseEl = g.select('text.spouse-info');
+                spouseEl.attr('y', spouseBase);
+                spouseEl.selectAll('tspan').each(function(_, i) {
+                    d3.select(this).attr('y', spouseBase + i * SPOUSE_LINE_HEIGHT);
+                });
+                if (hasExtra) {
+                    const extraY = spouseBase + spouseH - SPOUSE_LINE_HEIGHT/2 + gap + extraH/2;
+                    g.select('text.extra-name').attr('y', extraY);
+                }
+            } else if (hasExtra) {
+                const extraY = startY + nameH/2 + gap + extraH/2;
+                g.select('text.extra-name').attr('y', extraY);
+            }
+        });
+
+
 
         const nodeUpdate = nodeEnter.merge(node);
 
