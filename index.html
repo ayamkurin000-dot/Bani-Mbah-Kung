@@ -218,6 +218,93 @@
             100% { opacity: 1; transform: translate(-50%, -100%); }
         }
 
+        /* ===== PAN HINT: panduan geser layar 4 arah setelah shape root diketuk ===== */
+        #pan-hint {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            z-index: 600;
+            pointer-events: none;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            transform: translate(-50%, -50%);
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+        #pan-hint.show {
+            opacity: 1;
+        }
+        #pan-hint .pan-hint-badge {
+            width: 78px;
+            height: 78px;
+            border-radius: 50%;
+            background: rgba(15, 23, 42, 0.72);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 8px 22px rgba(0, 0, 0, 0.35);
+            animation: pan-hint-move 2.2s ease-in-out infinite;
+        }
+        #pan-hint .pan-hint-badge svg {
+            width: 42px;
+            height: 42px;
+        }
+        #pan-hint .pan-hint-text {
+            background: #1e293b;
+            color: #ffffff;
+            font-weight: 800;
+            font-size: 0.78rem;
+            padding: 6px 14px;
+            border-radius: 999px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.28);
+            white-space: nowrap;
+        }
+        @keyframes pan-hint-move {
+            0%, 100% { transform: translate(0, 0); }
+            20% { transform: translate(14px, 0); }
+            40% { transform: translate(0, 14px); }
+            60% { transform: translate(-14px, 0); }
+            80% { transform: translate(0, -14px); }
+        }
+
+        /* ===== ZOOM HINT: notifikasi cubit 2 jari untuk zoom in/out ===== */
+        #zoom-hint-toast {
+            position: fixed;
+            top: 90px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-12px);
+            background: #1e293b;
+            color: #ffffff;
+            padding: 10px 20px;
+            border-radius: 999px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            letter-spacing: 0.2px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+            opacity: 0;
+            pointer-events: none;
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            white-space: nowrap;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+        #zoom-hint-toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+        #zoom-hint-toast .zoom-hint-icon {
+            font-size: 1.15rem;
+            animation: zoom-hint-pinch 1.3s ease-in-out infinite;
+        }
+        @keyframes zoom-hint-pinch {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(0.8); }
+        }
+
         /* === MOBILE PERF PATCH === */
         .node .node-shape {
             will-change: transform;
@@ -1047,6 +1134,27 @@
         <div class="hint-hand">👇</div>
     </div>
 
+    <!-- Hint geser layar: muncul setelah shape root diketuk pertama kali, memandu user bahwa layar bisa digeser 4 arah -->
+    <div id="pan-hint">
+        <div class="pan-hint-badge">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="5 9 2 12 5 15"></polyline>
+                <polyline points="9 5 12 2 15 5"></polyline>
+                <polyline points="15 19 12 22 9 19"></polyline>
+                <polyline points="19 9 22 12 19 15"></polyline>
+                <line x1="2" y1="12" x2="22" y2="12"></line>
+                <line x1="12" y1="2" x2="12" y2="22"></line>
+            </svg>
+        </div>
+        <div class="pan-hint-text">Geser layar ke segala arah</div>
+    </div>
+
+    <!-- Toast hint zoom: muncul setelah user menggeser layar / berinteraksi, memandu bahwa layar bisa di-zoom pakai 2 jari -->
+    <div id="zoom-hint-toast">
+        <span class="zoom-hint-icon">🤏</span>
+        <span>Cubit 2 jari untuk zoom in / zoom out</span>
+    </div>
+
     <!-- Foto pasangan di atas shape MUBANAN BIN H. AHMAD TAMYIZ (root) - hanya tampil di tampilan awal, fade out saat shape diketuk -->
     <div id="root-photo-frame" style="position:fixed; z-index:55; pointer-events:none; display:none; opacity:0; transition:opacity 0.6s ease, transform 0.6s ease;">
         <svg viewBox="0 0 220 220" width="190" height="190" style="display:block; filter:drop-shadow(0 4px 10px rgba(0,0,0,0.35));">
@@ -1718,6 +1826,11 @@
         .scaleExtent([0.2, 2])
         .on("zoom", (event) => {
             gContainer.attr("transform", event.transform);
+            // event.sourceEvent hanya terisi kalau perubahan ini berasal dari aksi nyata
+            // user (drag/geser, scroll, atau cubit 2 jari) - bukan animasi transisi otomatis.
+            if (event.sourceEvent) {
+                dismissPanHintIfNeeded();
+            }
         });
 
     svg.call(zoom);
@@ -1829,6 +1942,59 @@
 
     setTimeout(positionRootTapHint, 700);
     window.addEventListener('resize', positionRootTapHint);
+
+    // ============================================================
+    // HINT GESER LAYAR (4 arah) - muncul setelah shape root diketuk pertama kali
+    // Lalu setelah user menggeser (atau berinteraksi apapun dengan kanvas),
+    // hint ini hilang dan digantikan notifikasi cara zoom pakai 2 jari.
+    // ============================================================
+    let panHintEverShown = false;
+    let panHintVisible = false;
+    let panHintTimer = null;
+    let zoomHintTimer = null;
+    let zoomHintEverShown = false;
+
+    function showPanHint() {
+        if (panHintEverShown) return;
+        panHintEverShown = true;
+        const hintEl = document.getElementById('pan-hint');
+        if (!hintEl) return;
+        hintEl.style.display = 'flex';
+        requestAnimationFrame(() => hintEl.classList.add('show'));
+        panHintVisible = true;
+        // Jaga-jaga: kalau user tidak berinteraksi sama sekali, hint otomatis hilang
+        // sendiri setelah beberapa detik supaya tidak mengganggu selamanya.
+        clearTimeout(panHintTimer);
+        panHintTimer = setTimeout(() => {
+            dismissPanHintIfNeeded();
+        }, 6000);
+    }
+
+    function dismissPanHintIfNeeded() {
+        if (!panHintVisible) return;
+        panHintVisible = false;
+        clearTimeout(panHintTimer);
+        const hintEl = document.getElementById('pan-hint');
+        if (hintEl) {
+            hintEl.classList.remove('show');
+            setTimeout(() => { hintEl.style.display = 'none'; }, 500);
+        }
+        showZoomHint();
+    }
+
+    function showZoomHint() {
+        if (zoomHintEverShown) return;
+        zoomHintEverShown = true;
+        const toast = document.getElementById('zoom-hint-toast');
+        if (!toast) return;
+        setTimeout(() => {
+            toast.classList.add('show');
+            clearTimeout(zoomHintTimer);
+            zoomHintTimer = setTimeout(() => {
+                toast.classList.remove('show');
+            }, 4200);
+        }, 350);
+    }
 
     // ============================================================
     // FOTO AWAL DI ATAS SHAPE MUBANAN BIN H. AHMAD TAMYIZ (root) - bingkai lingkaran motif bunga
@@ -1968,10 +2134,21 @@
                 nodeSel.classed('pressed', true);
                 setTimeout(() => nodeSel.classed('pressed', false), 320);
 
+                // Ketuk node apapun (selain drag/scroll) juga dianggap "berinteraksi",
+                // jadi hint geser layar ikut disembunyikan & hint zoom ditampilkan.
+                dismissPanHintIfNeeded();
+
                 const isRootNode = d.data.name === 'MUBANAN BIN H. AHMAD TAMYIZ';
                 const isFirstRootExpand = isRootNode && !!d._children && !d.children && !rootFirstExpandZoomDone;
 
-                if (isRootNode) { hideRootTapHint(); hideRootPhotoFrame(); }
+                if (isRootNode) {
+                    hideRootTapHint();
+                    hideRootPhotoFrame();
+                    // Tampilkan panduan geser layar 4 arah setelah shape root diketuk.
+                    // Delay lebih panjang kalau ini ekspansi pertama supaya muncul setelah
+                    // animasi kamera (zoom-out + geser) selesai.
+                    setTimeout(showPanHint, isFirstRootExpand ? 1300 : 400);
+                }
 
                 if (NO_DATA_NODES.includes(d.data.name)) {
                     showNoDataNotice(nodeSel.node());
