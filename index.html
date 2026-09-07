@@ -1503,7 +1503,12 @@
         "extraName": "BANI MBAH KUNG",
         "children": [
             { "name": "MUTHOLI'AH", "life": "1959 - ....", "spouse": "FATCHUR RO'I", "spouse_life": "1954 - ....", "type": "gen1", "address": "", "extraName": "ANAK KE-1", "children": [
-                { "name": "THOLIB", "life": "", "spouse": "USW", "spouse_life": "", "type": "gen2", "address": "", "extraName": "", "children": [] },
+                { "name": "ABDUL MUTHOLIB", "life": "1977 - ....", "spouse": "USWATUN LATIFA", "spouse_life": "1981 - ....", "type": "gen2", "address": "", "extraName": "", "children": [
+                    { "name": "AQILAH ZAHRA SALSABILA", "life": "2009 - 2012", "spouse": "", "spouse_life": "", "type": "gen3", "address": "", "extraName": "ZAHRA", "deceased": true, "children": [] },
+                    { "name": "INAYAH NURUL AZKIYAH", "life": "2011 - ....", "spouse": "", "spouse_life": "", "type": "gen3", "address": "", "extraName": "INAYAH", "children": [] },
+                    { "name": "MUHAMAD IRSYAD MUNAWIR", "life": "2015 - ....", "spouse": "", "spouse_life": "", "type": "gen3", "address": "", "extraName": "IRSYAD", "children": [] },
+                    { "name": "ABDUR ROZZAQ HANIF", "life": "2018 - ....", "spouse": "", "spouse_life": "", "type": "gen3", "address": "", "extraName": "HANIF", "children": [] }
+                ] },
                 { "name": "FATCHUR ROZI", "life": "1979 - ....", "spouse": "IKE SULISTIOWATI", "spouse_life": "1984 - ....", "type": "gen2", "address": "", "extraName": "", "children": [
                     { "name": "RIFQI BRIAN FADHLULLAH", "life": "2006 - ....", "spouse": "", "spouse_life": "", "type": "gen3", "address": "", "extraName": "", "children": [] },
                     { "name": "MOCHAMMAD ARMADANI TAQIYYUDDIN", "life": "2009 - ....", "spouse": "", "spouse_life": "", "type": "gen3", "address": "", "extraName": "", "children": [] },
@@ -1810,26 +1815,54 @@
     bigFlowerBadge.append('circle')
         .attr('r', 5.5).attr('fill', 'none').attr('stroke', '#eab308').attr('stroke-width', 1);
 
-    // ===== Symbol: badge bunga merah besar untuk node yang sudah alm./almh. (deceased) =====
+    // ===== Symbol: badge bunga MAWAR (rose) untuk node yang sudah alm./almh. (deceased) =====
     const bigFlowerBadgeRed = defs.append('g').attr('id', 'big-flower-badge-red');
+    // lingkaran dasar putih + cincin tepi
     bigFlowerBadgeRed.append('circle')
         .attr('r', 20).attr('fill', '#ffffff').attr('opacity', 0.95);
     bigFlowerBadgeRed.append('circle')
-        .attr('r', 20).attr('fill', 'none').attr('stroke', '#b91c1c').attr('stroke-width', 1.5).attr('opacity', 0.8);
+        .attr('r', 20).attr('fill', 'none').attr('stroke', '#9f1239').attr('stroke-width', 1.5).attr('opacity', 0.8);
+    // tangkai kecil + daun di bagian bawah badge (khas mawar)
+    bigFlowerBadgeRed.append('path')
+        .attr('d', 'M0,4 C0,9 1.5,12 2,15')
+        .attr('stroke', '#15803d').attr('stroke-width', 1.6).attr('fill', 'none')
+        .attr('stroke-linecap', 'round');
+    bigFlowerBadgeRed.append('path')
+        .attr('d', 'M1,9 C4,8 6.5,9.5 7.5,12 C4.5,12.5 2,11.5 1,9 Z')
+        .attr('fill', '#16a34a');
+    // lapisan luar kelopak mawar (5 kelopak besar, warna merah cerah)
     [0, 72, 144, 216, 288].forEach(angle => {
         const rad = angle * Math.PI / 180;
-        const px = 9.5 * Math.cos(rad);
-        const py = 9.5 * Math.sin(rad);
-        bigFlowerBadgeRed.append('ellipse')
-            .attr('cx', px).attr('cy', py)
-            .attr('rx', 7.5).attr('ry', 5.5)
-            .attr('transform', `rotate(${angle + 90}, ${px}, ${py})`)
-            .attr('fill', angle % 144 === 0 ? '#b91c1c' : '#dc2626');
+        const px = 10.5 * Math.cos(rad);
+        const py = 10.5 * Math.sin(rad);
+        bigFlowerBadgeRed.append('path')
+            .attr('d', 'M0,-8 C5,-7 7,-2 5,3 C2,6 -3,6 -5,2 C-7,-3 -4,-7 0,-8 Z')
+            .attr('transform', `translate(${px},${py}) rotate(${angle + 90}) scale(0.95)`)
+            .attr('fill', '#dc2626')
+            .attr('opacity', 0.95);
     });
+    // lapisan tengah kelopak (warna lebih gelap, sedikit lebih kecil, diselang-seling)
+    [36, 108, 180, 252, 324].forEach(angle => {
+        const rad = angle * Math.PI / 180;
+        const px = 6.5 * Math.cos(rad);
+        const py = 6.5 * Math.sin(rad);
+        bigFlowerBadgeRed.append('path')
+            .attr('d', 'M0,-7 C4.5,-6 6,-1.5 4.5,2.5 C2,5 -2.5,5 -4.5,1.5 C-6,-2.5 -3.5,-6 0,-7 Z')
+            .attr('transform', `translate(${px},${py}) rotate(${angle + 90}) scale(0.85)`)
+            .attr('fill', '#b91c1c')
+            .attr('opacity', 0.95);
+    });
+    // kuncup tengah (spiral inti mawar) - lapisan dalam gelap
+    bigFlowerBadgeRed.append('path')
+        .attr('d', 'M0,-4 C2.5,-3.5 3.5,-1.5 2.5,0.5 C1.5,2 -1.5,2 -2.5,0.5 C-3.5,-1.5 -2.5,-3.5 0,-4 Z')
+        .attr('fill', '#7f1d1d');
     bigFlowerBadgeRed.append('circle')
-        .attr('r', 5.5).attr('fill', '#fecaca');
-    bigFlowerBadgeRed.append('circle')
-        .attr('r', 5.5).attr('fill', 'none').attr('stroke', '#b91c1c').attr('stroke-width', 1);
+        .attr('r', 1.6).attr('cy', -0.5).attr('fill', '#450a0a');
+    // sedikit kilau di salah satu kelopak luar agar terlihat mengembang
+    bigFlowerBadgeRed.append('ellipse')
+        .attr('cx', -6).attr('cy', -9).attr('rx', 2).attr('ry', 1)
+        .attr('transform', 'rotate(-30, -6, -9)')
+        .attr('fill', '#fca5a5').attr('opacity', 0.7);
 
 
 
