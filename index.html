@@ -1699,6 +1699,11 @@
     function nodeContentLayout(d) {
         const hasExtra = !!d.data.extraName;
         const hasAddress = !!d.data.address;
+        // Alamat berbagi baris yang sama dengan "extraName" (rata kanan, sejajar
+        // horisontal dengan teks "ANAK KE-..."), jadi TIDAK menambah tinggi baris
+        // sendiri saat extraName ada. Hanya jika TIDAK ada extraName, alamat
+        // mendapat barisnya sendiri (fallback) supaya tetap terlihat.
+        const addressSharesRow = hasAddress && hasExtra;
         let spouseLines = 0;
         if (nodeHasSpouseLine(d)) {
             const w = cardWidthFor(d);
@@ -1708,21 +1713,21 @@
         const nameH = NAME_ROW_H;
         const spouseH = spouseLines ? spouseLines * SPOUSE_LINE_HEIGHT : 0;
         const extraH = hasExtra ? SUB_ROW_H : 0;
-        const addressH = hasAddress ? ADDRESS_ROW_H : 0;
+        const addressH = (hasAddress && !addressSharesRow) ? ADDRESS_ROW_H : 0;
         let total = nameH;
         if (spouseLines) total += ROW_GAP + spouseH;
         if (hasExtra) total += ROW_GAP + extraH;
-        if (hasAddress) total += ROW_GAP + addressH;
+        if (hasAddress && !addressSharesRow) total += ROW_GAP + addressH;
         // Kalau kontennya cuma 1 baris (nama saja, tanpa pasangan/panggilan/alamat),
         // tetap anggap tinggi minimalnya seukuran 2 baris supaya kartu tidak terlihat
         // terlalu kecil/kempes. Baris ke-2 ini hanya "ruang kosong" (bukan teks nyata),
         // dan baris nama akan otomatis tetap berada di tengah (rata atas-bawah).
-        const lineCount = 1 + (spouseLines ? 1 : 0) + (hasExtra ? 1 : 0) + (hasAddress ? 1 : 0);
+        const lineCount = 1 + (spouseLines ? 1 : 0) + (hasExtra ? 1 : 0) + ((hasAddress && !addressSharesRow) ? 1 : 0);
         const onlyName = lineCount < 2;
         if (onlyName) {
             total = nameH + ROW_GAP + SUB_ROW_H;
         }
-        return { hasExtra, hasAddress, spouseLines, nameH, spouseH, extraH, addressH, total, onlyName };
+        return { hasExtra, hasAddress, addressSharesRow, spouseLines, nameH, spouseH, extraH, addressH, total, onlyName };
     }
 
     function nodeHasSpouseLine(d) {
@@ -2694,9 +2699,16 @@
 // ========== ADDRESS UNTUK SEMUA NODE ==========
         nodeEnter.append('text')
             .attr('class', 'address-info')
-            .attr('x', TEXT_PAD_X)
+            .attr('x', d => {
+                const layout = nodeContentLayout(d);
+                if (layout.addressSharesRow) {
+                    const { w } = cardDims(d);
+                    return w - TEXT_PAD_X;
+                }
+                return TEXT_PAD_X;
+            })
             .attr('y', 0) // nilai awal - dirapikan oleh blok "AUTO CENTER VERTIKAL UNTUK SEMUA NODE"
-            .attr('text-anchor', 'start')
+            .attr('text-anchor', d => nodeContentLayout(d).addressSharesRow ? 'end' : 'start')
             .attr('dominant-baseline', 'middle')
             .style('font-weight', '600')
             .style('font-size', d => d.data.type === 'gen1' ? '7px' : '8px')
@@ -2741,7 +2753,7 @@
         nodeEnter.filter(d => d.data.name !== 'MUBANAN BIN H. AHMAD TAMYIZ').each(function(d) {
             const g = d3.select(this);
             const layout = nodeContentLayout(d);
-            const { hasExtra, hasAddress, spouseLines, nameH, spouseH, extraH, addressH, total, onlyName } = layout;
+            const { hasExtra, hasAddress, addressSharesRow, spouseLines, nameH, spouseH, extraH, addressH, total, onlyName } = layout;
             const gap = ROW_GAP;
             if (onlyName) {
                 // Cuma 1 baris nyata (nama saja) - taruh persis di tengah kartu (y=0),
@@ -2767,8 +2779,12 @@
                 const extraY = cursor + gap + extraH / 2;
                 g.select('text.extra-name').attr('y', extraY);
                 cursor = extraY + extraH / 2;
+                if (addressSharesRow) {
+                    // Alamat sejajar horisontal dengan "ANAK KE-...", rata di sisi kanan kartu.
+                    g.select('text.address-info').attr('y', extraY);
+                }
             }
-            if (hasAddress) {
+            if (hasAddress && !addressSharesRow) {
                 const addressY = cursor + gap + addressH / 2;
                 g.select('text.address-info').attr('y', addressY);
                 cursor = addressY + addressH / 2;
