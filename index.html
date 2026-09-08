@@ -1673,8 +1673,57 @@
         return _measureCtx.measureText(text).width;
     }
     const SPOUSE_FONT = '500 13px "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
-    const SPOUSE_LINE_HEIGHT = 15; // jarak antar baris tambahan nama pasangan
+    const SPOUSE_LINE_HEIGHT = 14; // jarak antar baris tambahan nama pasangan (dirapatkan)
     const CARD_TEXT_PAD_X = 14;    // harus sama dengan TEXT_PAD_X di fungsi update()
+
+    // ===== Konstanta ukuran baris & jarak antar baris - DIRAPATKAN supaya kartu
+    // otomatis mengecil/membesar mengikuti jumlah baris konten yang benar-benar ada =====
+    const NAME_ROW_H = 16;     // tinggi baris nama utama
+    const SUB_ROW_H = 12;      // tinggi baris panggilan (extra-name)
+    const ADDRESS_ROW_H = 11;  // tinggi baris alamat
+    const ROW_GAP = 3;         // jarak antar kelompok baris (dirapatkan dari 7 -> 3)
+    const CARD_PAD_V = 12;     // padding atas+bawah total kartu normal (rata atas-bawah)
+    const WIFE_PAD_V = 10;     // padding atas+bawah total kartu isteri/suami
+    const MIN_CARD_H = 34;     // tinggi minimum kartu normal (1 baris)
+    const MIN_WIFE_CARD_H = 28; // tinggi minimum kartu isteri/suami
+
+    function cardWidthFor(d) {
+        if (d.data.name === 'MUBANAN BIN H. AHMAD TAMYIZ') return founderCardWidth;
+        if (d.data.type === 'wife') return wifeCardWidth;
+        return cardWidth;
+    }
+
+    // Hitung total tinggi konten (nama + pasangan + panggilan + alamat) berdasarkan
+    // baris yang BENAR-BENAR ADA saja, supaya kartu 2 baris tidak dipaksa setinggi
+    // kartu 4 baris, dan sebaliknya - selalu rapat & pas mengikuti isinya.
+    function nodeContentLayout(d) {
+        const hasExtra = !!d.data.extraName;
+        const hasAddress = !!d.data.address;
+        let spouseLines = 0;
+        if (nodeHasSpouseLine(d)) {
+            const w = cardWidthFor(d);
+            const maxWidth = w - CARD_TEXT_PAD_X * 2;
+            spouseLines = wrapSpouseLines(d, maxWidth).length || 1;
+        }
+        const nameH = NAME_ROW_H;
+        const spouseH = spouseLines ? spouseLines * SPOUSE_LINE_HEIGHT : 0;
+        const extraH = hasExtra ? SUB_ROW_H : 0;
+        const addressH = hasAddress ? ADDRESS_ROW_H : 0;
+        let total = nameH;
+        if (spouseLines) total += ROW_GAP + spouseH;
+        if (hasExtra) total += ROW_GAP + extraH;
+        if (hasAddress) total += ROW_GAP + addressH;
+        // Kalau kontennya cuma 1 baris (nama saja, tanpa pasangan/panggilan/alamat),
+        // tetap anggap tinggi minimalnya seukuran 2 baris supaya kartu tidak terlihat
+        // terlalu kecil/kempes. Baris ke-2 ini hanya "ruang kosong" (bukan teks nyata),
+        // dan baris nama akan otomatis tetap berada di tengah (rata atas-bawah).
+        const lineCount = 1 + (spouseLines ? 1 : 0) + (hasExtra ? 1 : 0) + (hasAddress ? 1 : 0);
+        const onlyName = lineCount < 2;
+        if (onlyName) {
+            total = nameH + ROW_GAP + SUB_ROW_H;
+        }
+        return { hasExtra, hasAddress, spouseLines, nameH, spouseH, extraH, addressH, total, onlyName };
+    }
 
     function nodeHasSpouseLine(d) {
         if (!d.data.spouse) return false;
@@ -1762,15 +1811,16 @@
     }
 
     function cardDims(d) {
-        let w = cardWidth;
-        let h = cardHeight + (d.data.extraName ? extraNameHeight : 0) + (d.data.address ? extraNameHeight : 0) + spouseWrapExtraHeight(d);
         if (d.data.name === 'MUBANAN BIN H. AHMAD TAMYIZ') {
-            w = founderCardWidth;
-            h = founderCardHeight;
-        } else if (d.data.type === 'wife') {
-            w = wifeCardWidth;
-            h = wifeCardHeight + (d.data.extraName ? extraNameHeight : 0) + (d.data.address ? extraNameHeight : 0) + spouseWrapExtraHeight(d);
+            return { w: founderCardWidth, h: founderCardHeight };
         }
+        const w = cardWidthFor(d);
+        const layout = nodeContentLayout(d);
+        const isWife = d.data.type === 'wife';
+        const padV = isWife ? WIFE_PAD_V : CARD_PAD_V;
+        const minH = isWife ? MIN_WIFE_CARD_H : MIN_CARD_H;
+        let h = layout.total + padV;
+        if (h < minH) h = minH;
         return { w, h };
     }
 
@@ -2590,15 +2640,9 @@
             .attr('class', 'name-life')
             .attr('x', TEXT_PAD_X)
             .attr('y', d => {
-                // gen1 akan di-auto-center nanti, beri nilai awal
-                if (d.data.type === 'gen1') return -14;
-                const order = d.data.partnerOrder;
-                const hasExtra = d.data.extraName ? true : false;
-                const hasAddress = d.data.address ? true : false;
-                const offset = (hasExtra ? extraNameHeight : 0) + (hasAddress ? extraNameHeight : 0);
-                if (order) return hasExtra || hasAddress ? -6 - offset/2 : 0;
-                if (hasExtra || hasAddress) return -6 - offset/2;
-                return hasSpouseLine(d) ? -6 : 2;
+                // Nilai awal saja - posisi final dihitung & dirapatkan oleh blok
+                // "AUTO CENTER VERTIKAL UNTUK SEMUA NODE" di bawah, sesuai jumlah baris nyata.
+                return 0;
             })
             .attr('text-anchor', 'start')
             .attr('dominant-baseline', 'middle')
@@ -2624,17 +2668,7 @@
         nodeEnter.append('text')
             .attr('class', 'extra-name')
             .attr('x', TEXT_PAD_X)
-            .attr('y', d => {
-                if (d.data.type === 'gen1' && d.data.extraName) {
-                    return 24 + spouseWrapExtraHeight(d);
-                }
-                if (d.data.extraName && d.data.name !== 'MUBANAN BIN H. AHMAD TAMYIZ') {
-                    const hasAddress = d.data.address ? true : false;
-                    const baseY = 2;
-                    return baseY + 16 + (hasAddress ? 0 : 0) + spouseWrapExtraHeight(d);
-                }
-                return 0;
-            })
+            .attr('y', 0) // nilai awal - dirapikan oleh blok "AUTO CENTER VERTIKAL UNTUK SEMUA NODE"
             .attr('text-anchor', 'start')
             .attr('dominant-baseline', 'middle')
             .style('text-transform', 'uppercase')
@@ -2661,15 +2695,9 @@
         nodeEnter.append('text')
             .attr('class', 'address-info')
             .attr('x', TEXT_PAD_X)
-            .attr('y', d => {
-                if (d.data.address && d.data.name !== 'MUBANAN BIN H. AHMAD TAMYIZ') {
-                    const hasExtra = d.data.extraName ? true : false;
-                    const baseY = 16;
-                    return baseY + (hasExtra ? extraNameHeight : 0) + spouseWrapExtraHeight(d);
-                }
-                return 0;
-            })
+            .attr('y', 0) // nilai awal - dirapikan oleh blok "AUTO CENTER VERTIKAL UNTUK SEMUA NODE"
             .attr('text-anchor', 'start')
+            .attr('dominant-baseline', 'middle')
             .style('font-weight', '400')
             .style('font-size', '9px')
             .style('fill', '#64748b')
@@ -2681,16 +2709,7 @@
             .append('text')
             .attr('class', 'spouse-info')
             .attr('x', TEXT_PAD_X)
-            .attr('y', d => {
-                if (d.data.type === 'gen1') return 5;
-                const wifeOrder = d.data.partnerOrder;
-                const hasExtra = d.data.extraName ? true : false;
-                const hasAddress = d.data.address ? true : false;
-                const offset = (hasExtra ? extraNameHeight : 0) + (hasAddress ? extraNameHeight : 0);
-                if (wifeOrder) return hasExtra || hasAddress ? 24 - offset/2 : 24;
-                if (hasExtra || hasAddress) return 14 - offset/2;
-                return 14;
-            })
+            .attr('y', 0) // nilai awal - dirapikan oleh blok "AUTO CENTER VERTIKAL UNTUK SEMUA NODE"
             .attr('text-anchor', 'start')
             .attr('dominant-baseline', 'middle')
             .style('text-transform', 'uppercase')
@@ -2713,43 +2732,46 @@
                 });
             });
 
-        // ========== AUTO CENTER VERTIKAL KHUSUS GEN1 - RATA KIRI TETAP, TAPI TENGAH ATAS-BAWAH ==========
-        nodeEnter.filter(d => d.data.type === 'gen1').each(function(d) {
+        // ========== AUTO CENTER VERTIKAL UNTUK SEMUA NODE - RATA KIRI TETAP, TAPI RATA ATAS-BAWAH ==========
+        // Dipakai untuk SEMUA tipe kartu (root/wife/gen1..genN) supaya baris dirapatkan dan
+        // kartu yang isinya cuma 2 baris (mis. nama + panggilan) tidak ikut-ikutan setinggi
+        // kartu yang isinya 4 baris (nama + pasangan + panggilan + alamat). Jumlah baris nyata
+        // pada tiap kartu menentukan tinggi kartu (lihat cardDims/nodeContentLayout), dan blok
+        // ini memusatkan teks itu secara vertikal di dalam kartu tsb (margin atas = margin bawah).
+        nodeEnter.filter(d => d.data.name !== 'MUBANAN BIN H. AHMAD TAMYIZ').each(function(d) {
             const g = d3.select(this);
-            const hasExtra = !!d.data.extraName;
-            // hitung jumlah baris pasangan
-            let spouseLines = 0;
-            if (hasSpouseLine(d)) {
-                const w = cardDims(d).w;
-                const maxW = w - TEXT_PAD_X * 2;
-                spouseLines = wrapSpouseLines(d, maxW).length;
-                if (spouseLines === 0) spouseLines = 1;
+            const layout = nodeContentLayout(d);
+            const { hasExtra, hasAddress, spouseLines, nameH, spouseH, extraH, addressH, total, onlyName } = layout;
+            const gap = ROW_GAP;
+            if (onlyName) {
+                // Cuma 1 baris nyata (nama saja) - taruh persis di tengah kartu (y=0),
+                // meskipun kartu "dianggap" setinggi 2 baris supaya tidak kempes.
+                g.select('text.name-life').attr('y', 0);
+                return;
             }
-            const nameH = 16;
-            const spouseH = spouseLines * SPOUSE_LINE_HEIGHT;
-            const extraH = hasExtra ? 10 : 0;
-            const gap = 7;
-            let total = nameH;
-            if (spouseLines) total += gap + spouseH;
-            if (hasExtra) total += gap + extraH;
             // posisi tengah 0, jadi start = -total/2 + nameH/2
-            const startY = -total/2 + nameH/2;
-            // set nama
+            const startY = -total / 2 + nameH / 2;
             g.select('text.name-life').attr('y', startY);
+            let cursor = startY + nameH / 2; // tepi bawah baris sebelumnya
+
             if (spouseLines) {
-                const spouseBase = startY + nameH/2 + gap + SPOUSE_LINE_HEIGHT/2;
+                const spouseBase = cursor + gap + SPOUSE_LINE_HEIGHT / 2;
                 const spouseEl = g.select('text.spouse-info');
                 spouseEl.attr('y', spouseBase);
                 spouseEl.selectAll('tspan').each(function(_, i) {
                     d3.select(this).attr('y', spouseBase + i * SPOUSE_LINE_HEIGHT);
                 });
-                if (hasExtra) {
-                    const extraY = spouseBase + spouseH - SPOUSE_LINE_HEIGHT/2 + gap + extraH/2;
-                    g.select('text.extra-name').attr('y', extraY);
-                }
-            } else if (hasExtra) {
-                const extraY = startY + nameH/2 + gap + extraH/2;
+                cursor = spouseBase + spouseH - SPOUSE_LINE_HEIGHT / 2;
+            }
+            if (hasExtra) {
+                const extraY = cursor + gap + extraH / 2;
                 g.select('text.extra-name').attr('y', extraY);
+                cursor = extraY + extraH / 2;
+            }
+            if (hasAddress) {
+                const addressY = cursor + gap + addressH / 2;
+                g.select('text.address-info').attr('y', addressY);
+                cursor = addressY + addressH / 2;
             }
         });
 
