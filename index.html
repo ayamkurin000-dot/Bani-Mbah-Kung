@@ -1510,7 +1510,7 @@
         "type": "root",
         "extraName": "BANI MBAH KUNG",
         "children": [
-            { "name": "MUTHOLI'AH", "life": "1959 - ....", "spouse": "FATCHUR RO'I", "spouse_life": "1954 - ....", "type": "gen1", "address": "", "extraName": "ANAK KE-1", "children": [
+            { "name": "MUTHOLI'AH", "life": "1959 - ....", "spouse": "FATCHUR RO'I", "spouse_life": "1954 - ....", "type": "gen1", "address": "Denanyar, Jombang", "extraName": "ANAK KE-1", "children": [
                 { "name": "ABDUL MUTHOLIB", "life": "1977 - ....", "spouse": "USWATUN LATIFA", "spouse_life": "1981 - ....", "type": "gen2", "address": "", "extraName": "", "children": [
                     { "name": "AQILAH ZAHRA SALSABILA", "life": "2009 - 2012", "spouse": "", "spouse_life": "", "type": "gen3", "address": "", "extraName": "ZAHRA", "deceased": true, "children": [] },
                     { "name": "INAYAH NURUL AZKIYAH", "life": "2011 - ....", "spouse": "", "spouse_life": "", "type": "gen3", "address": "", "extraName": "INAYAH", "children": [] },
@@ -1544,7 +1544,7 @@
                 { "name": "KAMILA WARDATUL HUMAIRO'", "life": "2002 - ....", "spouse": "SYAIFUL ANWAR MUSLIM BIN SUGIMIN-RUKIYAH", "spouse_life": "", "type": "gen2", "address": "", "extraName": "", "children": [] },
                 { "name": "NAJMA NURUS SHOFIA", "life": "2009 - ....", "spouse": "", "spouse_life": "", "type": "gen2", "address": "", "extraName": "", "children": [] }
             ] },
-            { "name": "NUR AZIZAH", "life": "1969 - ....", "spouse": "MASTUR", "spouse_life": "1967 - ....", "type": "gen1", "address": "", "extraName": "ANAK KE-4", "children": [
+            { "name": "NUR AZIZAH", "life": "1969 - ....", "spouse": "MASTUR", "spouse_life": "1967 - ....", "type": "gen1", "address": "Guntung, Kateman Riau", "extraName": "ANAK KE-4", "children": [
                 { "name": "NURMASLIKAH", "life": "1992 - ....", "spouse": "KUSMARAN", "spouse_life": "", "type": "gen2", "address": "", "extraName": "", "children": [
                     { "name": "HIFZA NUR MAFAZA", "life": "2021 - ....", "spouse": "", "spouse_life": "", "type": "gen3", "address": "", "extraName": "", "children": [] },
                     { "name": "HAFA NUR AIZA", "life": "2026 - ....", "spouse": "", "spouse_life": "", "type": "gen3", "address": "", "extraName": "", "children": [] }
@@ -1558,7 +1558,7 @@
                 { "name": "DARMADIKA REGA SAHPUTRA", "life": "2008 - ....", "spouse": "", "spouse_life": "", "type": "gen2", "address": "", "extraName": "", "children": [] },
                 { "name": "FATEH RENNO HAGSAPUTRA", "life": "2019 - ....", "spouse": "", "spouse_life": "", "type": "gen2", "address": "", "extraName": "", "children": [] }
             ] },
-            { "name": "SITI KHUSNIAH", "life": "1978 - ....", "spouse": "IMAM JUREMI", "spouse_life": "1975 - ....", "type": "gen1", "address": "", "extraName": "ANAK KE-7", "children": [
+            { "name": "SITI KHUSNIAH", "life": "1978 - ....", "spouse": "IMAM JUREMI", "spouse_life": "1975 - ....", "type": "gen1", "address": "Belitang Sumatera Selatan", "extraName": "ANAK KE-7", "children": [
                 { "name": "AHMAD NGIDUL RIJALI", "life": "2000 - ....", "spouse": "NORMA DWI LESTARI", "spouse_life": "2000 - ....", "type": "gen2", "address": "", "extraName": "", "children": [] },
                 { "name": "ALFI MAGFIRAH", "life": "2002 - ....", "spouse": "MUHAMMAD NUR ARAFI", "spouse_life": "2003 - ....", "type": "gen2", "address": "", "extraName": "", "children": [
                     { "name": "MUHAMMAD AZZAM NAUFAL", "life": "2025 - ....", "spouse": "", "spouse_life": "", "type": "gen3", "address": "", "extraName": "", "children": [] }
@@ -2698,10 +2698,10 @@
             .attr('y', 0) // nilai awal - dirapikan oleh blok "AUTO CENTER VERTIKAL UNTUK SEMUA NODE"
             .attr('text-anchor', 'start')
             .attr('dominant-baseline', 'middle')
-            .style('font-weight', '400')
-            .style('font-size', '9px')
-            .style('fill', '#64748b')
-            .style('font-style', 'italic')
+            .style('font-weight', '600')
+            .style('font-size', d => d.data.type === 'gen1' ? '7px' : '8px')
+            .style('fill', '#000000')
+            .style('font-style', 'normal')
             .text(d => d.data.address || '');
 
                 // ========== SPOUSE INFO - RATA KIRI + AUTO CENTER VERTIKAL + GEN1 HITAM + TAHUN BERSIH ==========
