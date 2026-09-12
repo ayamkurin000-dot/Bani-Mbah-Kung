@@ -472,6 +472,25 @@
             #cursor-fx { display: none !important; }
         }
 
+        /* ===== SHAPE GLOSSY REALISTIC (style baru) ===== */
+        .node .node-shape-real {
+            will-change: transform;
+            transition: transform 0.15s ease, filter 0.15s ease;
+        }
+        .node:hover .node-shape-real {
+            transform: scale(1.03);
+            filter: drop-shadow(0 8px 18px rgba(15,23,42,0.32)) brightness(1.05);
+        }
+        @media (max-width: 640px) {
+            .node .node-shape-real {
+                filter: none !important;
+                transition: transform 0.12s ease !important;
+            }
+            .node:hover .node-shape-real {
+                filter: none !important;
+            }
+        }
+
         #cursor-fx {
             position: fixed;
             top: 0;
@@ -1664,6 +1683,49 @@
         return bars;
     }
 
+    // ====== REALISTIC GLOSSY BATTERY (style baru) - warna ikut file asli ======
+    function drawRealisticBattery(g, w, h, type){
+        const r = Math.min(22, Math.round(h*0.42));
+        const nubBaseW = 8;
+        const nubBaseH = h*0.68;
+        const nubW = 18;
+        const nubH = h*0.48;
+
+        // shadow halus
+        g.append('rect')
+            .attr('x', 1.5).attr('y', -h/2+2)
+            .attr('width', w).attr('height', h).attr('rx', r)
+            .attr('fill', '#000').attr('opacity', 0.09);
+
+        // body utama glossy - gradasi full (warna sesuai type/generasi)
+        g.append('rect')
+            .attr('class', 'real-body')
+            .attr('x', 0).attr('y', -h/2).attr('width', w).attr('height', h).attr('rx', r)
+            .attr('fill', `url(#grad-real-${type})`)
+            .attr('stroke', '#1e293b').attr('stroke-width', 0.9).attr('stroke-opacity', 0.18);
+
+        // highlight atas saja
+        g.append('rect')
+            .attr('x', r*0.6).attr('y', -h/2+2.5)
+            .attr('width', w - r*1.2).attr('height', h*0.36).attr('rx', r*0.5)
+            .attr('fill', `url(#gloss-${type})`).attr('pointer-events','none');
+
+        // metal base
+        g.append('rect')
+            .attr('x', w).attr('y', -nubBaseH/2)
+            .attr('width', nubBaseW).attr('height', nubBaseH).attr('rx', 2.2)
+            .attr('fill','url(#grad-metal-base)').attr('stroke','#64748b').attr('stroke-width',0.6);
+
+        // nub terminal
+        const nubG = g.append('g').attr('transform',`translate(${w+nubBaseW},0)`);
+        nubG.append('rect')
+            .attr('x',0).attr('y',-nubH/2).attr('width',nubW).attr('height',nubH).attr('rx',5.5)
+            .attr('fill','url(#grad-metal-nub)').attr('stroke','#334155').attr('stroke-width',0.7);
+        nubG.append('rect')
+            .attr('x',2.5).attr('y',-nubH/2+2.5).attr('width',nubW-5).attr('height',nubH*0.38).attr('rx',2.5)
+            .attr('fill','#ffffff').attr('opacity',0.58).attr('pointer-events','none');
+    }
+
     // ===== Utilitas: ukur lebar teks & bungkus nama pasangan yang kepanjangan ke baris baru =====
     // (dipakai supaya nama pasangan yang panjang turun ke bawah, bukan memperlebar kotak)
     const _measureCanvas = document.createElement('canvas');
@@ -2065,6 +2127,71 @@
         lg.append('stop').attr('offset', '100%').attr('stop-color', g.c2);
     });
 
+    // ====== GRADIENT GLOSSY UNTUK SHAPE REALISTIC BARU - WARNA TETAP IKUT FILE ASLI ======
+    // Warna dasar diambil persis dari warna solid tiap generasi di file ini:
+    // gen1 hijau (#bbf7d0), gen2 pink (#f9a8d4), gen3 kuning (#fef08a),
+    // gen4 ungu (#e9d5ff, cadangan), wife/root pink (#f9a8d4).
+    function buildGlossyStops(baseHex) {
+        const base = d3.color(baseHex);
+        return {
+            light: base.brighter(1.6).formatHex(),
+            mid: base.brighter(0.6).formatHex(),
+            mid2: baseHex,
+            dark: base.darker(1.1).formatHex()
+        };
+    }
+    const GEN_REAL_BASE = {
+        gen1: '#bbf7d0', // hijau muda - sama seperti file asli
+        gen2: '#f9a8d4', // pink - sama seperti file asli
+        gen3: '#fef08a', // kuning muda - sama seperti file asli
+        gen4: '#e9d5ff', // ungu muda - sama seperti file asli (cadangan)
+        wife: '#f9a8d4'  // pink - sama seperti file asli
+    };
+    Object.entries(GEN_REAL_BASE).forEach(([type, baseHex]) => {
+        const col = buildGlossyStops(baseHex);
+        const lg = defs.append('linearGradient').attr('id', 'grad-real-' + type)
+            .attr('x1', '0%').attr('y1', '0%').attr('x2', '0%').attr('y2', '100%');
+        lg.append('stop').attr('offset', '0%').attr('stop-color', col.light);
+        lg.append('stop').attr('offset', '22%').attr('stop-color', col.mid);
+        lg.append('stop').attr('offset', '58%').attr('stop-color', col.mid2);
+        lg.append('stop').attr('offset', '88%').attr('stop-color', col.dark);
+        lg.append('stop').attr('offset', '100%').attr('stop-color', d3.color(col.dark).darker(0.5).formatHex());
+
+        const gloss = defs.append('linearGradient').attr('id', 'gloss-' + type)
+            .attr('x1', '0%').attr('y1', '0%').attr('x2', '0%').attr('y2', '100%');
+        gloss.append('stop').attr('offset', '0%').attr('stop-color', '#ffffff').attr('stop-opacity', 0.88);
+        gloss.append('stop').attr('offset', '32%').attr('stop-color', '#ffffff').attr('stop-opacity', 0.28);
+        gloss.append('stop').attr('offset', '68%').attr('stop-color', '#ffffff').attr('stop-opacity', 0);
+    });
+
+    // ROOT/FOUNDER KHUSUS - gradasi hijau-putih-merah, sama persis seperti warna love asli file ini
+    const rootRealGrad = defs.append('linearGradient')
+        .attr('id', 'grad-real-root')
+        .attr('x1', '0%').attr('y1', '0%')
+        .attr('x2', '100%').attr('y2', '0%');
+    [
+        { off: '0%', c: '#16a34a' },
+        { off: '50%', c: '#ffffff' },
+        { off: '100%', c: '#dc2626' }
+    ].forEach(s => rootRealGrad.append('stop').attr('offset', s.off).attr('stop-color', s.c));
+    const rootRealGloss = defs.append('linearGradient').attr('id', 'gloss-root')
+        .attr('x1', '0%').attr('y1', '0%').attr('x2', '0%').attr('y2', '100%');
+    rootRealGloss.append('stop').attr('offset', '0%').attr('stop-color', '#ffffff').attr('stop-opacity', 0.85);
+    rootRealGloss.append('stop').attr('offset', '28%').attr('stop-color', '#ffffff').attr('stop-opacity', 0.32);
+    rootRealGloss.append('stop').attr('offset', '65%').attr('stop-color', '#ffffff').attr('stop-opacity', 0);
+
+    // metal base (nub) - abu-abu netral, sama seperti style baru
+    const metalBaseReal = defs.append('linearGradient').attr('id', 'grad-metal-base')
+        .attr('x1', '0%').attr('y1', '0%').attr('x2', '100%').attr('y2', '0%');
+    [{off:'0%',c:'#475569'},{off:'20%',c:'#94a3b8'},{off:'45%',c:'#e2e8f0'},{off:'70%',c:'#94a3b8'},{off:'100%',c:'#334155'}]
+        .forEach(s => metalBaseReal.append('stop').attr('offset', s.off).attr('stop-color', s.c));
+
+    // metal nub - abu-abu netral, sama seperti style baru
+    const metalNubReal = defs.append('linearGradient').attr('id', 'grad-metal-nub')
+        .attr('x1', '0%').attr('y1', '0%').attr('x2', '100%').attr('y2', '0%');
+    [{off:'0%',c:'#1e293b'},{off:'18%',c:'#64748b'},{off:'42%',c:'#f1f5f9'},{off:'68%',c:'#94a3b8'},{off:'100%',c:'#0f172a'}]
+        .forEach(s => metalNubReal.append('stop').attr('offset', s.off).attr('stop-color', s.c));
+
     const gContainer = svg.append("g");
 
         const zoom = d3.zoom()
@@ -2173,7 +2300,7 @@
     function positionRootTapHint() {
         const hintEl = document.getElementById('root-tap-hint');
         if (!hintEl || hintEl.dataset.dismissed === '1') return;
-        const founderShape = document.querySelector('.node-founder .node-shape');
+        const founderShape = document.querySelector('.node-founder .node-shape, .node-founder .node-shape-real');
         if (!founderShape) return;
         const rect = founderShape.getBoundingClientRect();
         hintEl.style.left = (rect.left + rect.width / 2) + 'px';
@@ -2253,7 +2380,7 @@
     function positionRootPhotoFrame() {
         const frameEl = document.getElementById('root-photo-frame');
         if (!frameEl || frameEl.dataset.dismissed === '1') return;
-        const founderShape = document.querySelector('.node-founder .node-shape');
+        const founderShape = document.querySelector('.node-founder .node-shape, .node-founder .node-shape-real');
         if (!founderShape) return;
         const rect = founderShape.getBoundingClientRect();
         // Ditempatkan di tengah, menumpuk di atas shape MUBANAN BIN H. AHMAD TAMYIZ (sebagian menutupi tepi atas shape)
@@ -2422,70 +2549,16 @@
                 }
             });
 
-        // Shape node - SEMUA NODE (termasuk founder) pakai model shape yang sama seperti "anak"
-        nodeEnter.append('path')
-            .attr('class', 'node-shape')
-            .attr('d', d => {
-                const { w, h } = cardDims(d);
-                return batteryPath(w, h);
-            });
-
-        
-        
-
-
-        // Bar indikator baterai (aksen warna per generasi) - SKIP untuk founder LOVE
-        nodeEnter.filter(d => d.data.name !== 'MUBANAN BIN H. AHMAD TAMYIZ').append('g')
-            .attr('class', 'battery-bars')
+        // Shape node - SEMUA NODE (termasuk founder) pakai model glossy realistic (style baru),
+        // warna tetap mengikuti warna asli tiap generasi di file ini.
+        nodeEnter.append('g')
+            .attr('class', 'node-shape-real')
             .each(function(d) {
                 const { w, h } = cardDims(d);
-                const tubeTypes = ['root', 'wife', 'gen1', 'gen2', 'gen3', 'gen4', 'gen5'];
-                const isTube = tubeTypes.includes(d.data.type);
-                const forceCount = isTube ? 1 : undefined;
-                const pad = isTube ? { x: 4, y: 4 } : undefined;
-                const shapeR = Math.min(14, h / 2, w / 2);
-                const barRx = isTube ? Math.max(shapeR - 4, 0) : 4;
-                const bars = batteryBars(w, h, forceCount, pad);
-                const g = d3.select(this);
-                g.selectAll('.battery-bar')
-                    .data(bars)
-                    .enter()
-                    .append('rect')
-                    .attr('class', 'battery-bar')
-                    .attr('x', b => b.x)
-                    .attr('y', b => b.y)
-                    .attr('width', b => b.w)
-                    .attr('height', b => b.h)
-                    .attr('rx', barRx);
-                // Overlay garis diagonal putih di atas tiap bar (motif seperti indikator baterai)
-                g.selectAll('.battery-bar-stripe')
-                    .data(bars)
-                    .enter()
-                    .append('rect')
-                    .attr('class', 'battery-bar-stripe')
-                    .attr('x', b => b.x)
-                    .attr('y', b => b.y)
-                    .attr('width', b => b.w)
-                    .attr('height', b => b.h)
-                    .attr('rx', barRx)
-                    .attr('fill', 'url(#diag-stripes)')
-                    .attr('pointer-events', 'none');
-                // Overlay kilap kaca vertikal khusus root (warna dasarnya pelangi horizontal,
-                // overlay ini memberi kesan terang di atas - gelap di bawah seperti pipa 3D)
-                if (d.data.type === 'root') {
-                    g.selectAll('.battery-bar-gloss')
-                        .data(bars)
-                        .enter()
-                        .append('rect')
-                        .attr('class', 'battery-bar-gloss')
-                        .attr('x', b => b.x)
-                        .attr('y', b => b.y)
-                        .attr('width', b => b.w)
-                        .attr('height', b => b.h)
-                        .attr('rx', barRx)
-                        .attr('fill', 'url(#grad-glass-gloss)')
-                        .attr('pointer-events', 'none');
-                }
+                let type = d.data.type;
+                if (d.data.name === 'MUBANAN BIN H. AHMAD TAMYIZ' || type === 'root') type = 'root';
+                else if (!['gen1', 'gen2', 'gen3', 'gen4', 'wife', 'root'].includes(type)) type = 'gen3';
+                drawRealisticBattery(d3.select(this), w, h, type);
             });
 
         
