@@ -4153,51 +4153,47 @@
     })();
     </script>
 
-<!-- WIDGET REKAP KETURUNAN GEN1 - PUTIH HIJAU PREMIUM - MUBANAN -->
+<!-- WIDGET REKAP KETURUNAN GEN1 - STYLE ISBADAR (HIJAU SOFT + PUTIH + COKLAT MUDA) - MUBANAN -->
 <style>
 #rekapGen1Fab{position:fixed;right:16px;bottom:16px;z-index:9999;font-family:'Segoe UI',sans-serif}
-#rekapGen1Btn{width:56px;height:56px;border-radius:18px;background:#ffffff;color:#065f46;border:1.5px solid #a7f3d0;box-shadow:0 10px 30px rgba(16,185,129,0.18), 0 2px 8px rgba(0,0,0,0.06);font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.25s ease}
-#rekapGen1Btn:hover{transform:translateY(-2px);box-shadow:0 14px 36px rgba(16,185,129,0.26);background:#ecfdf5}
-#rekapGen1Panel{position:fixed;right:16px;bottom:80px;width:92vw;max-width:400px;max-height:75vh;background:#ffffff;border-radius:20px;box-shadow:0 24px 64px rgba(6,95,70,0.14), 0 4px 16px rgba(0,0,0,0.06);border:1px solid #d1fae5;overflow:hidden;display:none;flex-direction:column;z-index:9999}
-#rekapGen1Panel.open{display:flex;animation:rekapFadeIn 0.25s ease}
-@keyframes rekapFadeIn{from{opacity:0;transform:translateY(8px) scale(0.98)}to{opacity:1;transform:translateY(0) scale(1)}}
-#rekapGen1Header{background:#ffffff;padding:14px 16px;border-bottom:1px solid #ecfdf5;display:flex;justify-content:space-between;align-items:center;gap:12px}
+#rekapGen1Btn{width:56px;height:56px;border-radius:16px;background:linear-gradient(135deg,#0f766e,#115e59);color:#fff;border:none;box-shadow:0 8px 24px rgba(0,0,0,.25);font-size:24px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+#rekapGen1Panel{position:fixed;right:16px;bottom:80px;width:92vw;max-width:400px;max-height:75vh;background:#fefcf6;border-radius:18px;box-shadow:0 16px 40px rgba(90,70,40,0.22), 0 4px 12px rgba(0,0,0,0.08);border:1.5px solid #d8c9a8;overflow:hidden;display:none;flex-direction:column;z-index:9999}
+#rekapGen1Panel.open{display:flex}
+#rekapGen1Header{background:linear-gradient(135deg,#e8f5e9 0%, #dcedc8 45%, #f3e2c8 100%);padding:12px 14px;border-bottom:1.5px solid #c5d9b2;display:flex;justify-content:space-between;align-items:center;gap:8px}
 #rekapGen1Header>div{min-width:0;flex:1;overflow:hidden}
-#rekapGen1Header h4{font-size:11.5px;font-weight:800;color:#065f46;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;line-height:1.2;text-transform:uppercase;letter-spacing:0.6px}
-#rekapGen1Header small{font-size:9px;color:#6b7280;display:block;line-height:1.4;white-space:normal;margin-top:2px;letter-spacing:0.2px}
-#rekapGen1Header small b{color:#065f46;font-weight:700}
+#rekapGen1Header h4{font-size:clamp(10px,3.2vw,12.5px);font-weight:800;color:#2e5939;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;line-height:1.2;text-transform:uppercase;letter-spacing:0.3px}
+#rekapGen1Header small{font-size:9.5px;color:#6b7f5e;display:block;line-height:1.3;white-space:normal;font-weight:500}
 #rekapGen1TableWrap{overflow:auto;flex:1;-webkit-overflow-scrolling:touch;background:#ffffff}
-#rekapGen1Table{width:100%;min-width:380px;border-collapse:separate;border-spacing:0;font-size:11px}
-#rekapGen1Table th{position:sticky;top:0;background:#f8faf8;font-size:9px;text-transform:uppercase;letter-spacing:.6px;color:#065f46;padding:9px 3px;text-align:center;z-index:2;white-space:nowrap;font-weight:800;border-bottom:1.5px solid #a7f3d0}
-#rekapGen1Table td{padding:8px 3px;border-bottom:1px solid #f0fdf4;text-align:center;font-size:11px;color:#1f2937;transition:background 0.15s}
-#rekapGen1Table tr:last-child td{border-bottom:none}
-#rekapGen1Table tr:hover td{background:#ecfdf5 !important}
-#rekapGen1Table .rank{font-weight:800;color:#065f46;text-align:center}
-#rekapGen1Table th:nth-child(1), #rekapGen1Table td:nth-child(1){position:sticky;left:0;z-index:4;background:#ecfdf5;min-width:22px;max-width:26px;width:24px;padding:8px 2px;font-size:10px;color:#065f46;border-right:1px solid #d1fae5}
-#rekapGen1Table tr:nth-child(even) td:nth-child(1){background:#d1fae5 !important}
-#rekapGen1Table th:nth-child(2), #rekapGen1Table td:nth-child(2){position:sticky;left:24px;z-index:4;background:#ffffff;min-width:76px;max-width:88px;width:82px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:11px;text-align:left;padding:8px 6px;color:#111827;font-weight:650;border-right:1px solid #e5f3eb;letter-spacing:0.1px}
-#rekapGen1Table tr:nth-child(even) td:nth-child(2){background:#f9fdfb !important}
-#rekapGen1Table th:nth-child(n+3), #rekapGen1Table td:nth-child(n+3){min-width:36px;max-width:46px;width:40px}
-#rekapGen1Table th:nth-child(n+3){background:#ffffff;color:#065f46}
-#rekapGen1Table td:nth-child(n+3){color:#374151;font-weight:600}
-#rekapGen1Table tr:nth-child(even) td:nth-child(n+3){background:#f9fdfb}
-#rekapGen1Table th:last-child, #rekapGen1Table td:last-child{background:#065f46 !important;color:#ffffff !important;font-weight:800;min-width:42px;border-left:1px solid #047857}
-#rekapGen1Footer{padding:10px 14px;background:#f8faf8;font-size:9.5px;color:#4b5563;border-top:1px solid #ecfdf5;line-height:1.4;letter-spacing:0.2px}
-#rekapGen1Footer b{color:#065f46}
-@media(max-width:380px){#rekapGen1Table{min-width:340px}#rekapGen1Table th:nth-child(2), #rekapGen1Table td:nth-child(2){min-width:68px;max-width:78px;width:72px;font-size:10px}#rekapGen1Panel{max-width:96vw;left:2vw;right:2vw}}
-@media(min-width:768px){#rekapGen1Fab{right:24px;bottom:24px}#rekapGen1Panel{right:24px;bottom:88px;max-width:460px;width:440px}#rekapGen1Table{min-width:420px}#rekapGen1Table th:nth-child(2), #rekapGen1Table td:nth-child(2){min-width:110px;max-width:130px;width:120px;font-size:12px}}
+#rekapGen1Table{width:100%;min-width:440px;border-collapse:collapse;font-size:11px}
+#rekapGen1Table th{position:sticky;top:0;background:#e8f5e9;font-size:9px;text-transform:uppercase;letter-spacing:.5px;color:#2e5939;padding:7px 3px;text-align:center;border-bottom:1.5px solid #c5d9b2;z-index:2;white-space:nowrap;font-weight:800}
+#rekapGen1Table td{padding:6px 3px;border-bottom:1px solid #e8dcc3;text-align:center;font-size:11px;color:#3d4a3a}
+#rekapGen1Table tr:nth-child(even){background:#f5f9ef}
+#rekapGen1Table tr:nth-child(odd){background:#ffffff}
+#rekapGen1Table tr:hover{background:#eef6e6 !important}
+#rekapGen1Table .rank{font-weight:800;color:#4a7a4a;text-align:center}
+#rekapGen1Table th:nth-child(1), #rekapGen1Table td:nth-child(1){position:sticky;left:0;z-index:4;background:#f8eeda;min-width:22px;max-width:26px;width:24px;padding:6px 2px;font-size:10px;color:#7a5a32;border-right:1px solid #d8c9a8}
+#rekapGen1Table tr:nth-child(even) td:nth-child(1){background:#f0e6cc !important}
+#rekapGen1Table th:nth-child(2), #rekapGen1Table td:nth-child(2){position:sticky;left:24px;z-index:4;background:#ffffff;min-width:76px;max-width:88px;width:82px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:10.5px;text-align:left;padding:6px 4px;color:#2e3d2a;font-weight:650;border-right:1.5px solid #d8c9a8}
+#rekapGen1Table thead th:nth-child(2){background:#e8f5e9}
+#rekapGen1Table tr:nth-child(even) td:nth-child(2){background:#f5f9ef !important}
+#rekapGen1Table th:nth-child(n+3), #rekapGen1Table td:nth-child(n+3){min-width:36px;max-width:46px;width:40px;padding:6px 2px}
+#rekapGen1Table th:nth-child(n+3){background:#e8f5e9}
+#rekapGen1Table th:nth-child(6), #rekapGen1Table th:nth-child(7){background:#dcedc8}
+#rekapGen1Footer{padding:8px 10px;background:linear-gradient(90deg,#e8f5e9,#f3e2c8);font-size:10px;color:#4a5a3a;border-top:1.5px solid #c5d9b2;line-height:1.3;font-weight:600}
+@media(max-width:380px){#rekapGen1Table{min-width:380px}#rekapGen1Table th:nth-child(2), #rekapGen1Table td:nth-child(2){min-width:68px;max-width:78px;width:72px;font-size:10px}#rekapGen1Panel{max-width:96vw;left:2vw;right:2vw}}
+@media(min-width:768px){#rekapGen1Fab{right:24px;bottom:24px}#rekapGen1Panel{right:24px;bottom:88px;max-width:560px;width:520px}#rekapGen1Table{min-width:480px}#rekapGen1Table th:nth-child(2), #rekapGen1Table td:nth-child(2){min-width:110px;max-width:130px;width:120px;font-size:12px}}
 </style>
 <div id="rekapGen1Fab"><button id="rekapGen1Btn" title="Jumlah Keturunan">👨‍👩‍👧‍👦</button></div>
 <div id="rekapGen1Panel">
-<div id="rekapGen1Header"><div><h4>JUMLAH KETURUNAN DARI MASING-MASING ANAK</h4><small>Selisih karena ada yang <b>belum masuk</b></small></div><button id="rekapGen1Close" style="background:#ffffff;border:1px solid #d1fae5;border-radius:10px;padding:5px 9px;cursor:pointer;flex-shrink:0;color:#065f46;font-weight:800;font-size:12px">✕</button></div>
-<div id="rekapGen1TableWrap"><table id="rekapGen1Table"><thead><tr><th>#</th><th>Nama Anak</th><th>Anak</th><th>Cucu</th><th>Buyut</th><th>Jml</th></tr></thead><tbody id="rekapGen1Body"></tbody></table></div>
+<div id="rekapGen1Header"><div><h4>JUMLAH KETURUNAN DARI MASING-MASING ANAK</h4><small><b>Selisih jumlah</b> bisa saja disebabkan karena ada anggota keluarga yang <b>belum masuk</b></small></div><button id="rekapGen1Close" style="background:#fff;border:1px solid #d8c9a8;border-radius:8px;padding:4px 8px;cursor:pointer;flex-shrink:0;color:#2e5939;font-weight:800">✕</button></div>
+<div id="rekapGen1TableWrap"><table id="rekapGen1Table"><thead><tr><th>#</th><th>NAMA ANAK</th><th>ANAK</th><th>CUCU</th><th>BUYUT</th><th>CANGGAH</th><th>WARENG</th></tr></thead><tbody id="rekapGen1Body"></tbody></table></div>
 <div id="rekapGen1Footer">Memuat...</div>
 </div>
 <script>
 (function(){
 function hitungRekap(data){
-const gen1=data.children||[];let rows=gen1.map(c=>{const gen2=c.children||[];const jmlAnak=gen2.length;let jmlCucu=0,jmlBuyut=0;gen2.forEach(g2=>{const g3=g2.children||[];jmlCucu+=g3.length;g3.forEach(g3n=>{jmlBuyut+=(g3n.children||[]).length;});});return{nama:c.name,anak:jmlAnak,cucu:jmlCucu,buyut:jmlBuyut,total:jmlAnak+jmlCucu+jmlBuyut};});
-/* Urutan asli silsilah - premium, tidak ranking */
+const gen1=data.children||[];let rows=gen1.map(c=>{const gen2=c.children||[];const jmlAnak=gen2.length;let jmlCucu=0,jmlBuyut=0,jmlCanggah=0,jmlWareng=0;gen2.forEach(g2=>{const g3=g2.children||[];jmlCucu+=g3.length;g3.forEach(g3n=>{const g4=g3n.children||[];jmlBuyut+=g4.length;g4.forEach(g4n=>{const g5=g4n.children||[];jmlCanggah+=g5.length;g5.forEach(g5n=>{const g6=g5n.children||[];jmlWareng+=g6.length;});});});});return{nama:c.name,anak:jmlAnak,cucu:jmlCucu,buyut:jmlBuyut,canggah:jmlCanggah,wareng:jmlWareng};});
+/* Urutan asli silsilah - sama seperti ISBADAR */
 return rows;
 }
 function hitungRoot(data){
@@ -4208,14 +4204,14 @@ try{
 if(typeof treeData==='undefined')return;
 const rows=hitungRekap(treeData);
 const tbody=document.getElementById('rekapGen1Body');
-tbody.innerHTML=rows.map((r,i)=>`<tr><td class="rank">${i+1}</td><td title="${r.nama}"><b>${r.nama}</b></td><td>${r.anak}</td><td>${r.cucu}</td><td>${r.buyut}</td><td>${r.total}</td></tr>`).join('');
-const root=hitungRoot(treeData);let parts=[];if(root.anak>0)parts.push(root.anak+' Anak');if(root.cucu>0)parts.push(root.cucu+' Cucu');if(root.buyut>0)parts.push(root.buyut+' Buyut');if(root.canggah>0)parts.push(root.canggah+' Canggah');if(root.wareng>0)parts.push(root.wareng+' Wareng');if(root.gantungSiwur>0)parts.push(root.gantungSiwur+' Gantung Siwur');const baniName=(treeData.extraName||treeData.name||'Bani').replace(/BANI/i,'Bani');document.getElementById('rekapGen1Footer').innerHTML='<b>'+baniName+'</b> : '+parts.join(' • ');
+tbody.innerHTML=rows.map((r,i)=>`<tr><td class="rank">${i+1}</td><td title="${r.nama}"><b>${r.nama}</b></td><td>${r.anak}</td><td>${r.cucu}</td><td>${r.buyut}</td><td>${r.canggah}</td><td>${r.wareng}</td></tr>`).join('');
+const root=hitungRoot(treeData);let parts=[];if(root.anak>0)parts.push(root.anak+' Anak');if(root.cucu>0)parts.push(root.cucu+' Cucu');if(root.buyut>0)parts.push(root.buyut+' Buyut');if(root.canggah>0)parts.push(root.canggah+' Canggah');if(root.wareng>0)parts.push(root.wareng+' Wareng');if(root.gantungSiwur>0)parts.push(root.gantungSiwur+' Gantung Siwur');const baniName=(treeData.extraName||treeData.name||'Bani').replace(/BANI/i,'Bani');document.getElementById('rekapGen1Footer').innerHTML=baniName+' : '+parts.join(', ');
 }catch(e){console.error(e);}
 }
 const btn=document.getElementById('rekapGen1Btn');const panel=document.getElementById('rekapGen1Panel');const closeBtn=document.getElementById('rekapGen1Close');btn.addEventListener('click',()=>{panel.classList.toggle('open');renderRekap();});closeBtn.addEventListener('click',()=>panel.classList.remove('open'));window.addEventListener('load',()=>setTimeout(renderRekap,800));let lastHash='';setInterval(()=>{try{const h=JSON.stringify((treeData.children||[]).map(c=>(c.children||[]).length));if(h!==lastHash){lastHash=h;renderRekap();}}catch(e){}},1500);
 })();
 </script>
-<!-- END WIDGET PREMIUM -->
+<!-- END WIDGET ISBADAR STYLE -->
 
 
 
