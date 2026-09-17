@@ -620,7 +620,8 @@
         #panel-switcher {
             position: fixed;
             bottom: 10px;
-            right: 165px;
+            left: 14px;
+            right: auto;
             z-index: 10000;
             background: #ffffffee;
             border: 1px solid #e2e8f0;
@@ -1191,6 +1192,14 @@
             stroke-linecap: round;
         }
         @media (max-width: 640px) {
+            #panel-switcher {
+                top: auto !important;
+                bottom: 10px !important;
+                left: 8px !important;
+                right: auto !important;
+                width: auto !important;
+                font-size: 0.52rem !important;
+            }
             #credit-tag {
                 bottom: 10px !important;
                 right: 8px !important;
@@ -1392,7 +1401,7 @@
     <canvas id="cursor-fx"></canvas>
     <div id="credit-tag">DIBUAT OLEH: MANNIXS-21</div>
     <div id="panel-switcher">
-        <button id="tab-generasi" class="active" onclick="switchSide('generasi')">GENERASI</button>
+        <button id="tab-generasi" class="active" onclick="toggleGenerasiLegend()">GENERASI</button>
         <button id="tab-chat" onclick="switchSide('chat')">CHAT BANI<span id="chat-notif-badge" class="chat-notif-badge" style="display:none;">0</span></button>
     </div>
 
@@ -2963,14 +2972,96 @@
         toggleIcon.textContent = el.classList.contains('collapsed') ? '▼' : '▲';
     }
 
+    // ===== TOMBOL GENERASI POJOK KIRI BAWAH - AKTIF: show/hide GENERASI KE ATAS/BAWAH =====
+    function toggleGenerasiLegend() {
+        const gen = document.getElementById('gen-legend');
+        const toggleIcon = document.getElementById('gen-legend-toggle');
+        const tabGen = document.getElementById('tab-generasi');
+        const tabChat = document.getElementById('tab-chat');
+        const chat = document.getElementById('chat-panel');
+
+        // Jika sedang di mode chat, balik dulu ke mode generasi
+        if (currentSide === 'chat') {
+            switchSide('generasi');
+            // Setelah switch, pastikan gen-legend terlihat
+            setTimeout(() => {
+                if (gen) {
+                    gen.style.display = 'block';
+                    gen.classList.remove('chat-hidden', 'collapsed');
+                    if (toggleIcon) toggleIcon.textContent = '▲';
+                    if (tabGen) tabGen.classList.add('active');
+                }
+            }, 100);
+            return;
+        }
+
+        // Mode generasi: toggle show/hide dengan 3 state: expanded -> collapsed -> hidden -> expanded
+        if (!gen) return;
+
+        const isHidden = gen.style.display === 'none' || gen.classList.contains('chat-hidden');
+        const isCollapsed = gen.classList.contains('collapsed');
+
+        if (isHidden) {
+            // Hidden -> Show expanded
+            gen.style.display = 'block';
+            gen.classList.remove('chat-hidden', 'collapsed');
+            if (toggleIcon) toggleIcon.textContent = '▲';
+            if (tabGen) tabGen.classList.add('active');
+            tabGen.textContent = 'GENERASI';
+            localStorage.setItem('bani_mbah_kung_gen_legend_state', 'expanded');
+        } else if (!isCollapsed) {
+            // Expanded -> Collapsed (minimize jadi title saja)
+            gen.classList.add('collapsed');
+            if (toggleIcon) toggleIcon.textContent = '▼';
+            tabGen.textContent = 'GENERASI ▼';
+            localStorage.setItem('bani_mbah_kung_gen_legend_state', 'collapsed');
+        } else {
+            // Collapsed -> Hidden (sembunyikan total)
+            gen.style.display = 'none';
+            gen.classList.add('chat-hidden');
+            gen.classList.remove('collapsed');
+            if (toggleIcon) toggleIcon.textContent = '▲';
+            tabGen.textContent = 'GENERASI ▶';
+            tabGen.classList.remove('active');
+            localStorage.setItem('bani_mbah_kung_gen_legend_state', 'hidden');
+        }
+    }
+
+    function restoreGenLegendState() {
+        const state = localStorage.getItem('bani_mbah_kung_gen_legend_state') || 'expanded';
+        const gen = document.getElementById('gen-legend');
+        const toggleIcon = document.getElementById('gen-legend-toggle');
+        const tabGen = document.getElementById('tab-generasi');
+        if (!gen) return;
+        if (state === 'hidden') {
+            gen.style.display = 'none';
+            gen.classList.add('chat-hidden');
+            if (tabGen) { tabGen.classList.remove('active'); tabGen.textContent = 'GENERASI ▶'; }
+        } else if (state === 'collapsed') {
+            gen.style.display = 'block';
+            gen.classList.remove('chat-hidden');
+            gen.classList.add('collapsed');
+            if (toggleIcon) toggleIcon.textContent = '▼';
+            if (tabGen) { tabGen.classList.add('active'); tabGen.textContent = 'GENERASI ▼'; }
+        } else {
+            gen.style.display = 'block';
+            gen.classList.remove('chat-hidden', 'collapsed');
+            if (toggleIcon) toggleIcon.textContent = '▲';
+            if (tabGen) { tabGen.classList.add('active'); tabGen.textContent = 'GENERASI'; }
+        }
+    }
+
     // ===== Auto-minimize jendela "GENERASI KE ATAS/BAWAH" saat user berinteraksi dengan bagan =====
     // (ketuk/tap, geser/pan, zoom, dsb) supaya bagan silsilah jadi lebih terbuka/lega.
     function minimizeGenLegend() {
         const el = document.getElementById('gen-legend');
         if (!el || el.classList.contains('collapsed')) return;
         const toggleIcon = document.getElementById('gen-legend-toggle');
+        const tabGen = document.getElementById('tab-generasi');
         el.classList.add('collapsed');
         if (toggleIcon) toggleIcon.textContent = '▼';
+        if (tabGen) tabGen.textContent = 'GENERASI ▼';
+        localStorage.setItem('bani_mbah_kung_gen_legend_state', 'collapsed');
     }
 
     let currentSide = localStorage.getItem('bani_mbah_kung_side') || 'generasi';
@@ -3000,7 +3091,7 @@
         }
     }
     // Init panel sesuai localStorage
-    setTimeout(() => switchSide(currentSide), 100);
+    setTimeout(() => { switchSide(currentSide); setTimeout(restoreGenLegendState, 150); }, 100);
 
     // Klik di luar area chat -> otomatis kembali ke tampilan diagram (generasi)
     document.addEventListener('click', function(e) {
