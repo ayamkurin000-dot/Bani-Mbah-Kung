@@ -2246,7 +2246,9 @@
 
     svg.call(zoom);
 
-    const tree = d3.tree().nodeSize([cardHeight + extraNameHeight + 25, cardWidth + 100]);
+    const tree = d3.tree()
+        .nodeSize([cardHeight + extraNameHeight + 4, cardWidth + 100])
+        .separation((a, b) => a.parent === b.parent ? 1 : 1.18);
 
     root = d3.hierarchy(treeData, d => d.children);
     root.x0 = height / 2;
