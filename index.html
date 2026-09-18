@@ -4520,6 +4520,12 @@ function getRealChildren(node){
   });
   return out;
 }
+// Ubah nama UPPERCASE jadi Title Case khusus untuk tampilan di tabel "Jumlah Keturunan"
+// (data asli/nama di kartu bagan tetap tidak diubah, ini hanya untuk teks yang ditampilkan).
+function toTitleCaseName(s){
+  if(!s) return s;
+  return String(s).split(' ').map(w => w.length ? (w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()) : w).join(' ');
+}
 function hitungRekap(effectiveRoot){
   const gen1=getRealChildren(effectiveRoot);
   return gen1.map(c=>{
@@ -4577,7 +4583,8 @@ function renderRekap(){
     tbody.innerHTML=rows.map((r,i)=>{
       const cls=r.hasChild?'clickable':'';
       const tdCls=r.hasChild?'hasChild':'';
-      return `<tr class="${cls}" data-idx="${i}"><td class="rank">${i+1}</td><td class="${tdCls}" title="${r.nama} - ${r.hasChild?'Klik untuk lihat keturunan':'Tidak ada keturunan'}"><b>${r.nama}</b></td><td>${r.anak||0}</td><td>${r.cucu||0}</td><td>${r.buyut||0}</td><td>${r.canggah||0}</td><td>${r.wareng||0}</td></tr>`;
+      const namaTampil=toTitleCaseName(r.nama);
+      return `<tr class="${cls}" data-idx="${i}"><td class="rank">${i+1}</td><td class="${tdCls}" title="${namaTampil} - ${r.hasChild?'Klik untuk lihat keturunan':'Tidak ada keturunan'}"><b>${namaTampil}</b></td><td>${r.anak||0}</td><td>${r.cucu||0}</td><td>${r.buyut||0}</td><td>${r.canggah||0}</td><td>${r.wareng||0}</td></tr>`;
     }).join('');
     tbody.querySelectorAll('tr.clickable').forEach(tr=>{
       tr.addEventListener('click',()=>{
