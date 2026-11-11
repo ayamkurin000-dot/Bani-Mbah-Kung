@@ -499,9 +499,8 @@
         }
 
         /* === MOBILE PERF PATCH === */
-        .node .node-shape {
-            will-change: transform;
-        }
+        /* will-change per-kartu DIHAPUS: di HP tiap kartu jadi layer GPU sendiri
+           (ratusan layer) yang dirender ulang tiap frame saat cubit zoom. */
         @media (max-width: 640px) {
             body { background-attachment: scroll !important; }
             .node .node-shape {
@@ -523,7 +522,6 @@
 
         /* ===== SHAPE GLOSSY REALISTIC (style baru) ===== */
         .node .node-shape-real {
-            will-change: transform;
             transition: transform 0.15s ease, filter 0.15s ease;
         }
         .node:hover .node-shape-real {
@@ -538,6 +536,30 @@
             .node:hover .node-shape-real {
                 filter: none !important;
             }
+        }
+
+        /* ===== LIDAH NOMOR ANAK (di kiri kartu, terselip di bawah kartu) ===== */
+        .lidah-anak { pointer-events: all; }
+        .lidah-anak .lidah-no {
+            font-weight: 800;
+            fill: #0f172a;
+            text-anchor: middle;
+            pointer-events: none;
+            user-select: none;
+        }
+        @media (pointer: coarse) {
+            #chat-panel { backdrop-filter: none !important; }
+        }
+        /* Selama zoom/geser (class dipasang lewat JS) matikan filter & transisi yang
+           dihitung ulang tiap frame. Begitu berhenti, tampilan kembali penuh. */
+        #chart-container svg.sedang-gerak .node,
+        #chart-container svg.sedang-gerak .node-shape-real,
+        #chart-container svg.sedang-gerak .node-farath,
+        #chart-container svg.sedang-gerak .special-flower-badge,
+        #chart-container svg.sedang-gerak .deceased-flower-badge,
+        #chart-container svg.sedang-gerak .search-highlight-overlay {
+            filter: none !important;
+            transition: none !important;
         }
 
         #cursor-fx {
@@ -2324,6 +2346,16 @@
         gloss.append('stop').attr('offset', '68%').attr('stop-color', '#ffffff').attr('stop-opacity', 0);
     });
 
+    // ====== GRADASI LIDAH NOMOR ANAK - satu warna keluarga dengan kartunya, sedikit lebih tua ======
+    Object.entries(GEN_REAL_BASE).forEach(([type, baseHex]) => {
+        const base = d3.color(baseHex);
+        const tg = defs.append('linearGradient').attr('id', 'grad-tab-' + type)
+            .attr('x1', '0%').attr('y1', '0%').attr('x2', '0%').attr('y2', '100%');
+        tg.append('stop').attr('offset', '0%').attr('stop-color', base.darker(0.2).formatHex());
+        tg.append('stop').attr('offset', '55%').attr('stop-color', base.darker(0.55).formatHex());
+        tg.append('stop').attr('offset', '100%').attr('stop-color', base.darker(1.0).formatHex());
+    });
+
     // ROOT/FOUNDER KHUSUS - gradasi hijau-putih-merah, sama persis seperti warna love asli file ini
     const rootRealGrad = defs.append('linearGradient')
         .attr('id', 'grad-real-root')
@@ -2373,6 +2405,20 @@
     svg.on("pointerdown.genlegend", () => { minimizeGenLegend(); });
 
     svg.call(zoom);
+
+    // Mode gerak: pasang class selama zoom/geser (lihat CSS ".sedang-gerak"), lepas 150ms setelah berhenti.
+    (function () {
+        const svgEl = svg.node();
+        let timer = null;
+        zoom.on("start.ringan", () => {
+            clearTimeout(timer);
+            svgEl.classList.add("sedang-gerak");
+        });
+        zoom.on("end.ringan", () => {
+            clearTimeout(timer);
+            timer = setTimeout(() => svgEl.classList.remove("sedang-gerak"), 150);
+        });
+    })();
 
     // ===== Jarak antar shape (vertikal) - DIBUAT KONSISTEN BERDASARKAN TEPI KARTU,
     // bukan jarak pusat-ke-pusat yang tetap. Karena tinggi kartu berbeda-beda
@@ -2735,6 +2781,47 @@
                     rootFirstExpandZoomDone = true;
                     zoomRootFirstExpand(d);
                 }
+            });
+
+        // ========== LIDAH NOMOR ANAK - di kiri kartu, digambar SEBELUM kartu supaya terselip di bawahnya ==========
+        // Nomor = urutan anak di bawah orang tuanya (1, 2, 3, ...). Root & kotak pasangan tidak diberi lidah.
+        nodeEnter.filter(d => d.parent && d.data.type !== 'wife')
+            .append('g')
+            .attr('class', 'lidah-anak')
+            .each(function(d) {
+                const g = d3.select(this);
+                const { h } = cardDims(d);
+                const no = d.parent.data.children.indexOf(d.data) + 1;
+                if (no < 1) return;
+                let type = d.data.type;
+                if (!['gen1', 'gen2', 'gen3', 'gen4', 'wife'].includes(type)) type = 'gen3';
+
+                const TAB_VIS = no >= 10 ? 36 : 30;  // bagian yang tampak di luar kartu
+                const TAB_HIDE = 16;                  // bagian yang masuk ke bawah kartu
+                const th = Math.max(30, Math.min(46, h * 0.64));
+                const rr = 10;
+                const x0 = -TAB_VIS, x1 = TAB_HIDE, y0 = -th / 2, y1 = th / 2;
+                const dPath = `M ${x1},${y0} L ${x0 + rr},${y0} Q ${x0},${y0} ${x0},${y0 + rr} ` +
+                              `L ${x0},${y1 - rr} Q ${x0},${y1} ${x0 + rr},${y1} L ${x1},${y1} Z`;
+
+                // bayangan halus (sama gaya dengan bayangan kartu)
+                g.append('path').attr('d', dPath).attr('transform', 'translate(-1,2)')
+                    .attr('fill', '#000').attr('opacity', 0.12);
+                // badan lidah
+                g.append('path').attr('d', dPath)
+                    .attr('fill', `url(#grad-tab-${type})`)
+                    .attr('stroke', '#1e293b').attr('stroke-width', 0.9).attr('stroke-opacity', 0.3);
+                // kilau atas
+                g.append('rect')
+                    .attr('x', x0 + 2.5).attr('y', y0 + 2.5)
+                    .attr('width', TAB_VIS - 4).attr('height', th * 0.34).attr('rx', 6)
+                    .attr('fill', `url(#gloss-${type})`).attr('pointer-events', 'none');
+                // nomor
+                g.append('text')
+                    .attr('class', 'lidah-no')
+                    .attr('x', x0 + TAB_VIS / 2 - 1).attr('y', 0).attr('dy', '0.35em')
+                    .style('font-size', no >= 10 ? '14px' : '17px')
+                    .text(no);
             });
 
         // Shape node - SEMUA NODE (termasuk founder) pakai model glossy realistic (style baru),
