@@ -1538,6 +1538,64 @@
 .cs-ok { min-height: 16px; font-size: .7rem; color: #15803d; font-weight: 700; margin-top: 6px; text-align: center; }
 </style>
 
+<style id="aliran-css">
+/* ===== Lapisan aliran di atas garis penghubung ===== */
+.link-flow { fill: none; pointer-events: none; visibility: hidden; stroke-linecap: round; stroke-linejoin: round; }
+svg.flow-always .link-flow, .link-flow.flow-run { visibility: visible; }
+svg.flow-off .link-flow { visibility: hidden !important; }
+svg.flow-style-dots  .link-flow { stroke-width: 4.5px; stroke-dasharray: 1 26;  animation: flowDots  calc(0.9s / var(--fspd, 1)) linear infinite; }
+svg.flow-style-dash  .link-flow { stroke-width: 3px;   stroke-dasharray: 12 9;  animation: flowDash  calc(0.7s / var(--fspd, 1)) linear infinite; }
+svg.flow-style-comet .link-flow { stroke-width: 4px;   stroke-dasharray: 70 340; animation: flowComet calc(1.3s / var(--fspd, 1)) linear infinite; }
+svg.flow-style-rainbow .link-flow {
+    stroke-width: 3.5px; stroke-dasharray: 14 10;
+    animation: flowDash calc(0.8s / var(--fspd, 1)) linear infinite, flowRainbow calc(2.4s / var(--fspd, 1)) linear infinite;
+}
+@keyframes flowDots  { to { stroke-dashoffset: -27; } }
+@keyframes flowDash  { to { stroke-dashoffset: -21; } }
+@keyframes flowComet { to { stroke-dashoffset: -410; } }
+@keyframes flowRainbow {
+    0% { stroke: #ef4444; } 17% { stroke: #f97316; } 34% { stroke: #eab308; } 51% { stroke: #22c55e; }
+    68% { stroke: #3b82f6; } 84% { stroke: #a855f7; } 100% { stroke: #ef4444; }
+}
+/* Saat zoom/geser: semua lapisan animasi dimatikan total supaya tetap ringan */
+#chart-container svg.sedang-gerak .link-flow,
+#chart-container svg.sedang-gerak .fx-layer { display: none !important; }
+#chart-container svg.sedang-gerak .node.fx-shake .node-shape-real,
+#chart-container svg.sedang-gerak .node.fx-pop .node-shape-real { animation: none !important; }
+
+/* ===== Efek saat kartu anak "teraliri" ===== */
+.node.fx-shake .node-shape-real { animation: fxShake .55s ease-in-out 1; }
+@keyframes fxShake {
+    0%,100% { transform: translateX(0); } 10% { transform: translateX(-6px); } 22% { transform: translateX(6px); }
+    36% { transform: translateX(-5px); } 50% { transform: translateX(4px); } 64% { transform: translateX(-3px); }
+    80% { transform: translateX(2px); }
+}
+.node.fx-pop .node-shape-real { transform-box: fill-box; transform-origin: center; animation: fxPop .55s cubic-bezier(.3,1.6,.5,1) 1; }
+@keyframes fxPop { 0% { transform: scale(1); } 35% { transform: scale(1.14); } 65% { transform: scale(.96); } 100% { transform: scale(1); } }
+.fx-layer { pointer-events: none; }
+.fx-p { animation: fxFly .6s ease-out forwards; }
+@keyframes fxFly { 0% { opacity: 1; transform: translate(0,0) scale(1); } 100% { opacity: 0; transform: translate(var(--dx), var(--dy)) scale(.3); } }
+.fx-drop { animation: fxDrop .85s cubic-bezier(.2,.6,.4,1) forwards; }
+@keyframes fxDrop {
+    0% { opacity: 1; transform: translate(0,0) scale(1); }
+    45% { opacity: 1; transform: translate(calc(var(--dx) * .6), calc(var(--dy) * .6 - 16px)); }
+    100% { opacity: 0; transform: translate(var(--dx), calc(var(--dy) + 14px)) scale(.4); }
+}
+.fx-bolt { fill: none; stroke: #fef08a; stroke-width: 1.8px; stroke-linecap: round; stroke-linejoin: round; animation: fxBolt .42s steps(1) forwards; }
+@keyframes fxBolt { 0% { opacity: 1; } 25% { opacity: 0; } 45% { opacity: 1; } 65% { opacity: 0; } 100% { opacity: 0; } }
+.fx-ring { fill: none; transform-box: fill-box; transform-origin: center; animation: fxRing .85s ease-out forwards; }
+@keyframes fxRing { 0% { opacity: .9; transform: scale(.15); } 100% { opacity: 0; transform: scale(1); } }
+.fx-flash { fill: #fff; animation: fxFlashRect .7s ease-out forwards; }
+@keyframes fxFlashRect { 0% { opacity: .75; } 100% { opacity: 0; } }
+.fx-halo { fill: none; animation: fxHalo .85s ease-out forwards; }
+@keyframes fxHalo { 0% { opacity: 1; stroke-width: 2px; } 100% { opacity: 0; stroke-width: 14px; } }
+.fx-tint { animation: fxTint 1s linear forwards; }
+@keyframes fxTint {
+    0% { fill: #ef4444; opacity: .36; } 25% { fill: #facc15; } 50% { fill: #22c55e; }
+    75% { fill: #3b82f6; opacity: .3; } 100% { fill: #a855f7; opacity: 0; }
+}
+</style>
+
 </head>
 <body>
     <div id="header">
@@ -1650,6 +1708,53 @@
                         <input type="range" class="cs-range" id="cs-seam" min="30" max="70" step="1" oninput="csSeamInput(this.value)">
                     </div>
                 </div>
+            </div>
+
+            <div class="cs-sec">
+                <div class="cs-label">Garis penghubung &amp; efek kartu anak</div>
+                <div class="cs-seg" id="cs-fmode-seg">
+                    <button data-v="off" onclick="csFlow('mode','off')">ALIRAN MATI</button>
+                    <button data-v="once" onclick="csFlow('mode','once')">SAAT DIBUKA</button>
+                    <button data-v="always" onclick="csFlow('mode','always')">TERUS</button>
+                </div>
+                <div class="cs-color-row" style="margin-top:8px;">
+                    <span class="nm">Gaya aliran</span>
+                    <select id="cs-fstyle" class="cs-select" style="flex:1;width:auto" onchange="csFlow('style',this.value)">
+                        <option value="dots">Titik cahaya</option>
+                        <option value="dash">Garis putus mengalir</option>
+                        <option value="comet">Komet</option>
+                        <option value="rainbow">Pelangi</option>
+                    </select>
+                </div>
+                <div class="cs-color-row">
+                    <span class="nm">Warna aliran</span>
+                    <div class="cs-seg" id="cs-fcol-seg" style="flex:1">
+                        <button data-v="auto" onclick="csFlow('colorMode','auto')">IKUT GENERASI</button>
+                        <button data-v="custom" onclick="csFlow('colorMode','custom')">PILIH</button>
+                    </div>
+                    <input type="color" id="cs-fcolor" oninput="csFlow('color',this.value,true)">
+                </div>
+                <div class="cs-color-row">
+                    <span class="nm">Kecepatan</span>
+                    <input type="range" class="cs-range" id="cs-fspeed" min="0.5" max="2.5" step="0.1" style="flex:1" oninput="csFlow('speed',+this.value,true)">
+                </div>
+                <div class="cs-color-row">
+                    <span class="nm">Efek kartu anak</span>
+                    <select id="cs-ffx" class="cs-select" style="flex:1;width:auto" onchange="csFlow('fx',this.value)">
+                        <option value="none">Tanpa efek</option>
+                        <option value="listrik">⚡ Listrik (getar + percikan + menyala)</option>
+                        <option value="getar">Getar</option>
+                        <option value="percikan">Percikan api</option>
+                        <option value="menyala">Menyala</option>
+                        <option value="warna">Berubah warna</option>
+                        <option value="cipratan">💧 Cipratan air</option>
+                        <option value="riak">Riak gelombang</option>
+                        <option value="pop">Memantul</option>
+                        <option value="acak">🎲 Acak</option>
+                    </select>
+                </div>
+                <div class="cs-row-btn" style="margin-top:4px;"><button class="cs-btn small" style="flex:1" onclick="csTestFlow()">▶ COBA EFEK</button></div>
+                <div class="cs-hint">Aliran &amp; efek otomatis berhenti saat layar dicubit/digeser agar tetap ringan. “Coba efek” butuh minimal satu kartu yang sudah dibuka.</div>
             </div>
 
             <div class="cs-ok" id="cs-ok"></div>
@@ -2098,6 +2203,7 @@
     // =====================================================================
     const CARD_SETTINGS_KEY = 'bk-kartu-tema-v1';
     const CARD_PASSWORD = '21';
+    const FLOW_DEFAULTS = { mode: 'once', style: 'dots', colorMode: 'auto', color: '#f59e0b', speed: 1, fx: 'listrik' };
     const CAPSULE_DEFAULTS = {
         root:  { a: '#16a34a', b: '#dc2626' },
         gen1:  { a: '#4ade80', b: '#ffffff' },
@@ -2123,6 +2229,7 @@
         const s = Object.assign({}, DEFAULT_CARD_SETTINGS, saved || {});
         s.all = Object.assign({}, DEFAULT_CARD_SETTINGS.all, (saved && saved.all) || {});
         s.per = Object.assign({}, DEFAULT_CARD_SETTINGS.per, (saved && saved.per) || {});
+        s.flow = Object.assign({}, FLOW_DEFAULTS, DEFAULT_CARD_SETTINGS.flow || {}, (saved && saved.flow) || {});
         if (s.model !== 'kapsul') s.model = 'baterai';
         s.count = (+s.count === 1) ? 1 : 2;
         s.seam = Math.max(30, Math.min(70, +s.seam || 50));
@@ -2250,6 +2357,7 @@
     }
 
     // pilih model sesuai pengaturan; atur kelas warna teks pada grup kartu
+    document.addEventListener('DOMContentLoaded', () => { try { applyFlowSettings(); } catch (e) {} });
     function drawCard(g, w, h, type) {
         const nodeG = d3.select(g.node().parentNode);
         nodeG.classed('txt-light', false).classed('txt-dark', false).classed('txt-halo', false);
@@ -2319,6 +2427,7 @@
             const lg = n.select('g.lidah-anak');
             if (!lg.empty()) { lg.selectAll('*').remove(); drawLidah(lg, d); }
         });
+        applyFlowSettings();
     }
 
     // ---------------------------------------------------------------------
@@ -2415,6 +2524,7 @@
         csEl('cs-a-grad').checked = !!pal.aTo; csEl('cs-b-grad').checked = !!pal.bTo;
         csEl('cs-aTo').style.display = pal.aTo ? '' : 'none'; csEl('cs-bTo').style.display = pal.bTo ? '' : 'none';
         csEl('cs-aTo').value = pal.aTo || pal.a; csEl('cs-bTo').value = pal.bTo || pal.b;
+        csFlowSync();
         csPreview();
     }
     function csCommit() {
@@ -2459,8 +2569,9 @@
         csRaf = requestAnimationFrame(() => { applyCardTheme(); csPreview(); csRaf = null; });
     }
     function csResetAll() {
-        cardSettings = JSON.parse(JSON.stringify(DEFAULT_CARD_SETTINGS));
         try { localStorage.removeItem(CARD_SETTINGS_KEY); } catch (e) {}
+        cardSettings = loadCardSettings();
+        applyFlowSettings();
         csCommit();
     }
     function csCopyCode() {
@@ -2487,6 +2598,174 @@
         g.append('text').attr('x', w / 2).attr('y', 13).attr('text-anchor', 'middle').attr('dominant-baseline', 'middle')
             .style('font-size', '11px').style('font-weight', '600').style('pointer-events', 'none')
             .style('fill', light ? '#fff' : '#0f172a').text('1990 - ....');
+    }
+
+
+    // =====================================================================
+    // ALIRAN PADA GARIS PENGHUBUNG + EFEK KARTU ANAK
+    // (semua animasi dimatikan otomatis selama zoom/geser -> tetap ringan)
+    // =====================================================================
+    const FLOW_FX_LIST = ['listrik', 'getar', 'percikan', 'menyala', 'warna', 'cipratan', 'riak', 'pop'];
+    const flowTimers = new WeakMap();
+
+    function flowColorFor(link) {
+        const f = cardSettings.flow;
+        if (f.colorMode === 'custom') return f.color;
+        const type = normCardType(link.target);
+        let base;
+        if (cardSettings.model === 'kapsul') base = d3.color(capsulePalette(type).a);
+        else base = d3.color((GEN_REAL_BASE[type]) || '#16a34a');
+        if (!base) base = d3.color('#f59e0b');
+        const hs = d3.hsl(base);
+        hs.s = Math.max(hs.s, 0.75);
+        hs.l = Math.min(0.5, Math.max(0.34, hs.l * 0.62));
+        return hs.formatHex();
+    }
+
+    // pasang class & variabel pada <svg> sesuai pengaturan
+    function applyFlowSettings() {
+        const f = cardSettings.flow, el = svg.node();
+        ['off', 'once', 'always'].forEach(m => el.classList.remove('flow-' + m));
+        el.classList.toggle('flow-always', f.mode === 'always');
+        el.classList.toggle('flow-off', f.mode === 'off');
+        ['dots', 'dash', 'comet', 'rainbow'].forEach(s => el.classList.toggle('flow-style-' + s, f.style === s));
+        el.style.setProperty('--fspd', f.speed);
+        gContainer.selectAll('path.link-flow').style('stroke', d => flowColorFor(d));
+    }
+
+    // dipanggil dari update(): sinkronkan lapisan aliran dengan garis penghubung
+    function syncFlowLinks(links, source, linkDuration) {
+        const sel = gContainer.selectAll('path.link-flow').data(links, d => d.target.id);
+        const enter = sel.enter().insert('path', 'g')
+            .attr('class', 'link-flow')
+            .style('stroke', d => flowColorFor(d))
+            .attr('d', () => { const o = { x: source.x0, y: source.y0 }; return diagonal(o, o); });
+        enter.merge(sel).transition().duration(linkDuration).attr('d', d => diagonal(d.source, d.target));
+        sel.exit().transition().duration(linkDuration)
+            .attr('d', () => { const o = { x: source.x, y: source.y }; return diagonal(o, o); })
+            .remove();
+    }
+
+    // dipanggil saat kartu orang tua dibuka
+    function playFlow(p) {
+        const f = cardSettings.flow;
+        const kids = p.children || [];
+        if (!kids.length) return;
+        if (f.mode === 'once') {
+            const ids = new Set(kids.map(k => k.id));
+            const run = gContainer.selectAll('path.link-flow').filter(l => ids.has(l.target.id)).classed('flow-run', true);
+            clearTimeout(flowTimers.get(p));
+            flowTimers.set(p, setTimeout(() => run.classed('flow-run', false), 4600 / f.speed));
+        }
+        if (f.fx === 'none') return;
+        kids.forEach((k, i) => setTimeout(() => whenIdle(() => arriveFx(k)), duration + 280 + i * 70));
+    }
+
+    // tunda sampai zoom/geser berhenti (maks. ~3 dtk), supaya efek tidak hilang saat kamera bergerak
+    function whenIdle(fn, tries) {
+        tries = tries || 0;
+        if (svg.node().classList.contains('sedang-gerak') && tries < 25) setTimeout(() => whenIdle(fn, tries + 1), 120);
+        else fn();
+    }
+    function fxLayer(n) {
+        n.selectAll('.fx-layer').remove();
+        return n.append('g').attr('class', 'fx-layer');
+    }
+    function fxSparks(L, bolts) {
+        const cols = ['#fde047', '#ffffff', '#fbbf24', '#fef08a'];
+        for (let i = 0; i < 11; i++) {
+            const a = Math.random() * Math.PI * 2, dist = 16 + Math.random() * 24;
+            L.append('circle').attr('class', 'fx-p').attr('r', (1.3 + Math.random() * 1.6).toFixed(1)).attr('fill', cols[i % 4])
+                .style('--dx', (Math.cos(a) * dist).toFixed(1) + 'px').style('--dy', (Math.sin(a) * dist).toFixed(1) + 'px')
+                .style('animation-delay', (Math.random() * 90 | 0) + 'ms');
+        }
+        if (bolts) for (let b = 0; b < 3; b++) {
+            let ang = Math.random() * Math.PI * 2, x = 0, y = 0, dd = 'M0,0';
+            for (let s = 0; s < 4; s++) {
+                ang += (Math.random() - 0.5) * 1.3;
+                const len = 6 + Math.random() * 4;
+                x += Math.cos(ang) * len; y += Math.sin(ang) * len;
+                dd += ` L${x.toFixed(1)},${y.toFixed(1)}`;
+            }
+            L.append('path').attr('class', 'fx-bolt').attr('d', dd).style('animation-delay', (b * 60) + 'ms');
+        }
+    }
+    function fxSplash(L) {
+        for (let i = 0; i < 10; i++) {
+            const a = -Math.PI * (0.1 + Math.random() * 0.8) - Math.PI * 0.1 + (Math.random() - 0.5) * 1.2;
+            const dist = 14 + Math.random() * 22;
+            L.append('circle').attr('class', 'fx-drop').attr('r', (2 + Math.random() * 1.6).toFixed(1))
+                .attr('fill', i % 3 ? '#38bdf8' : '#bae6fd')
+                .style('--dx', (Math.cos(a) * dist - 6).toFixed(1) + 'px').style('--dy', (Math.sin(a) * dist).toFixed(1) + 'px')
+                .style('animation-delay', (Math.random() * 80 | 0) + 'ms');
+        }
+        for (let r = 0; r < 2; r++)
+            L.append('circle').attr('class', 'fx-ring').attr('r', 34).attr('stroke', '#7dd3fc').attr('stroke-width', 2.4)
+                .style('animation-delay', (r * 160) + 'ms');
+    }
+    function fxRings(L, col) {
+        for (let r = 0; r < 3; r++)
+            L.append('circle').attr('class', 'fx-ring').attr('r', 40).attr('stroke', col).attr('stroke-width', 2.6)
+                .style('animation-delay', (r * 170) + 'ms');
+    }
+    function fxFlash(L, w, h, col) {
+        const rr = Math.min(h / 2, cardSettings.model === 'kapsul' ? 38 : 22);
+        L.append('rect').attr('class', 'fx-flash').attr('x', 0).attr('y', -h / 2).attr('width', w).attr('height', h).attr('rx', rr);
+        L.append('rect').attr('class', 'fx-halo').attr('x', 0).attr('y', -h / 2).attr('width', w).attr('height', h).attr('rx', rr).attr('stroke', col);
+    }
+    function fxTint(L, w, h) {
+        const rr = Math.min(h / 2, cardSettings.model === 'kapsul' ? 38 : 22);
+        L.append('rect').attr('class', 'fx-tint').attr('x', 0).attr('y', -h / 2).attr('width', w).attr('height', h).attr('rx', rr);
+    }
+    function fxClass(n, cls) {
+        n.classed(cls, false); void n.node().getBoundingClientRect(); n.classed(cls, true);
+        setTimeout(() => n.classed(cls, false), 750);
+    }
+
+    // efek di kartu anak saat aliran "sampai"
+    function arriveFx(k, forceFx) {
+        const n = gContainer.selectAll('g.node').filter(d => d === k);
+        if (n.empty() || svg.node().classList.contains('sedang-gerak')) return;
+        let fx = forceFx || cardSettings.flow.fx;
+        if (fx === 'none') return;
+        if (fx === 'acak') fx = FLOW_FX_LIST[Math.floor(Math.random() * FLOW_FX_LIST.length)];
+        const { w, h } = cardDims(k);
+        const col = flowColorFor({ target: k });
+        const L = fxLayer(n);
+        if (fx === 'listrik') { fxClass(n, 'fx-shake'); fxFlash(L, w, h, '#fde047'); fxSparks(L, true); }
+        else if (fx === 'getar') fxClass(n, 'fx-shake');
+        else if (fx === 'percikan') fxSparks(L, true);
+        else if (fx === 'menyala') fxFlash(L, w, h, col);
+        else if (fx === 'warna') fxTint(L, w, h);
+        else if (fx === 'cipratan') fxSplash(L);
+        else if (fx === 'riak') fxRings(L, col);
+        else if (fx === 'pop') fxClass(n, 'fx-pop');
+        setTimeout(() => L.remove(), 1300);
+    }
+
+    // ---------- UI panel ----------
+    function csFlowSync() {
+        const f = cardSettings.flow;
+        const mark = (id, v) => csEl(id).querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.v === String(v)));
+        mark('cs-fmode-seg', f.mode); mark('cs-fcol-seg', f.colorMode);
+        csEl('cs-fstyle').value = f.style; csEl('cs-ffx').value = f.fx;
+        csEl('cs-fcolor').value = f.color; csEl('cs-fcolor').style.display = f.colorMode === 'custom' ? '' : 'none';
+        csEl('cs-fspeed').value = f.speed;
+    }
+    function csFlow(key, val, quiet) {
+        cardSettings.flow[key] = val;
+        saveCardSettings();
+        applyFlowSettings();
+        csFlowSync();
+        if (!quiet) { csEl('cs-ok').textContent = 'Tersimpan ✓'; if (key === 'style' || key === 'fx' || key === 'mode') csTestFlow(true); }
+    }
+    function csTestFlow(silent) {
+        let target = null;
+        gContainer.selectAll('g.node').each(d => { if (!target && d.children && d.children.length) target = d; });
+        if (!target) { if (!silent) csEl('cs-ok').textContent = 'Buka dulu satu kartu (ketuk kartu pendiri) untuk mencoba.'; return; }
+        // lepas mode gerak sementara agar efek terlihat meski panel menutupi layar
+        playFlow(target);
+        target.children.forEach((k, i) => setTimeout(() => arriveFx(k), 150 + i * 70));
     }
 
     // ===== Utilitas: ukur lebar teks & bungkus nama pasangan yang kepanjangan ke baris baru =====
@@ -3393,6 +3672,7 @@
                     d._children = null;
                 }
                 update(d);
+                if (d.children) playFlow(d);
 
                 if (isFirstRootExpand) {
                     rootFirstExpandZoomDone = true;
@@ -3770,6 +4050,8 @@
                 return diagonal(o, o);
             })
             .remove();
+
+        syncFlowLinks(links, source, duration);
 
         nodes.forEach(d => {
             d.x0 = d.x;
