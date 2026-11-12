@@ -1646,7 +1646,7 @@ svg.flow-style-rainbow .link-flow {
 
             <div class="cs-sec">
                 <div class="cs-label">Pratinjau</div>
-                <div class="cs-preview"><svg id="cs-preview-svg" width="290" height="90" viewBox="-6 -45 290 90"></svg></div>
+                <div class="cs-preview"><svg id="cs-preview-svg" width="330" height="90" viewBox="-40 -45 330 90"></svg></div>
             </div>
 
             <div class="cs-sec">
@@ -1718,6 +1718,22 @@ svg.flow-style-rainbow .link-flow {
                     <div id="cs-seam-wrap">
                         <div class="cs-label" style="margin-top:6px;">Posisi sambungan: <span id="cs-seam-val">50</span>%</div>
                         <input type="range" class="cs-range" id="cs-seam" min="30" max="70" step="1" oninput="csSeamInput(this.value)">
+                    </div>
+                </div>
+            </div>
+
+            <div class="cs-sec">
+                <div class="cs-label">Lidah kartu (nomor anak)</div>
+                <div class="cs-seg" id="cs-lmode-seg">
+                    <button data-v="card" onclick="csLidah('mode','card')">IKUT KARTU</button>
+                    <button data-v="custom" onclick="csLidah('mode','custom')">PILIH WARNA</button>
+                </div>
+                <div id="cs-lidah-opts">
+                    <div class="cs-color-row" style="margin-top:8px;">
+                        <span class="nm">Warna lidah</span>
+                        <input type="color" id="cs-la" oninput="csLidah('a',this.value,true)">
+                        <label><input type="checkbox" id="cs-lgrad" onchange="csLidah('grad',this.checked)"> gradasi</label>
+                        <input type="color" id="cs-laTo" oninput="csLidah('aTo',this.value,true)" style="display:none">
                     </div>
                 </div>
             </div>
@@ -2239,6 +2255,7 @@ svg.flow-style-rainbow .link-flow {
     // =====================================================================
     const CARD_SETTINGS_KEY = 'bk-kartu-tema-v1';
     const CARD_PASSWORD = '21';
+    const LIDAH_DEFAULTS = { mode: 'custom', a: '#fbbf24', grad: true, aTo: '#d97706' };
     const FLOW_DEFAULTS = { mode: 'once', style: 'dots', colorMode: 'auto', color: '#f59e0b', speed: 1, fx: 'listrik', fxOpen: true, fxTap: false, fxLoop: false, fxGap: 4, seq: true, seqGap: 0.8, fxHit: true };
     const CAPSULE_DEFAULTS = {
         root:  { a: '#16a34a', b: '#dc2626' },
@@ -2268,6 +2285,8 @@ svg.flow-style-rainbow .link-flow {
         s.all = Object.assign({}, DEFAULT_CARD_SETTINGS.all, (saved && saved.all) || {});
         s.per = Object.assign({}, DEFAULT_CARD_SETTINGS.per, (saved && saved.per) || {});
         s.flow = Object.assign({}, FLOW_DEFAULTS, DEFAULT_CARD_SETTINGS.flow || {}, (saved && saved.flow) || {});
+        s.lidah = Object.assign({}, LIDAH_DEFAULTS, DEFAULT_CARD_SETTINGS.lidah || {}, (saved && saved.lidah) || {});
+        if (s.lidah.mode !== 'card') s.lidah.mode = 'custom';
         if (s.model !== 'kapsul') s.model = 'baterai';
         s.count = ([1, 2, 3].indexOf(+s.count) >= 0) ? +s.count : 2;
         s.seam = Math.max(30, Math.min(70, +s.seam || 50));
@@ -2430,9 +2449,24 @@ svg.flow-style-rainbow .link-flow {
         if (no < 1) return;
         let type = d.data.type;
         if (!['gen1', 'gen2', 'gen3', 'gen4', 'wife'].includes(type)) type = 'gen3';
-
+        drawLidahShape(g, h, no, type);
+    }
+    function drawLidahShape(g, h, no, type) {
         let tabFill = `url(#grad-tab-${type})`, glossFill = `url(#gloss-${type})`, numFill = null, glossOp = 1;
-        if (cardSettings.model === 'kapsul') {
+        const L = cardSettings.lidah;
+        if (L && L.mode === 'custom') {
+            // warna lidah dipilih sendiri (polos atau gradasi), tidak mengikuti warna kartu
+            const c1 = d3.color(L.a) || d3.color('#fbbf24');
+            const c2 = L.grad ? (d3.color(L.aTo) || c1) : null;
+            const id = 'lidahc-' + c1.formatHex().slice(1) + (c2 ? '-' + c2.formatHex().slice(1) : '');
+            addDynGrad(id, '0%', '100%', c2
+                ? [{ o: '0%', c: c1.formatHex() }, { o: '100%', c: c2.formatHex() }]
+                : [{ o: '0%', c: c1.brighter(0.35).formatHex() }, { o: '55%', c: c1.formatHex() }, { o: '100%', c: c1.darker(0.45).formatHex() }]);
+            ensureCapsuleStatics();
+            tabFill = `url(#${id})`; glossFill = 'url(#cap-gloss)'; glossOp = 0.55;
+            const lum = c2 ? (hexLum(c1.formatHex()) + hexLum(c2.formatHex())) / 2 : hexLum(c1.formatHex());
+            numFill = lum < 0.3 ? '#ffffff' : '#0f172a';
+        } else if (cardSettings.model === 'kapsul') {
             const base = d3.color(capsulePalette(type).a);
             const id = 'captab-' + base.formatHex().slice(1);
             addDynGrad(id, '0%', '100%', [
@@ -2587,6 +2621,11 @@ svg.flow-style-rainbow .link-flow {
         csEl('cs-a-grad').checked = !!pal.aTo; csEl('cs-b-grad').checked = !!pal.bTo;
         csEl('cs-aTo').style.display = pal.aTo ? '' : 'none'; csEl('cs-bTo').style.display = pal.bTo ? '' : 'none';
         csEl('cs-aTo').value = pal.aTo || pal.a; csEl('cs-bTo').value = pal.bTo || pal.b;
+        const L = s.lidah;
+        mark('cs-lmode-seg', L.mode);
+        csEl('cs-lidah-opts').style.display = L.mode === 'custom' ? '' : 'none';
+        csEl('cs-la').value = L.a; csEl('cs-lgrad').checked = !!L.grad;
+        csEl('cs-laTo').style.display = L.grad ? '' : 'none'; csEl('cs-laTo').value = L.aTo || L.a;
         csFlowSync();
         csPreview();
     }
@@ -2597,6 +2636,14 @@ svg.flow-style-rainbow .link-flow {
         csRaf = requestAnimationFrame(() => { applyCardTheme(); csPreview(); csRaf = null; });
         csEl('cs-ok').textContent = 'Tersimpan ✓';
         clearTimeout(csCommit._t); csCommit._t = setTimeout(() => { const e = csEl('cs-ok'); if (e) e.textContent = ''; }, 1400);
+    }
+    function csLidah(key, val, quiet) {
+        cardSettings.lidah[key] = val;
+        saveCardSettings();
+        if (quiet) {
+            if (csRaf) cancelAnimationFrame(csRaf);
+            csRaf = requestAnimationFrame(() => { applyCardTheme(); csPreview(); csRaf = null; });
+        } else csCommit();
     }
     function csSetModel(v) { cardSettings.model = v; csCommit(); }
     function csSetCount(n) {
@@ -2663,6 +2710,7 @@ svg.flow-style-rainbow .link-flow {
         const w = 240, h = 60;
         const type = cardSettings.same ? 'gen1' : csTarget;
         const g = sv.append('g').attr('class', 'node');
+        drawLidahShape(g.append('g'), h, 1, type);
         const sg = g.append('g').attr('class', 'node-shape-real');
         drawCard(sg, w, h, type);
         const light = g.classed('txt-light');
