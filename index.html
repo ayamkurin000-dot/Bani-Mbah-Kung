@@ -1462,7 +1462,8 @@
 }
 #header .controls .btn:hover { transform: translateY(-1px); box-shadow: 0 4px 8px rgba(0,0,0,.3); }
 #header .controls .btn:active { transform: translateY(0); }
-#card-settings-btn { background: linear-gradient(135deg,#8b5cf6,#6d28d9) !important; }
+#card-settings-btn { background: linear-gradient(135deg,#8b5cf6,#6d28d9) !important; display: inline-flex; align-items: center; justify-content: center; padding: 3px 7px !important; }
+#card-settings-btn svg { display: block; }
 @media (max-width: 640px) {
     #header .controls { gap: 2px; }
     #header .controls .btn { font-size: 0.5rem; padding: 3px 4px; }
@@ -1541,7 +1542,7 @@
 <style id="aliran-css">
 /* ===== Lapisan aliran di atas garis penghubung ===== */
 .link-flow { fill: none; pointer-events: none; visibility: hidden; stroke-linecap: round; stroke-linejoin: round; }
-svg.flow-always .link-flow, .link-flow.flow-run { visibility: visible; }
+svg.flow-always:not(.flow-seq) .link-flow, .link-flow.flow-run { visibility: visible; }
 svg.flow-off .link-flow { visibility: hidden !important; }
 svg.flow-style-dots  .link-flow { stroke-width: 4.5px; stroke-dasharray: 1 26;  animation: flowDots  calc(0.9s / var(--fspd, 1)) linear infinite; }
 svg.flow-style-dash  .link-flow { stroke-width: 3px;   stroke-dasharray: 12 9;  animation: flowDash  calc(0.7s / var(--fspd, 1)) linear infinite; }
@@ -1616,7 +1617,7 @@ svg.flow-style-rainbow .link-flow {
             <button class="btn" onclick="showFeatureDisabledNotice()">BUKA SEMUA</button>
             <button class="btn" onclick="showFeatureDisabledNotice()">TUTUP SEMUA</button>
             <button class="btn" id="lock-expand-btn" onclick="toggleLockExpand()" style="background:#64748b;">🔓 KUNCI: OFF</button>
-            <button class="btn" id="card-settings-btn" onclick="openCardSettings()" title="Pengaturan tema kartu">⚙ PENGATURAN</button>
+            <button class="btn" id="card-settings-btn" onclick="openCardSettings()" title="Tema kartu" aria-label="Tema kartu"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a9 9 0 1 0 0 18c1.3 0 2-.8 2-1.7 0-.5-.2-.9-.5-1.3-.3-.4-.5-.8-.5-1.3 0-1 .8-1.7 1.8-1.7H17a4 4 0 0 0 4-4C21 6.6 17 3 12 3z"/><circle cx="7.5" cy="11" r="1.1" fill="currentColor"/><circle cx="10.5" cy="7.2" r="1.1" fill="currentColor"/><circle cx="15" cy="7.4" r="1.1" fill="currentColor"/></svg></button>
         </div>
     </div>
 
@@ -1662,8 +1663,9 @@ svg.flow-style-rainbow .link-flow {
                     <div class="cs-seg" id="cs-count-seg">
                         <button data-v="1" onclick="csSetCount(1)">1 WARNA</button>
                         <button data-v="2" onclick="csSetCount(2)">2 WARNA</button>
+                        <button data-v="3" onclick="csSetCount(3)">3 WARNA</button>
                     </div>
-                    <div class="cs-hint">1 warna = kapsul polos tanpa sambungan. 2 warna = ada garis sambungan di tengah. Pilih “PER GENERASI” di bawah agar tiap generasi bisa berbeda (mis. Gen 1 = 1 warna, Gen 2 = 2 warna).</div>
+                    <div class="cs-hint">1 warna = kapsul polos tanpa sambungan. 2 warna = ada garis sambungan di tengah. 3 warna = ada dua sambungan (kiri–tengah–kanan, mis. biru–putih–merah). Pilih “PER GENERASI” di bawah agar tiap generasi bisa berbeda (mis. Gen 1 = 1 warna, Gen 2 = 2 warna).</div>
                 </div>
 
                 <div class="cs-sec">
@@ -1697,11 +1699,21 @@ svg.flow-style-rainbow .link-flow {
                         <label><input type="checkbox" id="cs-a-grad" onchange="csGradToggle('a',this.checked)"> gradasi</label>
                         <input type="color" id="cs-aTo" oninput="csColorInput('aTo',this.value)" style="display:none">
                     </div>
+                    <div class="cs-color-row" id="cs-row-m" style="display:none">
+                        <span class="nm">Warna tengah</span>
+                        <input type="color" id="cs-m" oninput="csColorInput('m',this.value)">
+                    </div>
                     <div class="cs-color-row" id="cs-row-b">
                         <span class="nm">Warna 2</span>
                         <input type="color" id="cs-b" oninput="csColorInput('b',this.value)">
                         <label><input type="checkbox" id="cs-b-grad" onchange="csGradToggle('b',this.checked)"> gradasi</label>
                         <input type="color" id="cs-bTo" oninput="csColorInput('bTo',this.value)" style="display:none">
+                    </div>
+                    <div id="cs-seam3-wrap" style="display:none">
+                        <div class="cs-label" style="margin-top:6px;">Sambungan 1: <span id="cs-seamA-val">30</span>%</div>
+                        <input type="range" class="cs-range" id="cs-seamA" min="15" max="45" step="1" oninput="csSeam3Input('seamA',this.value)">
+                        <div class="cs-label" style="margin-top:6px;">Sambungan 2: <span id="cs-seamB-val">62</span>%</div>
+                        <input type="range" class="cs-range" id="cs-seamB" min="50" max="85" step="1" oninput="csSeam3Input('seamB',this.value)">
                     </div>
                     <div id="cs-seam-wrap">
                         <div class="cs-label" style="margin-top:6px;">Posisi sambungan: <span id="cs-seam-val">50</span>%</div>
@@ -1759,13 +1771,26 @@ svg.flow-style-rainbow .link-flow {
                     <label><input type="checkbox" id="cs-fxtap" onchange="csFlow('fxTap',this.checked)"> saat diketuk</label>
                     <label><input type="checkbox" id="cs-fxloop" onchange="csFlow('fxLoop',this.checked)"> terus-menerus</label>
                 </div>
+                <div class="cs-color-row">
+                    <span class="nm">Urutan aliran</span>
+                    <label><input type="checkbox" id="cs-fseq" onchange="csFlow('seq',this.checked)"> bergantian (kartu 1, lalu 2, dst.)</label>
+                </div>
+                <div class="cs-color-row" id="cs-fseqgap-row">
+                    <span class="nm">Giliran tiap kartu</span>
+                    <input type="range" class="cs-range" id="cs-fseqgap" min="0.4" max="2" step="0.1" style="flex:1" oninput="csFlow('seqGap',+this.value,true)">
+                    <span id="cs-fseqgap-val" style="font-size:.7rem;font-weight:700;width:40px;"></span>
+                </div>
+                <div class="cs-color-row">
+                    <span class="nm">Efek kartu</span>
+                    <label><input type="checkbox" id="cs-fxhit" onchange="csFlow('fxHit',this.checked)"> hanya kartu yang terkena aliran</label>
+                </div>
                 <div class="cs-color-row" id="cs-fxgap-row">
                     <span class="nm">Jeda ulang</span>
                     <input type="range" class="cs-range" id="cs-fxgap" min="2" max="12" step="1" style="flex:1" oninput="csFlow('fxGap',+this.value,true)">
                     <span id="cs-fxgap-val" style="font-size:.7rem;font-weight:700;width:34px;"></span>
                 </div>
                 <div class="cs-row-btn" style="margin-top:4px;"><button class="cs-btn small" style="flex:1" onclick="csTestFlow()">▶ COBA EFEK</button></div>
-                <div class="cs-hint">Aliran &amp; efek otomatis berhenti saat layar dicubit/digeser agar tetap ringan. “Coba efek” butuh minimal satu kartu yang sudah dibuka.</div>
+                <div class="cs-hint">Aliran &amp; efek otomatis berhenti saat layar dicubit/digeser agar tetap ringan. Bila “hanya kartu yang terkena aliran” aktif, efek terus-menerus hanya muncul di kartu yang garisnya sedang dialiri. “Coba efek” butuh minimal satu kartu yang sudah dibuka.</div>
             </div>
 
             <div class="cs-ok" id="cs-ok"></div>
@@ -2214,7 +2239,7 @@ svg.flow-style-rainbow .link-flow {
     // =====================================================================
     const CARD_SETTINGS_KEY = 'bk-kartu-tema-v1';
     const CARD_PASSWORD = '21';
-    const FLOW_DEFAULTS = { mode: 'once', style: 'dots', colorMode: 'auto', color: '#f59e0b', speed: 1, fx: 'listrik', fxOpen: true, fxTap: false, fxLoop: false, fxGap: 4 };
+    const FLOW_DEFAULTS = { mode: 'once', style: 'dots', colorMode: 'auto', color: '#f59e0b', speed: 1, fx: 'listrik', fxOpen: true, fxTap: false, fxLoop: false, fxGap: 4, seq: true, seqGap: 0.8, fxHit: true };
     const CAPSULE_DEFAULTS = {
         root:  { a: '#16a34a', b: '#dc2626' },
         gen1:  { a: '#4ade80', b: '#ffffff' },
@@ -2224,14 +2249,16 @@ svg.flow-style-rainbow .link-flow {
         wife:  { a: '#f472b6', b: '#ffffff' }
     };
     // Ubah nilai ini (atau tempel hasil "SALIN KODE") supaya semua pengunjung melihat tema yang sama.
-    const DEFAULT_CARD_SETTINGS = { model: 'baterai', count: 2, same: false, seam: 50, all: { a: '#dc2626', b: '#ffffff' }, per: {} };
+    const DEFAULT_CARD_SETTINGS = { model: 'baterai', count: 2, same: false, seam: 50, seamA: 30, seamB: 62, all: { a: '#dc2626', b: '#ffffff' }, per: {} };
     const CAPSULE_PRESETS = [
         { name: 'Merah',        count: 1, p: { a: '#dc2626' } },
         { name: 'Putih–Biru',   count: 2, p: { a: '#f1f5f9', b: '#2b8fd6' } },
         { name: 'Biru–Jingga',  count: 2, p: { a: '#2563eb', b: '#f472b6', bTo: '#fb923c' } },
         { name: 'Putih–Merah',  count: 2, p: { a: '#f1f5f9', b: '#e03a2f' } },
         { name: 'Hijau',        count: 1, p: { a: '#16a34a' } },
-        { name: 'Ungu–Putih',   count: 2, p: { a: '#7c3aed', b: '#ffffff' } }
+        { name: 'Ungu–Putih',   count: 2, p: { a: '#7c3aed', b: '#ffffff' } },
+        { name: 'Biru–Putih–Merah', count: 3, p: { a: '#2b8fd6', m: '#f1f5f9', b: '#dc2626' } },
+        { name: 'Hijau–Putih–Merah', count: 3, p: { a: '#16a34a', m: '#f8fafc', b: '#dc2626' } }
     ];
 
     function loadCardSettings() {
@@ -2242,8 +2269,10 @@ svg.flow-style-rainbow .link-flow {
         s.per = Object.assign({}, DEFAULT_CARD_SETTINGS.per, (saved && saved.per) || {});
         s.flow = Object.assign({}, FLOW_DEFAULTS, DEFAULT_CARD_SETTINGS.flow || {}, (saved && saved.flow) || {});
         if (s.model !== 'kapsul') s.model = 'baterai';
-        s.count = (+s.count === 1) ? 1 : 2;
+        s.count = ([1, 2, 3].indexOf(+s.count) >= 0) ? +s.count : 2;
         s.seam = Math.max(30, Math.min(70, +s.seam || 50));
+        s.seamA = Math.max(15, Math.min(45, +s.seamA || 30));
+        s.seamB = Math.max(50, Math.min(85, +s.seamB || 62));
         return s;
     }
     let cardSettings = loadCardSettings();
@@ -2253,8 +2282,8 @@ svg.flow-style-rainbow .link-flow {
 
     function capsulePalette(type) {
         const p = cardSettings.same ? cardSettings.all : (cardSettings.per[type] || CAPSULE_DEFAULTS[type] || CAPSULE_DEFAULTS.gen3);
-        const n = (p.n === 1 || p.n === 2) ? p.n : cardSettings.count;
-        return { n: n, a: p.a || '#dc2626', aTo: p.aTo || null, b: p.b || p.a || '#ffffff', bTo: p.bTo || null };
+        const n = (p.n === 1 || p.n === 2 || p.n === 3) ? p.n : cardSettings.count;
+        return { n: n, a: p.a || '#dc2626', aTo: p.aTo || null, m: p.m || '#ffffff', b: p.b || p.a || '#ffffff', bTo: p.bTo || null };
     }
     function normCardType(d) {
         let type = d.data.type;
@@ -2296,7 +2325,6 @@ svg.flow-style-rainbow .link-flow {
     function drawCapsule(g, w, h, type) {
         ensureCapsuleStatics();
         const P = capsulePalette(type);
-        const two = P.n === 2;
         const r = Math.min(h / 2, 38);
         const top = -h / 2, bot = h / 2;
         const full = `M ${r},${top} H ${w - r} A ${r},${r} 0 0 1 ${w - r},${bot} H ${r} A ${r},${r} 0 0 1 ${r},${top} Z`;
@@ -2305,14 +2333,23 @@ svg.flow-style-rainbow .link-flow {
         g.append('rect').attr('x', 2).attr('y', top + 3.5).attr('width', w).attr('height', h).attr('rx', r)
             .attr('fill', '#000').attr('opacity', 0.17);
 
-        let seamX = null;
-        if (!two) {
+        // posisi sambungan: 2 warna = 1 sambungan, 3 warna = 2 sambungan
+        let seams = [];
+        if (P.n === 2) {
+            seams = [Math.max(r, Math.min(w - r, w * cardSettings.seam / 100))];
+        } else if (P.n === 3) {
+            const sA = Math.max(r, Math.min(w - r - 16, w * cardSettings.seamA / 100));
+            const sB = Math.max(sA + 16, Math.min(w - r, w * cardSettings.seamB / 100));
+            seams = [sA, sB];
+        }
+        if (seams.length === 0) {
             g.append('path').attr('d', full).attr('fill', capFill(P.a, P.aTo));
         } else {
-            seamX = Math.max(r, Math.min(w - r, w * cardSettings.seam / 100));
-            g.append('path').attr('d', `M ${seamX},${top} H ${r} A ${r},${r} 0 0 0 ${r},${bot} H ${seamX} Z`)
+            const s0 = seams[0], s1 = seams[seams.length - 1];
+            g.append('path').attr('d', `M ${s0},${top} H ${r} A ${r},${r} 0 0 0 ${r},${bot} H ${s0} Z`)
                 .attr('fill', capFill(P.a, P.aTo));
-            g.append('path').attr('d', `M ${seamX},${top} H ${w - r} A ${r},${r} 0 0 1 ${w - r},${bot} H ${seamX} Z`)
+            if (P.n === 3) g.append('rect').attr('x', s0).attr('y', top).attr('width', s1 - s0).attr('height', h).attr('fill', P.m);
+            g.append('path').attr('d', `M ${s1},${top} H ${w - r} A ${r},${r} 0 0 1 ${w - r},${bot} H ${s1} Z`)
                 .attr('fill', capFill(P.b, P.bTo));
         }
 
@@ -2320,19 +2357,23 @@ svg.flow-style-rainbow .link-flow {
         g.append('path').attr('d', full).attr('fill', 'url(#cap-shade)').attr('pointer-events', 'none');
         g.append('path').attr('d', full).attr('fill', 'url(#cap-endshade)').attr('pointer-events', 'none');
 
-        // sambungan (hanya untuk 2 warna)
-        if (two) {
+        // sambungan (hanya untuk 2 & 3 warna)
+        seams.forEach(seamX => {
             g.append('rect').attr('x', seamX).attr('y', top).attr('width', 7).attr('height', h)
                 .attr('fill', 'url(#cap-seam-shadow)').attr('pointer-events', 'none');
             g.append('rect').attr('x', seamX - 0.9).attr('y', top).attr('width', 1.8).attr('height', h)
                 .attr('fill', '#000').attr('opacity', 0.38).attr('pointer-events', 'none');
             g.append('rect').attr('x', seamX + 0.9).attr('y', top).attr('width', 1).attr('height', h)
                 .attr('fill', '#fff').attr('opacity', 0.5).attr('pointer-events', 'none');
-        }
+        });
 
         // kilau memanjang di atas (terputus di sambungan)
         const gy = top + h * 0.09, gh = h * 0.2;
-        const segs = two ? [[r * 0.55, seamX - 3.5], [seamX + 4.5, w - r * 0.55]] : [[r * 0.55, w - r * 0.55]];
+        const edges = [r * 0.55];
+        seams.forEach(sx => edges.push(sx - 3.5, sx + 4.5));
+        edges.push(w - r * 0.55);
+        const segs = [];
+        for (let q = 0; q < edges.length; q += 2) segs.push([edges[q], edges[q + 1]]);
         segs.forEach(([x0, x1]) => {
             if (x1 - x0 < 6) return;
             g.append('rect').attr('x', x0).attr('y', gy).attr('width', x1 - x0).attr('height', gh).attr('rx', gh / 2)
@@ -2362,7 +2403,8 @@ svg.flow-style-rainbow .link-flow {
         const lums = [];
         const avg2 = (c, t) => t ? (hexLum(c) + hexLum(t)) / 2 : hexLum(c);
         lums.push(avg2(P.a, P.aTo));
-        if (two) lums.push(avg2(P.b, P.bTo));
+        if (P.n === 3) lums.push(hexLum(P.m));
+        if (P.n >= 2) lums.push(avg2(P.b, P.bTo));
         const mean = lums.reduce((s, v) => s + v, 0) / lums.length;
         const mixed = Math.max(...lums) - Math.min(...lums) > 0.4;
         return { light: mean < 0.32 || (mixed && mean < 0.4), halo: mixed };
@@ -2498,6 +2540,7 @@ svg.flow-style-rainbow .link-flow {
             const a = pr.p.a, bb = pr.p.b;
             const sw = document.createElement('i');
             if (pr.count === 1) sw.style.background = a;
+            else if (pr.count === 3) sw.style.background = `linear-gradient(90deg, ${a} 0 33%, ${pr.p.m} 33% 66%, ${bb} 66% 100%)`;
             else if (pr.p.bTo) sw.style.background = `linear-gradient(90deg, ${a} 0 50%, ${bb} 50%, ${pr.p.bTo} 100%)`;
             else sw.style.background = `linear-gradient(90deg, ${a} 0 50%, ${bb} 50% 100%)`;
             b.appendChild(sw); b.appendChild(document.createTextNode(pr.name));
@@ -2509,7 +2552,7 @@ svg.flow-style-rainbow .link-flow {
         const pr = CAPSULE_PRESETS[i];
         cardSettings.model = 'kapsul';
         const pal = csEditPal();
-        ['a', 'aTo', 'b', 'bTo'].forEach(k => delete pal[k]);
+        ['a', 'aTo', 'm', 'b', 'bTo'].forEach(k => delete pal[k]);
         Object.assign(pal, pr.p);
         pal.n = pr.count;
         if (pr.count === 1) pal.b = pr.p.a;
@@ -2520,7 +2563,7 @@ svg.flow-style-rainbow .link-flow {
         const mark = (segId, val) => csEl(segId).querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.v === String(val)));
         mark('cs-model-seg', s.model);
         const base0 = s.same ? s.all : (s.per[csTarget] || CAPSULE_DEFAULTS[csTarget] || {});
-        const curN = (base0.n === 1 || base0.n === 2) ? base0.n : s.count;
+        const curN = (base0.n === 1 || base0.n === 2 || base0.n === 3) ? base0.n : s.count;
         mark('cs-count-seg', curN);
         const GEN_NAMES = { root: 'Pendiri (Mubanan & Siti Abidah)', gen1: 'Generasi 1', gen2: 'Generasi 2', gen3: 'Generasi 3 dst.', gen4: 'Generasi 4', wife: 'Pasangan (isteri/suami ke-2)' };
         csEl('cs-target').querySelectorAll('option').forEach(o => { o.textContent = GEN_NAMES[o.value] + ' — ' + capsulePalette(o.value).n + ' warna'; });
@@ -2528,15 +2571,19 @@ svg.flow-style-rainbow .link-flow {
         csEl('cs-capsule-opts').style.display = s.model === 'kapsul' ? '' : 'none';
         csEl('cs-target-wrap').style.display = s.same ? 'none' : '';
         csEl('cs-target').value = csTarget;
-        const two = curN === 2;
-        csEl('cs-row-b').style.display = two ? '' : 'none';
+        const two = curN === 2, three = curN === 3;
+        csEl('cs-row-b').style.display = (two || three) ? '' : 'none';
+        csEl('cs-row-m').style.display = three ? '' : 'none';
         csEl('cs-seam-wrap').style.display = two ? '' : 'none';
-        csEl('cs-nm-a').textContent = two ? 'Warna kiri' : 'Warna';
+        csEl('cs-seam3-wrap').style.display = three ? '' : 'none';
+        csEl('cs-seamA').value = s.seamA; csEl('cs-seamA-val').textContent = s.seamA;
+        csEl('cs-seamB').value = s.seamB; csEl('cs-seamB-val').textContent = s.seamB;
+        csEl('cs-nm-a').textContent = (two || three) ? 'Warna kiri' : 'Warna';
         csEl('cs-row-b').querySelector('.nm').textContent = 'Warna kanan';
         csEl('cs-seam').value = s.seam; csEl('cs-seam-val').textContent = s.seam;
         const base = s.same ? s.all : (s.per[csTarget] || CAPSULE_DEFAULTS[csTarget]);
         const pal = { a: base.a, aTo: base.aTo || null, b: base.b || base.a, bTo: base.bTo || null };
-        csEl('cs-a').value = pal.a; csEl('cs-b').value = pal.b;
+        csEl('cs-a').value = pal.a; csEl('cs-b').value = pal.b; csEl('cs-m').value = base.m || '#ffffff';
         csEl('cs-a-grad').checked = !!pal.aTo; csEl('cs-b-grad').checked = !!pal.bTo;
         csEl('cs-aTo').style.display = pal.aTo ? '' : 'none'; csEl('cs-bTo').style.display = pal.bTo ? '' : 'none';
         csEl('cs-aTo').value = pal.aTo || pal.a; csEl('cs-bTo').value = pal.bTo || pal.b;
@@ -2556,6 +2603,7 @@ svg.flow-style-rainbow .link-flow {
         const p = csEditPal();
         p.n = n;
         if (n === 1 && p.b == null) p.b = p.a;
+        if (n === 3 && !p.m) p.m = '#ffffff';
         csCommit();
     }
     function csSetSame(v) {
@@ -2567,7 +2615,7 @@ svg.flow-style-rainbow .link-flow {
     function csColorInput(key, val) {
         const pal = csEditPal();
         pal[key] = val;
-        const nn = (pal.n === 1 || pal.n === 2) ? pal.n : cardSettings.count;
+        const nn = (pal.n === 1 || pal.n === 2 || pal.n === 3) ? pal.n : cardSettings.count;
         if (key === 'a' && nn === 1) pal.b = val;
         saveCardSettings();
         if (csRaf) cancelAnimationFrame(csRaf);
@@ -2582,6 +2630,14 @@ svg.flow-style-rainbow .link-flow {
     function csSeamInput(v) {
         cardSettings.seam = Math.max(30, Math.min(70, +v || 50));
         csEl('cs-seam-val').textContent = cardSettings.seam;
+        saveCardSettings();
+        if (csRaf) cancelAnimationFrame(csRaf);
+        csRaf = requestAnimationFrame(() => { applyCardTheme(); csPreview(); csRaf = null; });
+    }
+    function csSeam3Input(key, v) {
+        const lim = key === 'seamA' ? [15, 45, 30] : [50, 85, 62];
+        cardSettings[key] = Math.max(lim[0], Math.min(lim[1], +v || lim[2]));
+        csEl('cs-' + key + '-val').textContent = cardSettings[key];
         saveCardSettings();
         if (csRaf) cancelAnimationFrame(csRaf);
         csRaf = requestAnimationFrame(() => { applyCardTheme(); csPreview(); csRaf = null; });
@@ -2649,7 +2705,70 @@ svg.flow-style-rainbow .link-flow {
         ['dots', 'dash', 'comet', 'rainbow'].forEach(s => el.classList.toggle('flow-style-' + s, f.style === s));
         el.style.setProperty('--fspd', f.speed);
         gContainer.selectAll('path.link-flow').style('stroke', d => flowColorFor(d));
+        applyFlowRelay();
         applyFxLoop();
+    }
+
+    // ---------- aliran BERGANTIAN ----------
+    // Aliran berjalan satu kartu anak dulu (kartu 1), lalu berikutnya (kartu 2, dst).
+    // Efek kartu muncul saat aliran "sampai" di kartu itu, jadi hanya kartu yang terkena aliran yang beranimasi.
+    const flowBusy = new WeakSet();     // kartu induk yang sedang menjalankan urutan buka
+    const FLOW_TRAVEL = 0.6;            // aliran dianggap sampai di kartu pada 60% waktu giliran
+    let flowRelayTimer = null, flowRelayTick = 0, flowRelayOn = false;
+
+    function linkOf(k) { return gContainer.selectAll('path.link-flow').filter(l => l.target === k); }
+    function stillChild(k) { return !!(k.parent && k.parent.children && k.parent.children.indexOf(k) >= 0); }
+    function restartFlowAnim(node) { node.style.animation = 'none'; void node.getBoundingClientRect(); node.style.animation = ''; }
+    function flowSlot() { return Math.max(250, (+cardSettings.flow.seqGap || 0.8) * 1000); }
+    // apakah garis menuju kartu d sedang dialiri?
+    function isFlowing(d) {
+        const f = cardSettings.flow;
+        if (!d.parent || f.mode === 'off') return false;
+        if (f.mode === 'always' && !f.seq) return true;
+        const l = linkOf(d);
+        return !l.empty() && l.classed('flow-run');
+    }
+
+    // mode TERUS + bergantian: tiap kelompok saudara dialiri satu per satu, berputar terus
+    function applyFlowRelay() {
+        clearInterval(flowRelayTimer); flowRelayTimer = null;
+        const f = cardSettings.flow, el = svg.node();
+        const on = f.mode === 'always' && f.seq;
+        el.classList.toggle('flow-seq', on);
+        if (!on) {
+            if (flowRelayOn) gContainer.selectAll('path.link-flow').filter(l => !flowBusy.has(l.source)).classed('flow-run', false);
+            flowRelayOn = false;
+            return;
+        }
+        flowRelayOn = true; flowRelayTick = 0;
+        const slot = flowSlot();
+        const step = () => {
+            if (document.hidden || el.classList.contains('sedang-gerak')) return;
+            const t = flowRelayTick++, cs = cardSettings.flow, started = [];
+            const wantFx = cs.fxLoop && cs.fxHit && cs.fx !== 'none';
+            let fired = 0;
+            gContainer.selectAll('path.link-flow').each(function (d) {
+                if (flowBusy.has(d.source)) return;
+                const ks = d.source.children;
+                const act = !!(ks && ks.length && ks[t % ks.length] === d.target);
+                const s = d3.select(this);
+                if (!act) { if (s.classed('flow-run')) s.classed('flow-run', false); return; }
+                s.classed('flow-run', true);
+                started.push(this);
+                if (wantFx && fired < 3) {
+                    const r = this.getBoundingClientRect();
+                    if (r.right < 0 || r.left > innerWidth || r.bottom < 70 || r.top > innerHeight) return;
+                    fired++;
+                    setTimeout(() => { if (stillChild(d.target)) arriveFx(d.target); }, slot * FLOW_TRAVEL);
+                }
+            });
+            // mulai ulang animasi garis supaya aliran selalu mulai dari kartu induk
+            started.forEach(n => { n.style.animation = 'none'; });
+            void el.getBoundingClientRect();
+            started.forEach(n => { n.style.animation = ''; });
+        };
+        step();
+        flowRelayTimer = setInterval(step, slot);
     }
 
     // efek terus-menerus: kartu yang tampak di layar bergantian diberi efek (berhenti otomatis saat zoom/geser)
@@ -2659,6 +2778,7 @@ svg.flow-style-rainbow .link-flow {
         clearInterval(fxLoopTimer); fxLoopTimer = null;
         const f0 = cardSettings.flow;
         if (!f0.fxLoop || f0.fx === 'none') return;
+        if (f0.fxHit && f0.mode === 'always' && f0.seq) return; // efek dipicu oleh giliran aliran (applyFlowRelay)
         fxLoopTimer = setInterval(() => {
             if (document.hidden || svg.node().classList.contains('sedang-gerak')) return;
             const gap = cardSettings.flow.fxGap * 1000, now = Date.now();
@@ -2668,6 +2788,7 @@ svg.flow-style-rainbow .link-flow {
                 const t = fxNext.get(d);
                 if (t == null) { fxNext.set(d, now + Math.random() * gap); return; }
                 if (now < t) return;
+                if (cardSettings.flow.fxHit && !isFlowing(d)) return; // hanya kartu yang sedang terkena aliran
                 fxNext.set(d, now + gap * (0.7 + Math.random() * 0.6));
                 const r = this.getBoundingClientRect();
                 if (r.right < 0 || r.left > innerWidth || r.bottom < 70 || r.top > innerHeight) return;
@@ -2689,19 +2810,51 @@ svg.flow-style-rainbow .link-flow {
             .remove();
     }
 
+    // batalkan urutan aliran milik kartu induk (mis. saat kartu ditutup)
+    function cancelFlow(p) {
+        const arr = flowTimers.get(p);
+        if (arr) arr.forEach(clearTimeout);
+        flowTimers.delete(p);
+        flowBusy.delete(p);
+        gContainer.selectAll('path.link-flow').filter(l => l.source === p).classed('flow-run', false);
+    }
+
     // dipanggil saat kartu orang tua dibuka
-    function playFlow(p, noFx) {
+    function playFlow(p, noFx, forceFx) {
         const f = cardSettings.flow;
         const kids = p.children || [];
         if (!kids.length) return;
-        if (f.mode === 'once') {
-            const ids = new Set(kids.map(k => k.id));
-            const run = gContainer.selectAll('path.link-flow').filter(l => ids.has(l.target.id)).classed('flow-run', true);
-            clearTimeout(flowTimers.get(p));
-            flowTimers.set(p, setTimeout(() => run.classed('flow-run', false), 4600 / f.speed));
+        cancelFlow(p);
+        const timers = []; flowTimers.set(p, timers);
+        const later = (fn, ms) => timers.push(setTimeout(fn, ms));
+        const wantFx = f.fx !== 'none' && (f.fxOpen || forceFx) && !noFx;
+
+        // --- semua serentak (cara lama, bila "bergantian" dimatikan) ---
+        if (!f.seq) {
+            if (f.mode === 'once') {
+                const ids = new Set(kids.map(k => k.id));
+                const run = gContainer.selectAll('path.link-flow').filter(l => ids.has(l.target.id)).classed('flow-run', true);
+                later(() => run.classed('flow-run', false), 4600 / f.speed);
+            }
+            if (wantFx) kids.forEach((k, i) => later(() => whenIdle(() => { if (stillChild(k)) arriveFx(k); }), duration + 280 + i * 70));
+            return;
         }
-        if (f.fx === 'none' || !f.fxOpen || noFx) return;
-        kids.forEach((k, i) => setTimeout(() => whenIdle(() => arriveFx(k)), duration + 280 + i * 70));
+
+        // --- bergantian: kartu 1 -> kartu 2 -> ... ---
+        const slot = flowSlot();
+        const start = Math.min(duration, 350);          // beri waktu garis tumbuh dulu
+        const showFlow = f.mode !== 'off';
+        flowBusy.add(p);
+        kids.forEach((k, i) => {
+            const t0 = start + i * slot;
+            if (showFlow) {
+                later(() => { const l = linkOf(k).classed('flow-run', true); if (!l.empty()) restartFlowAnim(l.node()); }, t0);
+                later(() => linkOf(k).classed('flow-run', false), t0 + slot);
+            }
+            // efek hanya di kartu yang baru saja terkena aliran
+            if (wantFx) later(() => whenIdle(() => { if (stillChild(k)) arriveFx(k); }), t0 + slot * FLOW_TRAVEL);
+        });
+        later(() => flowBusy.delete(p), start + kids.length * slot + 60);
     }
 
     // tunda sampai zoom/geser berhenti (maks. ~3 dtk), supaya efek tidak hilang saat kamera bergerak
@@ -2796,20 +2949,24 @@ svg.flow-style-rainbow .link-flow {
         csEl('cs-fspeed').value = f.speed;
         csEl('cs-fxopen').checked = !!f.fxOpen; csEl('cs-fxtap').checked = !!f.fxTap; csEl('cs-fxloop').checked = !!f.fxLoop;
         csEl('cs-fxgap').value = f.fxGap; csEl('cs-fxgap-val').textContent = f.fxGap + ' dtk';
-        csEl('cs-fxgap-row').style.display = f.fxLoop ? '' : 'none';
+        csEl('cs-fxgap-row').style.display = (f.fxLoop && !(f.fxHit && f.mode === 'always' && f.seq)) ? '' : 'none';
+        csEl('cs-fseq').checked = !!f.seq; csEl('cs-fxhit').checked = !!f.fxHit;
+        csEl('cs-fseqgap').value = f.seqGap; csEl('cs-fseqgap-val').textContent = (+f.seqGap).toFixed(1) + ' dtk';
+        csEl('cs-fseqgap-row').style.display = f.seq ? '' : 'none';
     }
     function csFlow(key, val, quiet) {
         cardSettings.flow[key] = val;
         saveCardSettings();
         applyFlowSettings();
         csFlowSync();
-        if (!quiet) { csEl('cs-ok').textContent = 'Tersimpan ✓'; if (key === 'style' || key === 'fx' || key === 'mode') csTestFlow(true); }
+        if (!quiet) { csEl('cs-ok').textContent = 'Tersimpan ✓'; if (key === 'style' || key === 'fx' || key === 'mode' || key === 'seq' || key === 'fxHit') csTestFlow(true); }
     }
     function csTestFlow(silent) {
         let target = null;
         gContainer.selectAll('g.node').each(d => { if (!target && d.children && d.children.length) target = d; });
         if (!target) { if (!silent) csEl('cs-ok').textContent = 'Buka dulu satu kartu (ketuk kartu pendiri) untuk mencoba.'; return; }
         // lepas mode gerak sementara agar efek terlihat meski panel menutupi layar
+        if (cardSettings.flow.seq) { playFlow(target, false, true); return; }
         playFlow(target, true);
         target.children.forEach((k, i) => setTimeout(() => arriveFx(k), 150 + i * 70));
     }
@@ -3706,6 +3863,7 @@ svg.flow-style-rainbow .link-flow {
                 }
 
                 if (d.children) {
+                    cancelFlow(d);
                     d._children = d.children;
                     d.children = null;
                 } else if (d._children) {
@@ -5146,6 +5304,7 @@ svg.flow-style-rainbow .link-flow {
 
     function collapse(d) {
         if (d.children) {
+            if (typeof cancelFlow === 'function') cancelFlow(d);
             d._children = d.children;
             d._children.forEach(collapse);
             d.children = null;
