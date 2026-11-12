@@ -530,11 +530,11 @@
         }
         @media (max-width: 640px) {
             .node .node-shape-real {
-                filter: none !important;
+                filter: none;
                 transition: transform 0.12s ease !important;
             }
             .node:hover .node-shape-real {
-                filter: none !important;
+                filter: none;
             }
         }
 
@@ -1770,13 +1770,17 @@ svg.flow-style-rainbow .link-flow {
                     <span class="nm">Efek kartu anak</span>
                     <select id="cs-ffx" class="cs-select" style="flex:1;width:auto" onchange="csFlow('fx',this.value)">
                         <option value="none">Tanpa efek</option>
+                        <option value="glow">✨ Glow</option>
+                        <option value="getar">📳 Glow + Getar</option>
+                        <option value="warna">🌈 Warna Berubah</option>
+                        <option value="denyut">💓 Berdetak</option>
+                        <option value="kilat">⚡ Kilat</option>
+                        <option value="riak">🌊 Riak Gelombang</option>
+                        <option value="percikan">🎆 Percikan</option>
+                        <option value="lompat">🦘 Melompat</option>
                         <option value="listrik">⚡ Listrik (getar + percikan + menyala)</option>
-                        <option value="getar">Getar</option>
-                        <option value="percikan">Percikan api</option>
                         <option value="menyala">Menyala</option>
-                        <option value="warna">Berubah warna</option>
                         <option value="cipratan">💧 Cipratan air</option>
-                        <option value="riak">Riak gelombang</option>
                         <option value="pop">Memantul</option>
                         <option value="acak">🎲 Acak</option>
                     </select>
@@ -2256,7 +2260,7 @@ svg.flow-style-rainbow .link-flow {
     const CARD_SETTINGS_KEY = 'bk-kartu-tema-v1';
     const CARD_PASSWORD = '21';
     const LIDAH_DEFAULTS = { mode: 'custom', a: '#fbbf24', grad: true, aTo: '#d97706' };
-    const FLOW_DEFAULTS = { mode: 'once', style: 'dots', colorMode: 'auto', color: '#f59e0b', speed: 1, fx: 'listrik', fxOpen: true, fxTap: false, fxLoop: false, fxGap: 4, seq: true, seqGap: 0.8, fxHit: true };
+    const FLOW_DEFAULTS = { mode: 'once', style: 'dots', colorMode: 'auto', color: '#f59e0b', speed: 1, fx: 'getar', fxOpen: true, fxTap: false, fxLoop: false, fxGap: 4, seq: true, seqGap: 0.8, fxHit: true };
     const CAPSULE_DEFAULTS = {
         root:  { a: '#16a34a', b: '#dc2626' },
         gen1:  { a: '#4ade80', b: '#ffffff' },
@@ -2727,7 +2731,7 @@ svg.flow-style-rainbow .link-flow {
     // ALIRAN PADA GARIS PENGHUBUNG + EFEK KARTU ANAK
     // (semua animasi dimatikan otomatis selama zoom/geser -> tetap ringan)
     // =====================================================================
-    const FLOW_FX_LIST = ['listrik', 'getar', 'percikan', 'menyala', 'warna', 'cipratan', 'riak', 'pop'];
+    const FLOW_FX_LIST = ['listrik', 'glow', 'getar', 'warna', 'denyut', 'kilat', 'riak', 'percikan', 'lompat', 'menyala', 'cipratan', 'pop'];
     const flowTimers = new WeakMap();
 
     function flowColorFor(link) {
@@ -2966,6 +2970,142 @@ svg.flow-style-rainbow .link-flow {
         setTimeout(() => n.classed(cls, false), 750);
     }
 
+    // =====================================================================
+    // MODEL ANIMASI KARTU (gaya Bani Isbadar): glow, getar, warna, denyut, kilat, riak, percikan, lompat.
+    // Semua berjalan sesaat lalu kartu kembali ke tampilan semula, dan dibatalkan saat cubit/geser.
+    // =====================================================================
+    const SVGNS = 'http://www.w3.org/2000/svg';
+    const ZAP_ACTIVE = new Set();
+    function zapOff() {
+        if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return true;
+        try { return perfMode === 'off'; } catch (e) { return false; }
+    }
+    function zapK() { let k = 1; try { k = d3.zoomTransform(svg.node()).k || 1; } catch (e) {} return k; }
+
+    // Getar halus memakai properti CSS `translate` (terpisah dari atribut transform kartu)
+    function kartuGetar(c, amp, dur) {
+        const el = c.el;
+        if (!el || !el.animate) return;
+        const a = Math.min(8, (amp || 2) / zapK());
+        const seq = [0, -1, 0.9, -0.8, 0.6, -0.45, 0.25, -0.1, 0];
+        try {
+            c.track(el.animate(seq.map((m, i) => ({ translate: `${(m * a).toFixed(2)}px ${((i % 2 ? 0.35 : -0.35) * m * a).toFixed(2)}px` })),
+                { duration: dur || 360, easing: 'ease-out' }));
+        } catch (e) {}
+    }
+    // glow berwarna + terang berkedip
+    function zapGlow(c, soft) {
+        if (!c.real) return;
+        const k = (c.strong && !soft) ? 1 : 0.4;
+        const f = (b, br) => `drop-shadow(0 0 ${b}px ${c.col}) brightness(${br})`;
+        c.track(c.real.animate([
+            { filter: f(0, 1), offset: 0 },
+            { filter: f(20 * k + 3, 1 + 0.38 * k), offset: 0.10 },
+            { filter: f(5, 1.04), offset: 0.20 },
+            { filter: f(24 * k + 3, 1 + 0.45 * k), offset: 0.32 },
+            { filter: f(8, 1.06), offset: 0.46 },
+            { filter: f(16 * k, 1 + 0.22 * k), offset: 0.60 },
+            { filter: f(0, 1), offset: 1 }
+        ], { duration: (c.strong && !soft) ? 1200 : 650, easing: 'linear' }));
+    }
+    // elemen SVG sementara (cincin/percikan) yang membersihkan dirinya sendiri
+    function zapTemp(c, tag, attrs, frames, opts) {
+        const n = document.createElementNS(SVGNS, tag);
+        Object.keys(attrs).forEach(k => n.setAttribute(k, attrs[k]));
+        n.setAttribute('pointer-events', 'none');
+        n.style.transformBox = 'fill-box'; n.style.transformOrigin = 'center'; n.style.opacity = 0;
+        c.el.appendChild(n);
+        const a = n.animate(frames, Object.assign({ fill: 'forwards' }, opts));
+        ZAP_ACTIVE.add(a);
+        a.onfinish = a.oncancel = () => { ZAP_ACTIVE.delete(a); n.remove(); };
+        return n;
+    }
+
+    const ZAP = {
+        glow(c) { zapGlow(c); kartuGetar(c, 2.8, 420); },
+        getar(c) { zapGlow(c); kartuGetar(c, 6, 760); },
+        warna(c) {
+            if (!c.real) return;
+            const hs = [0, 90, 180, 270, 360], sa = [1, 1.7, 2, 1.7, 1], br = [1, 1.12, 1.2, 1.12, 1], gl = [0, 8, 13, 8, 0];
+            c.track(c.real.animate(hs.map((h, i) => ({
+                filter: `hue-rotate(${h}deg) saturate(${sa[i]}) brightness(${br[i]}) drop-shadow(0 0 ${gl[i]}px ${c.col})`,
+                offset: i / 4
+            })), { duration: 1500, easing: 'ease-in-out' }));
+        },
+        denyut(c) {
+            zapGlow(c, true);
+            const el = c.el, s = 0.09;
+            el.style.transformBox = 'fill-box'; el.style.transformOrigin = 'center';
+            const a = el.animate([
+                { scale: 1, offset: 0 }, { scale: 1 + s, offset: 0.14 }, { scale: 1 - s * 0.25, offset: 0.28 },
+                { scale: 1 + s * 0.7, offset: 0.42 }, { scale: 1, offset: 0.70 }, { scale: 1, offset: 1 }
+            ], { duration: 950, easing: 'ease-out' });
+            c.track(a);
+            const clear = () => { el.style.transformBox = ''; el.style.transformOrigin = ''; };
+            a.addEventListener('finish', clear); a.addEventListener('cancel', clear);
+        },
+        kilat(c) {
+            if (!c.real) return;
+            const f = (br, gl, col) => `brightness(${br}) drop-shadow(0 0 ${gl}px ${col})`;
+            c.track(c.real.animate([
+                { filter: f(1, 0, '#fff'), offset: 0 },
+                { filter: f(2.6, 16, '#fff'), offset: 0.08 },
+                { filter: f(1, 0, '#fff'), offset: 0.18 },
+                { filter: f(2.2, 14, c.col), offset: 0.30 },
+                { filter: f(1, 0, c.col), offset: 0.42 },
+                { filter: f(2.8, 18, '#fff'), offset: 0.54 },
+                { filter: f(1, 0, '#fff'), offset: 1 }
+            ], { duration: 750, easing: 'ease-out' }));
+        },
+        riak(c) {
+            const { w, h } = c.dims, r = Math.min(22, Math.round(h * 0.42));
+            for (let i = 0; i < 3; i++) {
+                const ring = zapTemp(c, 'rect', {
+                    x: -2, y: -h / 2 - 2, width: w + 4, height: h + 4, rx: r + 2, ry: r + 2,
+                    fill: 'none', stroke: c.col, 'stroke-width': 3
+                }, [{ opacity: 0.95, scale: 1 }, { opacity: 0, scale: 1.45 }],
+                { duration: 950, delay: i * 220, easing: 'ease-out' });
+                ring.style.filter = `drop-shadow(0 0 5px ${c.col})`;
+            }
+            zapGlow(c, true);
+        },
+        percikan(c) {
+            zapGlow(c, true);
+            const { w, h } = c.dims;
+            for (let i = 0; i < 16; i++) {
+                const ang = Math.random() * Math.PI * 2, ca = Math.cos(ang), sa = Math.sin(ang);
+                const dist = 22 + Math.random() * 40;
+                zapTemp(c, 'circle', {
+                    cx: w / 2 + ca * w / 2, cy: sa * h / 2, r: (2.4 + Math.random() * 2.6).toFixed(1),
+                    fill: i % 3 === 0 ? '#ffffff' : c.col
+                }, [{ translate: '0px 0px', opacity: 1, scale: 1 },
+                    { translate: `${(ca * dist * 1.2).toFixed(1)}px ${(sa * dist).toFixed(1)}px`, opacity: 0, scale: 0.2 }],
+                { duration: 550 + Math.random() * 450, delay: Math.random() * 120, easing: 'cubic-bezier(.1,.7,.3,1)' });
+            }
+        },
+        lompat(c) {
+            const a = Math.min(40, 16 / zapK());
+            const t = y => `0px ${(-y).toFixed(2)}px`;
+            c.track(c.el.animate([
+                { translate: t(0), offset: 0, easing: 'ease-out' },
+                { translate: t(a), offset: 0.28, easing: 'ease-in' },
+                { translate: t(0), offset: 0.55, easing: 'ease-out' },
+                { translate: t(a * 0.4), offset: 0.72, easing: 'ease-in' },
+                { translate: t(0), offset: 0.88 },
+                { translate: t(0), offset: 1 }
+            ], { duration: 760 }));
+        }
+    };
+
+    function zapNode(el, d, col, strong, fx) {
+        if (!el || !el.animate || zapOff()) return;
+        const track = a => { ZAP_ACTIVE.add(a); a.addEventListener('finish', () => ZAP_ACTIVE.delete(a)); a.addEventListener('cancel', () => ZAP_ACTIVE.delete(a)); return a; };
+        const c = { el, d, col, strong, track, real: el.querySelector('.node-shape-real'), dims: cardDims(d) };
+        (ZAP[fx] || ZAP.glow)(c);
+    }
+    // cubit/geser: batalkan animasi yang sedang jalan supaya kartu tidak tertinggal di tengah efek
+    function zapCancelAll() { ZAP_ACTIVE.forEach(a => { try { a.cancel(); } catch (e) {} }); ZAP_ACTIVE.clear(); }
+
     // efek di kartu anak saat aliran "sampai"
     function arriveFx(k, forceFx) {
         const n = gContainer.selectAll('g.node').filter(d => d === k);
@@ -2976,13 +3116,10 @@ svg.flow-style-rainbow .link-flow {
         const { w, h } = cardDims(k);
         const col = flowColorFor({ target: k });
         const L = fxLayer(n);
-        if (fx === 'listrik') { fxClass(n, 'fx-shake'); fxFlash(L, w, h, '#fde047'); fxSparks(L, true); }
-        else if (fx === 'getar') fxClass(n, 'fx-shake');
-        else if (fx === 'percikan') fxSparks(L, true);
+        if (ZAP[fx]) zapNode(n.node(), k, col, true, fx);
+        else if (fx === 'listrik') { fxClass(n, 'fx-shake'); fxFlash(L, w, h, '#fde047'); fxSparks(L, true); }
         else if (fx === 'menyala') fxFlash(L, w, h, col);
-        else if (fx === 'warna') fxTint(L, w, h);
         else if (fx === 'cipratan') fxSplash(L);
-        else if (fx === 'riak') fxRings(L, col);
         else if (fx === 'pop') fxClass(n, 'fx-pop');
         setTimeout(() => L.remove(), 1300);
     }
@@ -3523,6 +3660,7 @@ svg.flow-style-rainbow .link-flow {
         let timer = null;
         zoom.on("start.ringan", () => {
             clearTimeout(timer);
+            zapCancelAll();
             svgEl.classList.add("sedang-gerak");
         });
         zoom.on("end.ringan", () => {
