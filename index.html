@@ -1553,24 +1553,48 @@ body.bg-dark .link { stroke: rgba(226, 232, 240, 0.8); }
 <style id="aliran-css">
 /* ===== Lapisan aliran di atas garis penghubung ===== */
 .link-flow { fill: none; pointer-events: none; visibility: hidden; stroke-linecap: round; stroke-linejoin: round; }
-svg.flow-always:not(.flow-seq) .link-flow, .link-flow.flow-run { visibility: visible; }
+.link-flow.flow-run { visibility: visible; }
 svg.flow-off .link-flow { visibility: hidden !important; }
+.link-jag { fill: none; pointer-events: none; display: none; stroke-linecap: round; stroke-linejoin: round; stroke-width: 2px;
+    filter: drop-shadow(0 0 2px var(--fc, #fff)) drop-shadow(0 0 6px var(--fc, #fff)); }
+svg.flow-style-listrik .link-jag.flow-run, svg.flow-style-kilat .link-jag.flow-run { display: inline; }
+svg.flow-off .link-jag { display: none !important; }
 svg.flow-style-dots  .link-flow { stroke-width: 4.5px; stroke-dasharray: 1 26;  animation: flowDots  calc(0.9s / var(--fspd, 1)) linear infinite; }
 svg.flow-style-dash  .link-flow { stroke-width: 3px;   stroke-dasharray: 12 9;  animation: flowDash  calc(0.7s / var(--fspd, 1)) linear infinite; }
-svg.flow-style-comet .link-flow { stroke-width: 4px;   stroke-dasharray: 70 340; animation: flowComet calc(1.3s / var(--fspd, 1)) linear infinite; }
+svg.flow-style-comet .link-flow { stroke-width: 4px;   stroke-dasharray: 70 340; animation: flowComet calc(1.3s / var(--fspd, 1)) linear infinite;
+    filter: drop-shadow(0 0 3px var(--fc, #fff)); }
 svg.flow-style-rainbow .link-flow {
     stroke-width: 3.5px; stroke-dasharray: 14 10;
     animation: flowDash calc(0.8s / var(--fspd, 1)) linear infinite, flowRainbow calc(2.4s / var(--fspd, 1)) linear infinite;
 }
+/* Flash: kilatan terang yang melesat cepat di sepanjang garis (panjang garis dinormalkan lewat pathLength=100) */
+svg.flow-style-flash .link-flow { stroke-width: 5px; stroke-dasharray: 9 300; stroke-dashoffset: 9;
+    animation: flowFlash calc(0.75s / var(--fspd, 1)) cubic-bezier(.5,0,.8,.6) infinite;
+    filter: drop-shadow(0 0 4px var(--fc, #fff)) drop-shadow(0 0 9px var(--fc, #fff)); }
+/* Neon: tabung cahaya yang berdenyut */
+svg.flow-style-neon .link-flow { stroke-width: 3.4px; stroke-dasharray: none;
+    animation: flowNeon calc(1.1s / var(--fspd, 1)) ease-in-out infinite; filter: drop-shadow(0 0 4px var(--fc, #fff)); }
+/* Plasma: butiran energi bersinar yang berganti warna */
+svg.flow-style-plasma .link-flow { stroke-width: 6px; stroke-dasharray: 0.1 13;
+    animation: flowPlasma calc(0.9s / var(--fspd, 1)) linear infinite; }
+/* Listrik & Kilat: garis zig-zag digambar lewat JS (.link-jag); garis dasarnya hanya jadi pendar tipis */
+svg.flow-style-listrik .link-flow, svg.flow-style-kilat .link-flow { stroke-width: 9px; stroke-dasharray: none; opacity: .17; animation: none; }
 @keyframes flowDots  { to { stroke-dashoffset: -27; } }
 @keyframes flowDash  { to { stroke-dashoffset: -21; } }
 @keyframes flowComet { to { stroke-dashoffset: -410; } }
+@keyframes flowFlash { from { stroke-dashoffset: 9; } to { stroke-dashoffset: -100; } }
+@keyframes flowNeon  { 0%,100% { stroke-opacity: .55; stroke-width: 3px; } 50% { stroke-opacity: 1; stroke-width: 4.8px; } }
+@keyframes flowPlasma {
+    from { stroke-dashoffset: 0;   filter: drop-shadow(0 0 4px var(--fc, #fff)) hue-rotate(0deg); }
+    to   { stroke-dashoffset: -13.1; filter: drop-shadow(0 0 4px var(--fc, #fff)) hue-rotate(360deg); }
+}
 @keyframes flowRainbow {
     0% { stroke: #ef4444; } 17% { stroke: #f97316; } 34% { stroke: #eab308; } 51% { stroke: #22c55e; }
     68% { stroke: #3b82f6; } 84% { stroke: #a855f7; } 100% { stroke: #ef4444; }
 }
 /* Saat zoom/geser: semua lapisan animasi dimatikan total supaya tetap ringan */
 #chart-container svg.sedang-gerak .link-flow,
+#chart-container svg.sedang-gerak .link-jag,
 #chart-container svg.sedang-gerak .fx-layer { display: none !important; }
 #chart-container svg.sedang-gerak .node.fx-shake .node-shape-real,
 #chart-container svg.sedang-gerak .node.fx-pop .node-shape-real { animation: none !important; }
@@ -1794,10 +1818,15 @@ svg.flow-style-rainbow .link-flow {
                 <div class="cs-color-row" style="margin-top:8px;">
                     <span class="nm">Gaya aliran</span>
                     <select id="cs-fstyle" class="cs-select" style="flex:1;width:auto" onchange="csFlow('style',this.value)">
+                        <option value="listrik">⚡ Aliran Listrik (zig-zag menyetrum)</option>
+                        <option value="kilat">🌩 Aliran Kilat (petir bercabang)</option>
+                        <option value="flash">💥 Aliran Flash (kilatan melesat)</option>
+                        <option value="neon">🔮 Neon (tabung cahaya berdenyut)</option>
+                        <option value="plasma">🟣 Plasma (butiran energi)</option>
+                        <option value="comet">☄ Komet</option>
                         <option value="dots">Titik cahaya</option>
                         <option value="dash">Garis putus mengalir</option>
-                        <option value="comet">Komet</option>
-                        <option value="rainbow">Pelangi</option>
+                        <option value="rainbow">🌈 Pelangi</option>
                     </select>
                 </div>
                 <div class="cs-color-row">
@@ -1824,6 +1853,8 @@ svg.flow-style-rainbow .link-flow {
                         <option value="riak">🌊 Riak Gelombang</option>
                         <option value="percikan">🎆 Percikan</option>
                         <option value="lompat">🦘 Melompat</option>
+                        <option value="petir">🌩 Sambaran Petir</option>
+                        <option value="flash">💥 Flash Putih</option>
                         <option value="listrik">⚡ Listrik (getar + percikan + menyala)</option>
                         <option value="menyala">Menyala</option>
                         <option value="cipratan">💧 Cipratan air</option>
@@ -1835,11 +1866,11 @@ svg.flow-style-rainbow .link-flow {
                     <span class="nm">Kapan efek</span>
                     <label><input type="checkbox" id="cs-fxopen" onchange="csFlow('fxOpen',this.checked)"> saat dibuka</label>
                     <label><input type="checkbox" id="cs-fxtap" onchange="csFlow('fxTap',this.checked)"> saat diketuk</label>
-                    <label><input type="checkbox" id="cs-fxloop" onchange="csFlow('fxLoop',this.checked)"> terus-menerus</label>
+                    <label><input type="checkbox" id="cs-fxloop" onchange="csFlow('fxLoop',this.checked)"> tiap putaran aliran</label>
                 </div>
                 <div class="cs-color-row">
                     <span class="nm">Urutan aliran</span>
-                    <label><input type="checkbox" id="cs-fseq" onchange="csFlow('seq',this.checked)"> bergantian (kartu 1, lalu 2, dst.)</label>
+                    <label><input type="checkbox" id="cs-fseq" onchange="csFlow('seq',this.checked)"> bergantian antar saudara (kartu 1, lalu 2, dst.)</label>
                 </div>
                 <div class="cs-color-row" id="cs-fseqgap-row">
                     <span class="nm">Giliran tiap kartu</span>
@@ -1851,12 +1882,12 @@ svg.flow-style-rainbow .link-flow {
                     <label><input type="checkbox" id="cs-fxhit" onchange="csFlow('fxHit',this.checked)"> hanya kartu yang terkena aliran</label>
                 </div>
                 <div class="cs-color-row" id="cs-fxgap-row">
-                    <span class="nm">Jeda ulang</span>
+                    <span class="nm">Jeda ulang siklus</span>
                     <input type="range" class="cs-range" id="cs-fxgap" min="2" max="12" step="1" style="flex:1" oninput="csFlow('fxGap',+this.value,true)">
                     <span id="cs-fxgap-val" style="font-size:.7rem;font-weight:700;width:34px;"></span>
                 </div>
                 <div class="cs-row-btn" style="margin-top:4px;"><button class="cs-btn small" style="flex:1" onclick="csTestFlow()">▶ COBA EFEK</button></div>
-                <div class="cs-hint">Aliran &amp; efek otomatis berhenti saat layar dicubit/digeser agar tetap ringan. Bila “hanya kartu yang terkena aliran” aktif, efek terus-menerus hanya muncul di kartu yang garisnya sedang dialiri. “Coba efek” butuh minimal satu kartu yang sudah dibuka.</div>
+                <div class="cs-hint">Aliran selalu bersumber dari kartu pendiri (Mubanan), merambat ke generasi berikutnya, dan seterusnya. Kartu baru beraksi (efek) saat aliran SAMPAI padanya; kartu yang belum teraliri diam. Mode TERUS mengulang dari Mubanan setelah jeda. Aliran &amp; efek otomatis berhenti saat layar dicubit/digeser agar tetap ringan. “Coba efek” butuh minimal satu kartu yang sudah dibuka.</div>
             </div>
 
             <div class="cs-ok" id="cs-ok"></div>
@@ -2304,7 +2335,7 @@ svg.flow-style-rainbow .link-flow {
     // =====================================================================
     // TEMA KARTU: BATERAI (asli) / KAPSUL 3D  + PENGATURAN BERSANDI
     // =====================================================================
-    const CARD_SETTINGS_KEY = 'bk-kartu-tema-v1';
+    const CARD_SETTINGS_KEY = 'bk-kartu-tema-v2';
     const CARD_PASSWORD = '21';
     const LIDAH_DEFAULTS = { mode: 'custom', a: '#fbbf24', grad: true, aTo: '#d97706' };
     const FLOW_DEFAULTS = { mode: 'once', style: 'dots', colorMode: 'auto', color: '#f59e0b', speed: 1, fx: 'getar', fxOpen: true, fxTap: false, fxLoop: false, fxGap: 4, seq: true, seqGap: 0.8, fxHit: true };
@@ -2317,7 +2348,7 @@ svg.flow-style-rainbow .link-flow {
         wife:  { a: '#f472b6', b: '#ffffff' }
     };
     // Ubah nilai ini (atau tempel hasil "SALIN KODE") supaya semua pengunjung melihat tema yang sama.
-    const DEFAULT_CARD_SETTINGS = { model: 'baterai', count: 2, same: false, seam: 50, seamA: 30, seamB: 62, all: { a: '#dc2626', b: '#ffffff' }, per: {} };
+    const DEFAULT_CARD_SETTINGS = {"model":"kapsul","count":2,"same":false,"seam":50,"seamA":45,"seamB":78,"all":{"a":"#dc2626","b":"#ffffff"},"per":{"gen1":{"a":"#4ade80","b":"#ffffff","n":1,"m":"#ffffff","aTo":"#d96d6d"},"gen2":{"a":"#f472b6","b":"#cfdadd","n":3,"m":"#1ac8cb","aTo":"#f1f5b2","bTo":"#45d962"}},"flow":{"mode":"always","style":"comet","colorMode":"custom","color":"#ffffff","speed":1,"fx":"warna","fxOpen":true,"fxTap":true,"fxLoop":true,"fxGap":4,"seq":true,"seqGap":0.8,"fxHit":true},"lidah":{"mode":"custom","a":"#8c7c54","grad":true,"aTo":"#766e65"},"bg":{"theme":"petir","variant":{"hitam":"kedip","biru":"warna","petir":"beruntun"},"tone":{"hitam":0,"biru":0,"petir":2},"stars":{"density":1,"speed":1,"size":1},"colorMode":"auto","color":"#c4d9c4","pt":{"freq":6,"intensity":80,"flicker":5,"thick":2,"branches":2,"rain":true,"cloud":true,"flash":true}}};
     const CAPSULE_PRESETS = [
         { name: 'Merah',        count: 1, p: { a: '#dc2626' } },
         { name: 'Putih–Biru',   count: 2, p: { a: '#f1f5f9', b: '#2b8fd6' } },
@@ -3302,7 +3333,7 @@ svg.flow-style-rainbow .link-flow {
     // ALIRAN PADA GARIS PENGHUBUNG + EFEK KARTU ANAK
     // (semua animasi dimatikan otomatis selama zoom/geser -> tetap ringan)
     // =====================================================================
-    const FLOW_FX_LIST = ['listrik', 'glow', 'getar', 'warna', 'denyut', 'kilat', 'riak', 'percikan', 'lompat', 'menyala', 'cipratan', 'pop'];
+    const FLOW_FX_LIST = ['listrik', 'glow', 'getar', 'warna', 'denyut', 'kilat', 'riak', 'percikan', 'lompat', 'menyala', 'cipratan', 'pop', 'petir', 'flash'];
     const flowTimers = new WeakMap();
 
     function flowColorFor(link) {
@@ -3319,112 +3350,248 @@ svg.flow-style-rainbow .link-flow {
         return hs.formatHex();
     }
 
+    // warna "bersinar" untuk gaya neon/flash/plasma/listrik/kilat (lebih terang dari warna biasa agar menyala di latar gelap)
+    function flowGlow(link) {
+        const f = cardSettings.flow;
+        if (f.colorMode === 'custom') return f.color;
+        const h = d3.hsl(flowColorFor(link));
+        h.s = Math.max(h.s, 0.85); h.l = Math.min(0.66, Math.max(0.5, h.l + 0.2));
+        return h.formatHex();
+    }
+    const FLOW_STYLES = ['dots', 'dash', 'comet', 'rainbow', 'flash', 'neon', 'plasma', 'listrik', 'kilat'];
+    const FLOW_GLOW_STYLES = ['flash', 'neon', 'plasma', 'listrik', 'kilat'];
+    const FLOW_JAG = ['listrik', 'kilat'];
+    function flowStroke(d) { return FLOW_GLOW_STYLES.indexOf(cardSettings.flow.style) >= 0 ? flowGlow(d) : flowColorFor(d); }
+    function flowCoreColor(d) { return d3.interpolateRgb(flowGlow(d), '#ffffff')(0.5); }
+    // cat semua lapisan aliran (garis halus + garis zig-zag) sesuai gaya & warna terpilih
+    function paintFlowLinks() {
+        gContainer.selectAll('path.link-flow')
+            .style('stroke', d => flowStroke(d)).style('--fc', d => flowGlow(d))
+            .attr('pathLength', cardSettings.flow.style === 'flash' ? 100 : null);
+        gContainer.selectAll('path.link-jag')
+            .style('stroke', d => flowCoreColor(d)).style('--fc', d => flowGlow(d));
+    }
+
     // pasang class & variabel pada <svg> sesuai pengaturan
     function applyFlowSettings() {
         const f = cardSettings.flow, el = svg.node();
         ['off', 'once', 'always'].forEach(m => el.classList.remove('flow-' + m));
         el.classList.toggle('flow-always', f.mode === 'always');
         el.classList.toggle('flow-off', f.mode === 'off');
-        ['dots', 'dash', 'comet', 'rainbow'].forEach(s => el.classList.toggle('flow-style-' + s, f.style === s));
+        FLOW_STYLES.forEach(s => el.classList.toggle('flow-style-' + s, f.style === s));
         el.style.setProperty('--fspd', f.speed);
-        gContainer.selectAll('path.link-flow').style('stroke', d => flowColorFor(d));
+        paintFlowLinks();
         applyFlowRelay();
         applyFxLoop();
     }
 
-    // ---------- aliran BERGANTIAN ----------
-    // Aliran berjalan satu kartu anak dulu (kartu 1), lalu berikutnya (kartu 2, dst).
-    // Efek kartu muncul saat aliran "sampai" di kartu itu, jadi hanya kartu yang terkena aliran yang beranimasi.
-    const flowBusy = new WeakSet();     // kartu induk yang sedang menjalankan urutan buka
-    const FLOW_TRAVEL = 0.6;            // aliran dianggap sampai di kartu pada 60% waktu giliran
-    let flowRelayTimer = null, flowRelayTick = 0, flowRelayOn = false;
+    // =====================================================================
+    // ALIRAN BERANTAI
+    // Sumber aliran = kartu pendiri (MUBANAN, root). Aliran merambat di garis ke generasi berikutnya;
+    // begitu SAMPAI di sebuah kartu, kartu itu beraksi (efek) lalu aliran diteruskan ke anak-anaknya, dst.
+    // Jadi hanya kartu yang sudah teraliri yang beranimasi. Mode TERUS mengulang dari root tiap siklus.
+    // =====================================================================
+    const FW = { timers: [], gen: 0, jag: new Map(), jagTimer: null, fxWin: 0, fxCnt: 0 };
 
+    function isJagStyle() { return FLOW_JAG.indexOf(cardSettings.flow.style) >= 0; }
     function linkOf(k) { return gContainer.selectAll('path.link-flow').filter(l => l.target === k); }
-    function stillChild(k) { return !!(k.parent && k.parent.children && k.parent.children.indexOf(k) >= 0); }
-    // Waktu aliran menempuh garis dari kartu induk sampai kartu anak (ms). Efek kartu baru boleh mulai
-    // setelah waktu ini, jadi kartu tidak pernah beraksi mendahului aliran di garisnya.
-    function flowTravel(node) {
-        let len = 0;
-        try { len = node.getTotalLength(); } catch (e) {}
-        if (!len || !isFinite(len)) len = 150;
-        return Math.max(450, Math.min(1200, 300 + len * 1.8)) / (+cardSettings.flow.speed || 1);
+    // kartu benar-benar tampil (semua leluhurnya terbuka)
+    function nodeShown(k) {
+        for (let n = k; n && n.parent; n = n.parent) if (!n.parent.children || n.parent.children.indexOf(n) < 0) return false;
+        return true;
     }
-    // aliran "merambat": garis terbuka dari induk (kiri) ke anak (kanan) selama waktu tempuh, untuk semua gaya
-    function restartFlowAnim(node) {
+    function stillChild(k) { return nodeShown(k); }
+    function flowSlot() { return Math.max(250, (+cardSettings.flow.seqGap || 0.8) * 1000); }
+    // panjang garis induk->anak (dihitung dari posisi akhir kartu, bukan dari garis yang sedang beranimasi)
+    function flowLinkLen(k) {
+        const s0 = k.parent; if (!s0) return 150;
+        const dx = k.y - (s0.y + cardDims(s0).w), dy = k.x - s0.x;
+        return Math.max(40, Math.sqrt(dx * dx + dy * dy) * 1.05);
+    }
+    // waktu aliran menempuh garis (ms). Efek kartu baru mulai setelah waktu ini.
+    function flowTravelK(k, fast) {
+        const ms = Math.max(450, Math.min(1200, 300 + flowLinkLen(k) * 1.8)) / (+cardSettings.flow.speed || 1);
+        return fast ? ms * 0.45 : ms;
+    }
+    // aliran "merambat": garis terbuka dari induk (kiri) ke anak (kanan) selama waktu tempuh
+    function restartFlowAnim(node, ms) {
         node.style.animation = 'none'; void node.getBoundingClientRect(); node.style.animation = '';
-        const ms = flowTravel(node);
         try {
             if (node.animate) node.animate(
-                [{ clipPath: 'inset(-10px 100% -10px -10px)' }, { clipPath: 'inset(-10px -10px -10px -10px)' }],
+                [{ clipPath: 'inset(-16px 100% -16px -16px)' }, { clipPath: 'inset(-16px -16px -16px -16px)' }],
                 { duration: ms, easing: 'linear', fill: 'backwards' });
         } catch (e) {}
-        return ms;
     }
-    function flowSlot() { return Math.max(250, (+cardSettings.flow.seqGap || 0.8) * 1000); }
     // apakah garis menuju kartu d sedang dialiri?
     function isFlowing(d) {
-        const f = cardSettings.flow;
-        if (!d.parent || f.mode === 'off') return false;
-        if (f.mode === 'always' && !f.seq) return true;
+        if (!d.parent || cardSettings.flow.mode === 'off') return false;
         const l = linkOf(d);
         return !l.empty() && l.classed('flow-run');
     }
 
-    // mode TERUS + bergantian: tiap kelompok saudara dialiri satu per satu, berputar terus
-    function applyFlowRelay() {
-        clearInterval(flowRelayTimer); flowRelayTimer = null;
-        const f = cardSettings.flow, el = svg.node();
-        const on = f.mode === 'always' && f.seq;
-        el.classList.toggle('flow-seq', on);
-        if (!on) {
-            if (flowRelayOn) gContainer.selectAll('path.link-flow').filter(l => !flowBusy.has(l.source)).classed('flow-run', false);
-            flowRelayOn = false;
-            return;
-        }
-        flowRelayOn = true; flowRelayTick = 0;
-        const slot = flowSlot();
-        const step = () => {
-            if (document.hidden || el.classList.contains('sedang-gerak')) return;
-            const t = flowRelayTick++, cs = cardSettings.flow, started = [];
-            const wantFx = cs.fxLoop && cs.fxHit && cs.fx !== 'none';
-            let fired = 0; const fxQueue = [];
-            gContainer.selectAll('path.link-flow').each(function (d) {
-                if (flowBusy.has(d.source)) return;
-                const ks = d.source.children;
-                const act = !!(ks && ks.length && ks[t % ks.length] === d.target);
-                const s = d3.select(this);
-                if (!act) { if (s.classed('flow-run')) s.classed('flow-run', false); return; }
-                s.classed('flow-run', true);
-                started.push(this);
-                if (wantFx && fired < 3) {
-                    const r = this.getBoundingClientRect();
-                    if (r.right < 0 || r.left > innerWidth || r.bottom < 70 || r.top > innerHeight) return;
-                    fired++;
-                    fxQueue.push([this, d.target]);
-                }
-            });
-            // mulai ulang aliran supaya selalu mulai dari kartu induk; efek kartu menunggu aliran sampai
-            started.forEach(n => { n.style.animation = 'none'; });
-            void el.getBoundingClientRect();
-            started.forEach(n => { n.style.animation = ''; });
-            started.forEach(n => {
-                const ms = restartFlowAnim(n);
-                fxQueue.forEach(q => { if (q[0] === n) setTimeout(() => { if (stillChild(q[1])) arriveFx(q[1]); }, ms); });
-            });
-            fxQueue.length = 0;
-        };
-        step();
-        flowRelayTimer = setInterval(step, slot);
+    function fwLater(fn, ms, gen) {
+        FW.timers.push(setTimeout(() => { if (gen === FW.gen) fn(); }, Math.max(0, ms)));
+    }
+    function fwClearLit() {
+        gContainer.selectAll('path.link-flow,path.link-jag').classed('flow-run', false);
+        FW.jag.clear();
+    }
+    function fwStop() {
+        FW.gen++; FW.timers.forEach(clearTimeout); FW.timers = [];
+        fwClearLit();
     }
 
-    // efek terus-menerus: kartu yang tampak di layar bergantian diberi efek (berhenti otomatis saat zoom/geser)
+    // susun jadwal: kapan aliran mulai di tiap garis & kapan sampai di tiap kartu (mulai dari root)
+    function fwPlan(focus, trigger) {
+        const f = cardSettings.flow, slot = flowSlot(), out = [];
+        const onPath = new Set(); for (let n = focus; n; n = n.parent) onPath.add(n);
+        const inSub = n => { for (let x = n; x; x = x.parent) if (x === focus) return true; return false; };
+        const restrict = !!focus && f.mode !== 'always';        // mode "saat dibuka": hanya jalur ke kartu itu + isinya
+        const base = focus ? Math.min(duration, 450) : 0;        // beri waktu tata letak selesai bergeser
+        const walk = (p, A) => {
+            const kids = (p.children || []).filter(k => !restrict || onPath.has(k) || inSub(k));
+            let idx = 0;
+            kids.forEach(k => {
+                const path = onPath.has(k);                      // jalur leluhur -> kartu yang dibuka (cepat, tanpa efek)
+                const start = A + (path ? 0 : (f.seq ? idx : idx * 0.09) * (f.seq ? slot : 1000));
+                if (!path) idx++;
+                const ms = flowTravelK(k, path);
+                const sub = !!focus && !path && inSub(k);        // isi kartu yang baru dibuka
+                let fx = false;
+                if (f.fx !== 'none' && !path) fx = sub ? (trigger === 'test' || !!f.fxOpen) : !!(f.fxLoop && f.fxHit);
+                out.push({ k, start, ms, arrive: start + ms, fx });
+                walk(k, start + ms + 90);                        // diteruskan ke generasi berikutnya
+            });
+        };
+        walk(root, base);
+        return out;
+    }
+
+    function fwLight(ev) {
+        const k = ev.k; if (!nodeShown(k)) return;
+        const sel = gContainer.selectAll('path.link-flow,path.link-jag').filter(l => l.target === k);
+        sel.classed('flow-run', true);
+        sel.each(function () {
+            if (this.classList.contains('link-jag')) FW.jag.set(k.id, { el: this, k, t0: performance.now(), ms: ev.ms });
+            else restartFlowAnim(this, ev.ms);
+        });
+    }
+    function fwFx(ev, mode) {
+        const k = ev.k; if (!nodeShown(k)) return;
+        const go = () => {
+            if (!nodeShown(k)) return;
+            const n = gContainer.selectAll('g.node').filter(d => d === k);
+            if (n.empty()) return;
+            const r = n.node().getBoundingClientRect();
+            if (r.right < 0 || r.left > innerWidth || r.bottom < 70 || r.top > innerHeight) return;   // di luar layar: lewati
+            const now = Date.now(); if (now - FW.fxWin > 250) { FW.fxWin = now; FW.fxCnt = 0; }
+            if (++FW.fxCnt > 6) return;                                                                   // batasi efek serentak
+            arriveFx(k);
+        };
+        if (mode === 'loop') { if (!document.hidden && !svg.node().classList.contains('sedang-gerak')) go(); }
+        else whenIdle(go);
+    }
+
+    // jalankan satu gelombang aliran. focus = kartu yang baru dibuka (atau null = siklus penuh dari root)
+    function fwRun(focus, trigger) {
+        fwStop();
+        const gen = FW.gen, f = cardSettings.flow;
+        if (f.mode === 'off' && !focus) return;
+        const showLine = f.mode !== 'off';
+        const plan = fwPlan(focus, trigger);
+        let end = 0;
+        plan.forEach(e => {
+            end = Math.max(end, e.arrive);
+            if (showLine) fwLater(() => fwLight(e), e.start, gen);
+            if (e.fx) fwLater(() => fwFx(e, trigger === 'loop' ? 'loop' : 'open'), e.arrive, gen);
+        });
+        if (f.mode === 'always') {
+            const hold = Math.max(1000, (+f.fxGap || 4) * 1000);     // semua garis tetap menyala sebentar, lalu ulang dari root
+            fwLater(fwCycle, plan.length ? end + hold : 1200, gen);
+        } else if (plan.length) {
+            fwLater(fwClearLit, end + 2200 / (+f.speed || 1), gen);
+        }
+    }
+    function fwCycle() {
+        if (document.hidden) { fwLater(fwCycle, 1000, FW.gen); return; }
+        fwRun(null, 'loop');
+    }
+
+    // ---------- garis zig-zag (gaya Listrik & Kilat) ----------
+    function jagBuild(k, p, kind) {
+        const s0 = k.parent; if (!s0) return '';
+        const y0 = s0.y + cardDims(s0).w, x0 = s0.x, y3 = k.y, x3 = k.x, ym = (y0 + y3) / 2;
+        const len = flowLinkLen(k), kilat = kind === 'kilat';
+        const n = Math.max(3, Math.ceil(len * p / (kilat ? 10 : 7))), amp = kilat ? 7 : 3.6;
+        const bez = t => {
+            const u = 1 - t;
+            return [u * u * u * y0 + 3 * u * u * t * ym + 3 * u * t * t * ym + t * t * t * y3,
+                    u * u * u * x0 + 3 * u * u * t * x0 + 3 * u * t * t * x3 + t * t * t * x3,
+                    3 * u * u * (ym - y0) + 3 * t * t * (y3 - ym),
+                    6 * u * t * (x3 - x0)];
+        };
+        const full = p >= 0.999;
+        let d = '';
+        for (let i = 0; i <= n; i++) {
+            const t = p * i / n, b = bez(t), m = Math.hypot(b[2], b[3]) || 1, nx = -b[3] / m, ny = b[2] / m;
+            const env = Math.min(1, t * 9, full ? (1 - t) * 9 : 1);
+            const off = (kilat ? (i % 2 ? 1 : -1) * (0.5 + Math.random() * 0.5) : (Math.random() * 2 - 1)) * amp * env;
+            d += (i ? ' L' : 'M') + (b[0] + nx * off).toFixed(1) + ',' + (b[1] + ny * off).toFixed(1);
+        }
+        if (kilat && p > 0.25) {                                     // cabang kecil khas petir
+            const nb = Math.random() < 0.5 ? 1 : 2;
+            for (let j = 0; j < nb; j++) {
+                const t = 0.12 + Math.random() * (p - 0.2), b = bez(t), m = Math.hypot(b[2], b[3]) || 1;
+                let ang = Math.atan2(b[3] / m, b[2] / m) + (Math.random() < 0.5 ? -1 : 1) * (0.5 + Math.random() * 0.6);
+                let px = b[0], py = b[1]; d += ' M' + px.toFixed(1) + ',' + py.toFixed(1);
+                for (let q = 0; q < 3; q++) {
+                    ang += (Math.random() - 0.5) * 1.1; const l = 5 + Math.random() * 6;
+                    px += Math.cos(ang) * l; py += Math.sin(ang) * l; d += ' L' + px.toFixed(1) + ',' + py.toFixed(1);
+                }
+            }
+        }
+        return d;
+    }
+    function fwJagTick() {
+        if (!FW.jag.size || document.hidden || !isJagStyle() || svg.node().classList.contains('sedang-gerak')) return;
+        const kind = cardSettings.flow.style, now = performance.now(), tr = d3.zoomTransform(svg.node());
+        FW.jag.forEach(st => {
+            const k = st.k; if (!k.parent || !nodeShown(k)) return;
+            const ax = tr.x + tr.k * k.parent.y, bx = tr.x + tr.k * (k.y), ay = tr.y + tr.k * k.parent.x, by = tr.y + tr.k * k.x;
+            if (Math.max(ax, bx) < -60 || Math.min(ax, bx) > innerWidth + 60 || Math.max(ay, by) < 0 || Math.min(ay, by) > innerHeight + 60) return;   // di luar layar
+            const p = Math.min(1, (now - st.t0) / st.ms), el = st.el;
+            el.setAttribute('d', jagBuild(k, p, kind));
+            if (kind === 'kilat') {
+                el.style.strokeWidth = (1.8 + Math.random() * 1.8).toFixed(1);
+                el.style.opacity = Math.random() < 0.14 ? 0.2 : (0.65 + Math.random() * 0.35).toFixed(2);
+            } else {
+                el.style.strokeWidth = (1.5 + Math.random() * 1.1).toFixed(1);
+                el.style.opacity = (0.75 + Math.random() * 0.25).toFixed(2);
+            }
+        });
+    }
+    function fwJagStart() { if (!FW.jagTimer) FW.jagTimer = setInterval(fwJagTick, 85); }
+    function fwJagStop() { clearInterval(FW.jagTimer); FW.jagTimer = null; }
+
+    // dipanggil saat pengaturan berubah / halaman siap
+    function applyFlowRelay() {
+        svg.node().classList.remove('flow-seq');
+        fwStop();
+        if (isJagStyle()) fwJagStart(); else fwJagStop();
+        if (cardSettings.flow.mode === 'always') fwRun(null, 'loop');
+    }
+    // setelah kartu ditutup: susun ulang siklus supaya mengikuti kartu yang masih tampil
+    function flowAfterClose() {
+        if (cardSettings.flow.mode === 'always') setTimeout(() => fwRun(null, 'loop'), 120);
+    }
+
+    // efek acak per kartu (hanya bila "hanya kartu yang terkena aliran" dimatikan)
     let fxLoopTimer = null;
     const fxNext = new WeakMap();
     function applyFxLoop() {
         clearInterval(fxLoopTimer); fxLoopTimer = null;
         const f0 = cardSettings.flow;
-        if (!f0.fxLoop || f0.fx === 'none') return;
-        if (f0.fxHit && f0.mode === 'always' && f0.seq) return; // efek dipicu oleh giliran aliran (applyFlowRelay)
+        if (!f0.fxLoop || f0.fx === 'none' || f0.fxHit) return;   // bila fxHit aktif, efek dipicu oleh aliran sendiri (fwRun)
         fxLoopTimer = setInterval(() => {
             if (document.hidden || svg.node().classList.contains('sedang-gerak')) return;
             const gap = cardSettings.flow.fxGap * 1000, now = Date.now();
@@ -3434,7 +3601,6 @@ svg.flow-style-rainbow .link-flow {
                 const t = fxNext.get(d);
                 if (t == null) { fxNext.set(d, now + Math.random() * gap); return; }
                 if (now < t) return;
-                if (cardSettings.flow.fxHit && !isFlowing(d)) return; // hanya kartu yang sedang terkena aliran
                 fxNext.set(d, now + gap * (0.7 + Math.random() * 0.6));
                 const r = this.getBoundingClientRect();
                 if (r.right < 0 || r.left > innerWidth || r.bottom < 70 || r.top > innerHeight) return;
@@ -3445,70 +3611,29 @@ svg.flow-style-rainbow .link-flow {
 
     // dipanggil dari update(): sinkronkan lapisan aliran dengan garis penghubung
     function syncFlowLinks(links, source, linkDuration) {
+        const o0 = () => { const o = { x: source.x0, y: source.y0 }; return diagonal(o, o); };
+        const o1 = () => { const o = { x: source.x, y: source.y }; return diagonal(o, o); };
         const sel = gContainer.selectAll('path.link-flow').data(links, d => d.target.id);
-        const enter = sel.enter().insert('path', 'g')
-            .attr('class', 'link-flow')
-            .style('stroke', d => flowColorFor(d))
-            .attr('d', () => { const o = { x: source.x0, y: source.y0 }; return diagonal(o, o); });
+        const enter = sel.enter().insert('path', 'g').attr('class', 'link-flow').attr('d', o0);
         enter.merge(sel).transition().duration(linkDuration).attr('d', d => diagonal(d.source, d.target));
-        sel.exit().transition().duration(linkDuration)
-            .attr('d', () => { const o = { x: source.x, y: source.y }; return diagonal(o, o); })
-            .remove();
+        sel.exit().transition().duration(linkDuration).attr('d', o1).remove();
+        // garis zig-zag (hanya dipakai gaya Listrik/Kilat); digambar JS, jadi cukup dibuat & dibuang bersama garisnya
+        const js = gContainer.selectAll('path.link-jag').data(links, d => d.target.id);
+        js.enter().insert('path', 'g').attr('class', 'link-jag');
+        js.exit().each(d => FW.jag.delete(d.target.id)).remove();
+        paintFlowLinks();
     }
 
-    // batalkan urutan aliran milik kartu induk (mis. saat kartu ditutup)
+    // batalkan lampu aliran milik kartu induk (mis. saat kartu ditutup)
     function cancelFlow(p) {
-        const arr = flowTimers.get(p);
-        if (arr) arr.forEach(clearTimeout);
-        flowTimers.delete(p);
-        flowBusy.delete(p);
-        gContainer.selectAll('path.link-flow').filter(l => l.source === p).classed('flow-run', false);
+        gContainer.selectAll('path.link-flow,path.link-jag').filter(l => l.source === p).classed('flow-run', false);
+        (p.children || p._children || []).forEach(k => FW.jag.delete(k.id));
     }
 
-    // dipanggil saat kartu orang tua dibuka
+    // dipanggil saat kartu orang tua dibuka: aliran mengalir dari root sampai kartu itu, lalu ke seluruh isinya
     function playFlow(p, noFx, forceFx) {
-        const f = cardSettings.flow;
-        const kids = p.children || [];
-        if (!kids.length) return;
-        cancelFlow(p);
-        const timers = []; flowTimers.set(p, timers);
-        const later = (fn, ms) => timers.push(setTimeout(fn, ms));
-        const wantFx = f.fx !== 'none' && (f.fxOpen || forceFx) && !noFx;
-
-        // --- semua serentak (cara lama, bila "bergantian" dimatikan) ---
-        if (!f.seq) {
-            if (f.mode === 'once') {
-                const ids = new Set(kids.map(k => k.id));
-                const run = gContainer.selectAll('path.link-flow').filter(l => ids.has(l.target.id));
-                later(() => run.classed('flow-run', false), 350 + 4600 / f.speed);
-            }
-            const st0 = Math.min(duration, 350);
-            kids.forEach((k, i) => later(() => {
-                const l = linkOf(k); let ms = 600;
-                if (!l.empty()) { if (f.mode === 'once') l.classed('flow-run', true); ms = (f.mode === 'off') ? flowTravel(l.node()) : restartFlowAnim(l.node()); }
-                if (wantFx) later(() => whenIdle(() => { if (stillChild(k)) arriveFx(k); }), ms);
-            }, st0 + i * 70));
-            return;
-        }
-
-        // --- bergantian: kartu 1 -> kartu 2 -> ... ---
-        const slot = flowSlot();
-        const start = Math.min(duration, 350);          // beri waktu garis tumbuh dulu
-        const showFlow = f.mode !== 'off';
-        flowBusy.add(p);
-        kids.forEach((k, i) => {
-            const t0 = start + i * slot;
-            // aliran merambat dulu di garis; efek kartu baru mulai SETELAH aliran sampai di kartu itu
-            later(() => {
-                const l = linkOf(k); let ms = slot * FLOW_TRAVEL;
-                if (!l.empty()) {
-                    ms = showFlow ? (l.classed('flow-run', true), restartFlowAnim(l.node())) : flowTravel(l.node());
-                    if (showFlow) later(() => linkOf(k).classed('flow-run', false), Math.max(slot, ms + 250));
-                }
-                if (wantFx) later(() => whenIdle(() => { if (stillChild(k)) arriveFx(k); }), ms);
-            }, t0);
-        });
-        later(() => flowBusy.delete(p), start + kids.length * slot + 1500);
+        if (!(p.children && p.children.length)) return;
+        fwRun(p, forceFx ? 'test' : 'open');
     }
 
     // tunda sampai zoom/geser berhenti (maks. ~3 dtk), supaya efek tidak hilang saat kamera bergerak
@@ -3685,6 +3810,37 @@ svg.flow-style-rainbow .link-flow {
                 { duration: 550 + Math.random() * 450, delay: Math.random() * 120, easing: 'cubic-bezier(.1,.7,.3,1)' });
             }
         },
+        // sambaran petir turun ke kartu + kartu berkedip
+        petir(c) {
+            const { w, h } = c.dims;
+            zapGlow(c, false);
+            const bolt = (x0, y0, x1, y1) => {
+                let d = `M${x0.toFixed(1)},${y0.toFixed(1)}`;
+                for (let i = 1; i < 7; i++) { const t = i / 7; d += ` L${(x0 + (x1 - x0) * t + (Math.random() - 0.5) * 14).toFixed(1)},${(y0 + (y1 - y0) * t).toFixed(1)}`; }
+                return d + ` L${x1.toFixed(1)},${y1.toFixed(1)}`;
+            };
+            for (let i = 0; i < 2; i++) {
+                const x = w * (0.2 + Math.random() * 0.6);
+                const el = zapTemp(c, 'path', { d: bolt(x + (Math.random() - 0.5) * 26, -h / 2 - 46, x, -h / 2 + 6), fill: 'none', stroke: '#ffffff',
+                    'stroke-width': 2.6, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' },
+                    [{ opacity: 1 }, { opacity: 0.1 }, { opacity: 1 }, { opacity: 0 }, { opacity: 0.85 }, { opacity: 0 }],
+                    { duration: 520, delay: i * 140, easing: 'steps(1)' });
+                el.style.filter = `drop-shadow(0 0 4px ${c.col}) drop-shadow(0 0 9px ${c.col})`;
+            }
+        },
+        // kilatan putih terang dua kali + cincin cahaya
+        flash(c) {
+            if (!c.real) return;
+            const f = (br, gl) => `brightness(${br}) drop-shadow(0 0 ${gl}px #fff)`;
+            c.track(c.real.animate([
+                { filter: f(1, 0), offset: 0 }, { filter: f(3.4, 22), offset: 0.07 }, { filter: f(1.1, 2), offset: 0.16 },
+                { filter: f(2.6, 18), offset: 0.26 }, { filter: f(1, 0), offset: 0.55 }, { filter: f(1, 0), offset: 1 }
+            ], { duration: 800, easing: 'linear' }));
+            const { w, h } = c.dims, r = Math.min(22, Math.round(h * 0.42));
+            const ring = zapTemp(c, 'rect', { x: -2, y: -h / 2 - 2, width: w + 4, height: h + 4, rx: r + 2, ry: r + 2, fill: 'none', stroke: '#ffffff', 'stroke-width': 3 },
+                [{ opacity: 0.95, scale: 1 }, { opacity: 0, scale: 1.4 }], { duration: 700, easing: 'ease-out' });
+            ring.style.filter = `drop-shadow(0 0 6px ${c.col})`;
+        },
         lompat(c) {
             const a = Math.min(40, 16 / zapK());
             const t = y => `0px ${(-y).toFixed(2)}px`;
@@ -3736,7 +3892,7 @@ svg.flow-style-rainbow .link-flow {
         csEl('cs-fspeed').value = f.speed;
         csEl('cs-fxopen').checked = !!f.fxOpen; csEl('cs-fxtap').checked = !!f.fxTap; csEl('cs-fxloop').checked = !!f.fxLoop;
         csEl('cs-fxgap').value = f.fxGap; csEl('cs-fxgap-val').textContent = f.fxGap + ' dtk';
-        csEl('cs-fxgap-row').style.display = (f.fxLoop && !(f.fxHit && f.mode === 'always' && f.seq)) ? '' : 'none';
+        csEl('cs-fxgap-row').style.display = (f.mode === 'always' || (f.fxLoop && !f.fxHit)) ? '' : 'none';
         csEl('cs-fseq').checked = !!f.seq; csEl('cs-fxhit').checked = !!f.fxHit;
         csEl('cs-fseqgap').value = f.seqGap; csEl('cs-fseqgap-val').textContent = (+f.seqGap).toFixed(1) + ' dtk';
         csEl('cs-fseqgap-row').style.display = f.seq ? '' : 'none';
@@ -3753,7 +3909,6 @@ svg.flow-style-rainbow .link-flow {
         gContainer.selectAll('g.node').each(d => { if (!target && d.children && d.children.length) target = d; });
         if (!target) { if (!silent) csEl('cs-ok').textContent = 'Buka dulu satu kartu (ketuk kartu pendiri) untuk mencoba.'; return; }
         // lepas mode gerak sementara agar efek terlihat meski panel menutupi layar
-        if (cardSettings.flow.seq) { playFlow(target, false, true); return; }
         playFlow(target, false, true);
     }
 
@@ -4663,7 +4818,7 @@ svg.flow-style-rainbow .link-flow {
                     d._children = null;
                 }
                 update(d);
-                if (d.children) playFlow(d);
+                if (d.children) playFlow(d); else flowAfterClose();
                 if (cardSettings.flow.fxTap) arriveFx(d);
 
                 if (isFirstRootExpand) {
