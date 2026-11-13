@@ -1546,6 +1546,20 @@
 #bg-fx canvas { width: 100%; height: 100%; display: block; }
 body.bg-themed { background-image: none !important; background-color: #000 !important; }
 body.bg-dark .link { stroke: rgba(226, 232, 240, 0.8); }
+/* kelompok besar di panel */
+.cs-grp { margin-top: 10px; padding-top: 8px; border-top: 2px solid #e2e8f0; }
+.cs-grp > summary { list-style: none; cursor: pointer; }
+.cs-grp > summary::-webkit-details-marker { display: none; }
+.cs-grp-sum { font-size: .86rem; font-weight: 800; color: #1e293b; padding: 6px 2px 8px; display: flex; align-items: baseline; gap: 6px; }
+.cs-grp-sum::after { content: '▾'; margin-left: auto; color: #7c3aed; font-size: .9rem; }
+.cs-grp:not([open]) > .cs-grp-sum::after { content: '▸'; }
+.cs-grp-sum small { font-size: .62rem; font-weight: 600; color: #64748b; }
+.cs-note { font-size: .7rem; line-height: 1.4; color: #334155; background: #f5f3ff; border: 1px solid #ddd6fe; border-radius: 8px; padding: 7px 9px; margin-bottom: 8px; }
+.cs-step { font-size: .74rem; font-weight: 800; color: #1e293b; margin: 12px 0 6px; display: flex; align-items: center; gap: 7px; }
+.cs-step b { display: inline-flex; width: 18px; height: 18px; border-radius: 50%; background: #7c3aed; color: #fff; font-size: .66rem; align-items: center; justify-content: center; }
+.cs-dim { opacity: .38; pointer-events: none; }
+.cs-adv { margin-top: 8px; border: 1px dashed #cbd5e1; border-radius: 8px; padding: 6px 9px; }
+.cs-adv > summary { cursor: pointer; font-size: .7rem; font-weight: 800; color: #475569; }
 .cs-hint { font-size: .66rem; color: #64748b; margin-top: 4px; line-height: 1.35; }
 .cs-ok { min-height: 16px; font-size: .7rem; color: #15803d; font-weight: 700; margin-top: 6px; text-align: center; }
 </style>
@@ -1684,37 +1698,8 @@ svg.flow-style-listrik .link-flow, svg.flow-style-kilat .link-flow { stroke-widt
                 <div class="cs-preview"><svg id="cs-preview-svg" width="330" height="90" viewBox="-40 -45 330 90"></svg></div>
             </div>
 
-            <details class="cs-sec" id="cs-bg-sec" open>
-                <summary class="cs-label" style="cursor:pointer;margin-bottom:6px">🌌 Latar belakang</summary>
-                <div class="cs-presets" id="cs-bg-themes"></div>
-                <div id="cs-bg-opts" style="display:none">
-                    <div class="cs-label" style="margin-top:10px" id="cs-bg-variant-label">Variasi</div>
-                    <div class="cs-presets" id="cs-bg-variants"></div>
-                    <div class="cs-label" style="margin-top:10px">Nuansa warna langit</div>
-                    <div class="cs-presets" id="cs-bg-tones"></div>
-                    <div id="cs-bg-stars-box" style="margin-top:10px"><div id="cs-bg-stars-sl"></div></div>
-                    <div id="cs-bg-pt-box" style="margin-top:10px">
-                        <div id="cs-bg-pt-sl"></div>
-                        <div class="cs-color-row">
-                            <label><input type="checkbox" id="cs-bg-cloud" onchange="csBgBool('cloud',this.checked)"> ☁ awan</label>
-                            <label><input type="checkbox" id="cs-bg-rain" onchange="csBgBool('rain',this.checked)"> 🌧 hujan</label>
-                            <label><input type="checkbox" id="cs-bg-flash" onchange="csBgBool('flash',this.checked)"> 💥 flash layar</label>
-                        </div>
-                        <div class="cs-row-btn" style="margin-top:2px"><button class="cs-btn small" id="cs-bg-test" style="flex:1" onclick="csBgTest()">⚡ COBA KILAT</button></div>
-                    </div>
-                    <div class="cs-color-row" style="margin-top:8px">
-                        <span class="nm" style="width:104px">Warna</span>
-                        <div class="cs-seg" id="cs-bg-cmode" style="flex:1">
-                            <button data-v="auto" onclick="csBgColorMode('auto')">IKUT VARIASI</button>
-                            <button data-v="custom" onclick="csBgColorMode('custom')">PILIH</button>
-                        </div>
-                        <input type="color" id="cs-bg-color" oninput="csBgColor(this.value)">
-                    </div>
-                    <div class="cs-hint" id="cs-bg-colorhint"></div>
-                    <div class="cs-hint">Memilih variasi petir akan mengembalikan pengaturan awal variasi itu; setelah itu semua slider bebas disesuaikan. Animasi berhenti sementara saat layar dicubit/digeser agar tetap ringan.</div>
-                </div>
-            </details>
-
+            <details class="cs-grp" id="cs-card-sec">
+                <summary class="cs-grp-sum">🎴 Tampilan kartu <small>model, warna, lidah</small></summary>
             <div class="cs-sec">
                 <div class="cs-label">Model kartu</div>
                 <div class="cs-seg" id="cs-model-seg">
@@ -1808,106 +1793,147 @@ svg.flow-style-listrik .link-flow, svg.flow-style-kilat .link-flow { stroke-widt
                 </div>
             </div>
 
-            <div class="cs-sec">
-                <div class="cs-label">Garis penghubung &amp; efek kartu anak</div>
+            </details>
+
+            <details class="cs-grp" id="cs-flow-sec" open>
+                <summary class="cs-grp-sum">⚡ Aliran &amp; efek kartu <small>listrik dari Mubanan ke bawah</small></summary>
+                <div class="cs-note">Aliran selalu keluar dari kartu <b>Mubanan</b>, merambat ke generasi berikutnya, dan seterusnya. Setiap kartu yang dilewati aliran <b>berefek tepat saat aliran sampai</b>; kartu yang tidak dilewati diam.</div>
+                <div class="cs-row-btn" style="margin:0 0 6px;"><button class="cs-btn small" style="flex:1" onclick="csTestFlow()">▶ COBA SEKARANG</button></div>
+
+                <div class="cs-step"><b>1</b> Kapan mengalir?</div>
                 <div class="cs-seg" id="cs-fmode-seg">
-                    <button data-v="off" onclick="csFlow('mode','off')">ALIRAN MATI</button>
+                    <button data-v="off" onclick="csFlow('mode','off')">MATI</button>
                     <button data-v="once" onclick="csFlow('mode','once')">SAAT DIBUKA</button>
                     <button data-v="always" onclick="csFlow('mode','always')">TERUS</button>
                 </div>
-                <div class="cs-color-row" style="margin-top:8px;">
-                    <span class="nm">Jumlah aliran</span>
-                    <div class="cs-seg" id="cs-fone-seg" style="flex:1">
-                        <button data-v="off" onclick="csFlow('one','off')">SEMUA KARTU</button>
-                        <button data-v="urut" onclick="csFlow('one','urut')">1 URUT</button>
-                        <button data-v="acak" onclick="csFlow('one','acak')">1 ACAK</button>
+                <div class="cs-hint" id="cs-fhint-mode"></div>
+
+                <div id="cs-f-dim">
+                    <div class="cs-step"><b>2</b> Tema aliran</div>
+                    <div class="cs-presets" id="cs-fstyle-chips"></div>
+                    <div class="cs-color-row" style="margin-top:8px;">
+                        <span class="nm">Warna</span>
+                        <div class="cs-seg" id="cs-fcol-seg" style="flex:1">
+                            <button data-v="auto" onclick="csFlow('colorMode','auto')">IKUT GENERASI</button>
+                            <button data-v="custom" onclick="csFlow('colorMode','custom')">PILIH</button>
+                        </div>
+                        <input type="color" id="cs-fcolor" oninput="csFlow('color',this.value,true)">
+                    </div>
+
+                    <div class="cs-step"><b>3</b> Ke mana &amp; seberapa cepat?</div>
+                    <div class="cs-color-row">
+                        <span class="nm">Jalur</span>
+                        <div class="cs-seg" id="cs-fone-seg" style="flex:1">
+                            <button data-v="off" onclick="csFlow('one','off')">SEMUA</button>
+                            <button data-v="urut" onclick="csFlow('one','urut')">1 URUT</button>
+                            <button data-v="acak" onclick="csFlow('one','acak')">1 ACAK</button>
+                        </div>
+                    </div>
+                    <div class="cs-hint" id="cs-fhint-one" style="margin:-3px 0 7px;"></div>
+                    <div class="cs-color-row">
+                        <span class="nm">Putaran</span>
+                        <div class="cs-seg" id="cs-frep-seg" style="flex:1">
+                            <button data-v="1" onclick="csFlow('rep',1)">1X</button>
+                            <button data-v="2" onclick="csFlow('rep',2)">2X</button>
+                            <button data-v="3" onclick="csFlow('rep',3)">3X</button>
+                        </div>
+                    </div>
+                    <div class="cs-hint" style="margin:-3px 0 7px;">Berapa kali aliran lewat di garis ke satu kartu sebelum pindah ke kartu berikutnya.</div>
+                    <div class="cs-color-row">
+                        <span class="nm">Kecepatan</span>
+                        <input type="range" class="cs-range" id="cs-fspeed" min="0.5" max="2.5" step="0.1" style="flex:1" oninput="csFlow('speed',+this.value,true)">
                     </div>
                 </div>
-                <div class="cs-hint" style="margin:-2px 0 6px;">“1 URUT/ACAK”: dari tiap kartu hanya SATU anak yang dialiri, anak lain tidak. Tiap putaran berpindah ke kartu berikutnya (urut) atau sembarang kartu (acak).</div>
+
+                <div class="cs-step"><b>4</b> Efek pada kartu</div>
                 <div class="cs-color-row">
-                    <span class="nm">Gaya aliran</span>
-                    <select id="cs-fstyle" class="cs-select" style="flex:1;width:auto" onchange="csFlow('style',this.value)">
-                        <option value="listrik">⚡ Aliran Listrik (zig-zag menyetrum)</option>
-                        <option value="kilat">🌩 Aliran Kilat (petir bercabang)</option>
-                        <option value="flash">💥 Aliran Flash (kilatan melesat)</option>
-                        <option value="neon">🔮 Neon (tabung cahaya berdenyut)</option>
-                        <option value="plasma">🟣 Plasma (butiran energi)</option>
-                        <option value="comet">☄ Komet</option>
-                        <option value="dots">Titik cahaya</option>
-                        <option value="dash">Garis putus mengalir</option>
-                        <option value="rainbow">🌈 Pelangi</option>
-                    </select>
-                </div>
-                <div class="cs-color-row">
-                    <span class="nm">Warna aliran</span>
-                    <div class="cs-seg" id="cs-fcol-seg" style="flex:1">
-                        <button data-v="auto" onclick="csFlow('colorMode','auto')">IKUT GENERASI</button>
-                        <button data-v="custom" onclick="csFlow('colorMode','custom')">PILIH</button>
-                    </div>
-                    <input type="color" id="cs-fcolor" oninput="csFlow('color',this.value,true)">
-                </div>
-                <div class="cs-color-row">
-                    <span class="nm">Kecepatan</span>
-                    <input type="range" class="cs-range" id="cs-fspeed" min="0.5" max="2.5" step="0.1" style="flex:1" oninput="csFlow('speed',+this.value,true)">
-                </div>
-                <div class="cs-color-row">
-                    <span class="nm">Putaran per kartu</span>
-                    <div class="cs-seg" id="cs-frep-seg" style="flex:1">
-                        <button data-v="1" onclick="csFlow('rep',1)">1X</button>
-                        <button data-v="2" onclick="csFlow('rep',2)">2X</button>
-                        <button data-v="3" onclick="csFlow('rep',3)">3X</button>
-                    </div>
-                </div>
-                <div class="cs-hint" style="margin:-2px 0 6px;">Berapa kali aliran lewat di garis ke satu kartu sebelum pindah ke kartu berikutnya (efek kartu muncul setelah putaran terakhir).</div>
-                <div class="cs-color-row">
-                    <span class="nm">Efek kartu anak</span>
+                    <span class="nm">Gerakan</span>
                     <select id="cs-ffx" class="cs-select" style="flex:1;width:auto" onchange="csFlow('fx',this.value)">
                         <option value="none">Tanpa efek</option>
-                        <option value="ikut">🔗 Ikut gaya aliran (listrik→listrik, kilat→petir, dst.)</option>
-                        <option value="glow">✨ Glow</option>
-                        <option value="getar">📳 Glow + Getar</option>
-                        <option value="warna">🌈 Warna Berubah</option>
-                        <option value="denyut">💓 Berdetak</option>
-                        <option value="kilat">⚡ Kilat</option>
-                        <option value="riak">🌊 Riak Gelombang</option>
-                        <option value="percikan">🎆 Percikan</option>
-                        <option value="lompat">🦘 Melompat</option>
-                        <option value="petir">🌩 Sambaran Petir</option>
-                        <option value="flash">💥 Flash Putih</option>
-                        <option value="listrik">⚡ Listrik (getar + percikan + menyala)</option>
-                        <option value="menyala">Menyala</option>
-                        <option value="cipratan">💧 Cipratan air</option>
-                        <option value="pop">Memantul</option>
+                        <option value="ikut">🔗 Ikut tema aliran (disarankan)</option>
+                        <optgroup label="Listrik &amp; cahaya">
+                            <option value="listrik">⚡ Listrik (getar + percikan)</option>
+                            <option value="petir">🌩 Sambaran petir</option>
+                            <option value="kilat">⚡ Kilat</option>
+                            <option value="flash">💥 Flash putih</option>
+                            <option value="glow">✨ Glow</option>
+                            <option value="menyala">Menyala</option>
+                        </optgroup>
+                        <optgroup label="Gerak &amp; warna">
+                            <option value="getar">📳 Glow + getar</option>
+                            <option value="warna">🌈 Warna berubah</option>
+                            <option value="denyut">💓 Berdetak</option>
+                            <option value="lompat">🦘 Melompat</option>
+                            <option value="pop">Memantul</option>
+                        </optgroup>
+                        <optgroup label="Percikan">
+                            <option value="riak">🌊 Riak gelombang</option>
+                            <option value="percikan">🎆 Percikan</option>
+                            <option value="cipratan">💧 Cipratan air</option>
+                        </optgroup>
                         <option value="acak">🎲 Acak</option>
                     </select>
                 </div>
                 <div class="cs-color-row">
-                    <span class="nm">Kapan efek</span>
-                    <label><input type="checkbox" id="cs-fxopen" onchange="csFlow('fxOpen',this.checked)"> saat dibuka</label>
-                    <label><input type="checkbox" id="cs-fxtap" onchange="csFlow('fxTap',this.checked)"> saat diketuk</label>
-                    <label><input type="checkbox" id="cs-fxloop" onchange="csFlow('fxLoop',this.checked)"> tiap putaran aliran</label>
+                    <span class="nm">Muncul saat</span>
+                    <label><input type="checkbox" id="cs-fxopen" onchange="csFlow('fxOpen',this.checked)"> kartu dibuka</label>
+                    <label><input type="checkbox" id="cs-fxtap" onchange="csFlow('fxTap',this.checked)"> kartu diketuk</label>
+                    <label id="cs-fxloop-lb"><input type="checkbox" id="cs-fxloop" onchange="csFlow('fxLoop',this.checked)"> tiap putaran ulang</label>
                 </div>
                 <div class="cs-color-row">
-                    <span class="nm">Urutan aliran</span>
-                    <label><input type="checkbox" id="cs-fseq" onchange="csFlow('seq',this.checked)"> bergantian antar saudara (kartu 1, lalu 2, dst.)</label>
+                    <label><input type="checkbox" id="cs-fxhit" onchange="csFlow('fxHit',this.checked)"> <b>Hanya kartu yang dilewati aliran</b> yang berefek (disarankan)</label>
                 </div>
-                <div class="cs-color-row" id="cs-fseqgap-row">
-                    <span class="nm">Giliran tiap kartu</span>
-                    <input type="range" class="cs-range" id="cs-fseqgap" min="0.4" max="2" step="0.1" style="flex:1" oninput="csFlow('seqGap',+this.value,true)">
-                    <span id="cs-fseqgap-val" style="font-size:.7rem;font-weight:700;width:40px;"></span>
+
+                <details class="cs-adv">
+                    <summary>Pengaturan lanjutan</summary>
+                    <div class="cs-color-row" id="cs-fseq-row" style="margin-top:8px;">
+                        <label><input type="checkbox" id="cs-fseq" onchange="csFlow('seq',this.checked)"> Kartu bersaudara dialiri bergantian (kartu 1, lalu 2, dst.)</label>
+                    </div>
+                    <div class="cs-color-row" id="cs-fseqgap-row">
+                        <span class="nm" style="width:104px">Jeda antar kartu</span>
+                        <input type="range" class="cs-range" id="cs-fseqgap" min="0.4" max="2" step="0.1" style="flex:1" oninput="csFlow('seqGap',+this.value,true)">
+                        <span id="cs-fseqgap-val" style="font-size:.7rem;font-weight:700;width:40px;"></span>
+                    </div>
+                    <div class="cs-color-row" id="cs-fxgap-row">
+                        <span class="nm" style="width:104px">Jeda ulang</span>
+                        <input type="range" class="cs-range" id="cs-fxgap" min="2" max="12" step="1" style="flex:1" oninput="csFlow('fxGap',+this.value,true)">
+                        <span id="cs-fxgap-val" style="font-size:.7rem;font-weight:700;width:34px;"></span>
+                    </div>
+                    <div class="cs-hint">“Jeda ulang” = lama semua garis tetap menyala sebelum aliran mulai lagi dari Mubanan (mode TERUS).</div>
+                </details>
+                <div class="cs-hint">Aliran &amp; efek berhenti sementara saat layar dicubit/digeser agar tetap ringan. “Coba sekarang” butuh minimal satu kartu yang sudah dibuka.</div>
+            </details>
+
+            <details class="cs-grp" id="cs-bg-sec">
+                <summary class="cs-grp-sum">🌌 Latar belakang <small>bintang, petir, warna langit</small></summary>
+                <div class="cs-presets" id="cs-bg-themes"></div>
+                <div id="cs-bg-opts" style="display:none">
+                    <div class="cs-label" style="margin-top:10px" id="cs-bg-variant-label">Variasi</div>
+                    <div class="cs-presets" id="cs-bg-variants"></div>
+                    <div class="cs-label" style="margin-top:10px">Nuansa warna langit</div>
+                    <div class="cs-presets" id="cs-bg-tones"></div>
+                    <div id="cs-bg-stars-box" style="margin-top:10px"><div id="cs-bg-stars-sl"></div></div>
+                    <div id="cs-bg-pt-box" style="margin-top:10px">
+                        <div id="cs-bg-pt-sl"></div>
+                        <div class="cs-color-row">
+                            <label><input type="checkbox" id="cs-bg-cloud" onchange="csBgBool('cloud',this.checked)"> ☁ awan</label>
+                            <label><input type="checkbox" id="cs-bg-rain" onchange="csBgBool('rain',this.checked)"> 🌧 hujan</label>
+                            <label><input type="checkbox" id="cs-bg-flash" onchange="csBgBool('flash',this.checked)"> 💥 flash layar</label>
+                        </div>
+                        <div class="cs-row-btn" style="margin-top:2px"><button class="cs-btn small" id="cs-bg-test" style="flex:1" onclick="csBgTest()">⚡ COBA KILAT</button></div>
+                    </div>
+                    <div class="cs-color-row" style="margin-top:8px">
+                        <span class="nm" style="width:104px">Warna</span>
+                        <div class="cs-seg" id="cs-bg-cmode" style="flex:1">
+                            <button data-v="auto" onclick="csBgColorMode('auto')">IKUT VARIASI</button>
+                            <button data-v="custom" onclick="csBgColorMode('custom')">PILIH</button>
+                        </div>
+                        <input type="color" id="cs-bg-color" oninput="csBgColor(this.value)">
+                    </div>
+                    <div class="cs-hint" id="cs-bg-colorhint"></div>
+                    <div class="cs-hint">Memilih variasi petir akan mengembalikan pengaturan awal variasi itu; setelah itu semua slider bebas disesuaikan. Animasi berhenti sementara saat layar dicubit/digeser agar tetap ringan.</div>
                 </div>
-                <div class="cs-color-row">
-                    <span class="nm">Efek kartu</span>
-                    <label><input type="checkbox" id="cs-fxhit" onchange="csFlow('fxHit',this.checked)"> hanya kartu yang terkena aliran</label>
-                </div>
-                <div class="cs-color-row" id="cs-fxgap-row">
-                    <span class="nm">Jeda ulang siklus</span>
-                    <input type="range" class="cs-range" id="cs-fxgap" min="2" max="12" step="1" style="flex:1" oninput="csFlow('fxGap',+this.value,true)">
-                    <span id="cs-fxgap-val" style="font-size:.7rem;font-weight:700;width:34px;"></span>
-                </div>
-                <div class="cs-row-btn" style="margin-top:4px;"><button class="cs-btn small" style="flex:1" onclick="csTestFlow()">▶ COBA EFEK</button></div>
-                <div class="cs-hint">Aliran selalu bersumber dari kartu pendiri (Mubanan), merambat ke generasi berikutnya, dan seterusnya. Kartu sumber (Mubanan) selalu beraksi saat mulai mengalirkan. Setiap kartu yang dilewati aliran beraksi (efek) saat aliran SAMPAI padanya; kartu yang tidak dilewati diam. Mode TERUS mengulang dari Mubanan setelah jeda. Aliran &amp; efek otomatis berhenti saat layar dicubit/digeser agar tetap ringan. “Coba efek” butuh minimal satu kartu yang sudah dibuka.</div>
-            </div>
+            </details>
 
             <div class="cs-ok" id="cs-ok"></div>
             <div class="cs-row-btn">
@@ -3936,19 +3962,42 @@ svg.flow-style-listrik .link-flow, svg.flow-style-kilat .link-flow { stroke-widt
     }
 
     // ---------- UI panel ----------
+    const FLOW_STYLE_ITEMS = [
+        { k: 'listrik', name: '⚡ Listrik' }, { k: 'kilat', name: '🌩 Kilat' }, { k: 'flash', name: '💥 Flash' },
+        { k: 'neon', name: '🔮 Neon' }, { k: 'plasma', name: '🟣 Plasma' }, { k: 'comet', name: '☄ Komet' },
+        { k: 'rainbow', name: '🌈 Pelangi' }, { k: 'dots', name: '• Titik' }, { k: 'dash', name: '┅ Putus-putus' }
+    ];
+    const FLOW_HINT_MODE = {
+        off: 'Garis tidak mengalir. Kartu tetap bisa berefek bila efek dinyalakan.',
+        once: 'Aliran berjalan sekali dari Mubanan saat Anda membuka sebuah kartu.',
+        always: 'Aliran berulang terus dari Mubanan ke generasi berikutnya, tanpa henti.'
+    };
+    const FLOW_HINT_ONE = {
+        off: 'Semua kartu anak dialiri.',
+        urut: 'Hanya SATU kartu anak yang dialiri; putaran berikutnya pindah ke kartu berikutnya secara berurutan.',
+        acak: 'Hanya SATU kartu anak yang dialiri; kartu yang dipilih sembarang di tiap putaran.'
+    };
     function csFlowSync() {
         const f = cardSettings.flow;
+        const one = (f.one === 'urut' || f.one === 'acak') ? f.one : 'off';
         const mark = (id, v) => csEl(id).querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.v === String(v)));
-        mark('cs-fmode-seg', f.mode); mark('cs-fcol-seg', f.colorMode); mark('cs-frep-seg', Math.max(1, Math.min(3, Math.round(+f.rep) || 1))); mark('cs-fone-seg', (f.one === 'urut' || f.one === 'acak') ? f.one : 'off');
-        csEl('cs-fstyle').value = f.style; csEl('cs-ffx').value = f.fx;
+        mark('cs-fmode-seg', f.mode); mark('cs-fcol-seg', f.colorMode); mark('cs-frep-seg', Math.max(1, Math.min(3, Math.round(+f.rep) || 1))); mark('cs-fone-seg', one);
+        csBgChip(csEl('cs-fstyle-chips'), FLOW_STYLE_ITEMS, f.style, k => csFlow('style', k));
+        csEl('cs-ffx').value = f.fx;
         csEl('cs-fcolor').value = f.color; csEl('cs-fcolor').style.display = f.colorMode === 'custom' ? '' : 'none';
         csEl('cs-fspeed').value = f.speed;
         csEl('cs-fxopen').checked = !!f.fxOpen; csEl('cs-fxtap').checked = !!f.fxTap; csEl('cs-fxloop').checked = !!f.fxLoop;
         csEl('cs-fxgap').value = f.fxGap; csEl('cs-fxgap-val').textContent = f.fxGap + ' dtk';
-        csEl('cs-fxgap-row').style.display = (f.mode === 'always' || (f.fxLoop && !f.fxHit)) ? '' : 'none';
         csEl('cs-fseq').checked = !!f.seq; csEl('cs-fxhit').checked = !!f.fxHit;
         csEl('cs-fseqgap').value = f.seqGap; csEl('cs-fseqgap-val').textContent = (+f.seqGap).toFixed(1) + ' dtk';
-        csEl('cs-fseqgap-row').style.display = (f.seq && !(f.one === 'urut' || f.one === 'acak')) ? '' : 'none';
+        csEl('cs-fhint-mode').textContent = FLOW_HINT_MODE[f.mode] || '';
+        csEl('cs-fhint-one').textContent = FLOW_HINT_ONE[one];
+        // bagian yang tidak berlaku untuk pilihan saat ini diredupkan (tidak disembunyikan, supaya tetap terbaca)
+        csEl('cs-f-dim').classList.toggle('cs-dim', f.mode === 'off');
+        csEl('cs-fxloop-lb').classList.toggle('cs-dim', f.mode !== 'always');
+        csEl('cs-fxgap-row').classList.toggle('cs-dim', f.mode !== 'always');
+        csEl('cs-fseq-row').classList.toggle('cs-dim', one !== 'off');
+        csEl('cs-fseqgap-row').classList.toggle('cs-dim', one !== 'off' || !f.seq);
     }
     function csFlow(key, val, quiet) {
         cardSettings.flow[key] = val;
