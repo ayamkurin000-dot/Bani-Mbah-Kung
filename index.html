@@ -1854,6 +1854,7 @@ svg.flow-style-listrik .link-flow, svg.flow-style-kilat .link-flow { stroke-widt
                     <span class="nm">Efek kartu anak</span>
                     <select id="cs-ffx" class="cs-select" style="flex:1;width:auto" onchange="csFlow('fx',this.value)">
                         <option value="none">Tanpa efek</option>
+                        <option value="ikut">🔗 Ikut gaya aliran (listrik→listrik, kilat→petir, dst.)</option>
                         <option value="glow">✨ Glow</option>
                         <option value="getar">📳 Glow + Getar</option>
                         <option value="warna">🌈 Warna Berubah</option>
@@ -1896,7 +1897,7 @@ svg.flow-style-listrik .link-flow, svg.flow-style-kilat .link-flow { stroke-widt
                     <span id="cs-fxgap-val" style="font-size:.7rem;font-weight:700;width:34px;"></span>
                 </div>
                 <div class="cs-row-btn" style="margin-top:4px;"><button class="cs-btn small" style="flex:1" onclick="csTestFlow()">▶ COBA EFEK</button></div>
-                <div class="cs-hint">Aliran selalu bersumber dari kartu pendiri (Mubanan), merambat ke generasi berikutnya, dan seterusnya. Setiap kartu yang dilewati aliran beraksi (efek) saat aliran SAMPAI padanya; kartu yang tidak dilewati diam. Mode TERUS mengulang dari Mubanan setelah jeda. Aliran &amp; efek otomatis berhenti saat layar dicubit/digeser agar tetap ringan. “Coba efek” butuh minimal satu kartu yang sudah dibuka.</div>
+                <div class="cs-hint">Aliran selalu bersumber dari kartu pendiri (Mubanan), merambat ke generasi berikutnya, dan seterusnya. Kartu sumber (Mubanan) selalu beraksi saat mulai mengalirkan. Setiap kartu yang dilewati aliran beraksi (efek) saat aliran SAMPAI padanya; kartu yang tidak dilewati diam. Mode TERUS mengulang dari Mubanan setelah jeda. Aliran &amp; efek otomatis berhenti saat layar dicubit/digeser agar tetap ringan. “Coba efek” butuh minimal satu kartu yang sudah dibuka.</div>
             </div>
 
             <div class="cs-ok" id="cs-ok"></div>
@@ -2357,7 +2358,7 @@ svg.flow-style-listrik .link-flow, svg.flow-style-kilat .link-flow { stroke-widt
         wife:  { a: '#f472b6', b: '#ffffff' }
     };
     // Ubah nilai ini (atau tempel hasil "SALIN KODE") supaya semua pengunjung melihat tema yang sama.
-    const DEFAULT_CARD_SETTINGS = {"model":"kapsul","count":2,"same":false,"seam":50,"seamA":45,"seamB":78,"all":{"a":"#dc2626","b":"#ffffff"},"per":{"gen1":{"a":"#4ade80","b":"#ffffff","n":1,"m":"#ffffff","aTo":"#d96d6d"},"gen2":{"a":"#f472b6","b":"#cfdadd","n":3,"m":"#1ac8cb","aTo":"#f1f5b2","bTo":"#45d962"}},"flow":{"mode":"always","style":"comet","colorMode":"custom","color":"#ffffff","speed":1,"fx":"warna","fxOpen":true,"fxTap":true,"fxLoop":true,"fxGap":4,"seq":true,"seqGap":0.8,"fxHit":true},"lidah":{"mode":"custom","a":"#8c7c54","grad":true,"aTo":"#766e65"},"bg":{"theme":"petir","variant":{"hitam":"kedip","biru":"warna","petir":"beruntun"},"tone":{"hitam":0,"biru":0,"petir":2},"stars":{"density":1,"speed":1,"size":1},"colorMode":"auto","color":"#c4d9c4","pt":{"freq":6,"intensity":80,"flicker":5,"thick":2,"branches":2,"rain":true,"cloud":true,"flash":true}}};
+    const DEFAULT_CARD_SETTINGS = {"model":"kapsul","count":2,"same":false,"seam":50,"seamA":45,"seamB":78,"all":{"a":"#dc2626","b":"#ffffff"},"per":{"gen1":{"a":"#4ade80","b":"#ffffff","n":1,"m":"#ffffff","aTo":"#d96d6d"},"gen2":{"a":"#f472b6","b":"#cfdadd","n":3,"m":"#1ac8cb","aTo":"#f1f5b2","bTo":"#45d962"}},"flow":{"mode":"always","style":"comet","colorMode":"custom","color":"#ffffff","speed":1,"fx":"ikut","fxOpen":true,"fxTap":true,"fxLoop":true,"fxGap":4,"seq":true,"seqGap":0.8,"fxHit":true},"lidah":{"mode":"custom","a":"#8c7c54","grad":true,"aTo":"#766e65"},"bg":{"theme":"petir","variant":{"hitam":"kedip","biru":"warna","petir":"beruntun"},"tone":{"hitam":0,"biru":0,"petir":2},"stars":{"density":1,"speed":1,"size":1},"colorMode":"auto","color":"#c4d9c4","pt":{"freq":6,"intensity":80,"flicker":5,"thick":2,"branches":2,"rain":true,"cloud":true,"flash":true}}};
     const CAPSULE_PRESETS = [
         { name: 'Merah',        count: 1, p: { a: '#dc2626' } },
         { name: 'Putih–Biru',   count: 2, p: { a: '#f1f5f9', b: '#2b8fd6' } },
@@ -3527,6 +3528,11 @@ svg.flow-style-listrik .link-flow, svg.flow-style-kilat .link-flow { stroke-widt
         const showLine = f.mode !== 'off';
         const plan = fwPlan(focus, trigger);
         let end = 0;
+        // kartu sumber (Mubanan) selalu beraksi tepat saat ia mulai mengalirkan aliran ke kartu di bawahnya
+        if (plan.length && f.fx !== 'none') {
+            const t0 = Math.min.apply(null, plan.map(e => e.start));
+            fwLater(() => fwFx({ k: root }, trigger === 'loop' ? 'loop' : 'open'), t0, gen);
+        }
         plan.forEach(e => {
             end = Math.max(end, e.arrive);
             if (showLine) fwLater(() => fwLight(e), e.start, gen);
@@ -3898,14 +3904,18 @@ svg.flow-style-listrik .link-flow, svg.flow-style-kilat .link-flow { stroke-widt
     function zapCancelAll() { ZAP_ACTIVE.forEach(a => { try { a.cancel(); } catch (e) {} }); ZAP_ACTIVE.clear(); }
 
     // efek di kartu anak saat aliran "sampai"
+    // pasangan efek kartu untuk tiap gaya aliran (dipakai bila efek = "Ikut gaya aliran")
+    const FX_BY_STYLE = { listrik: 'listrik', kilat: 'petir', flash: 'flash', neon: 'glow', plasma: 'warna', comet: 'percikan', dots: 'glow', dash: 'getar', rainbow: 'warna' };
     function arriveFx(k, forceFx) {
         const n = gContainer.selectAll('g.node').filter(d => d === k);
         if (n.empty() || svg.node().classList.contains('sedang-gerak')) return;
         let fx = forceFx || cardSettings.flow.fx;
         if (fx === 'none') return;
+        const follow = fx === 'ikut';
+        if (follow) fx = FX_BY_STYLE[cardSettings.flow.style] || 'glow';
         if (fx === 'acak') fx = FLOW_FX_LIST[Math.floor(Math.random() * FLOW_FX_LIST.length)];
         const { w, h } = cardDims(k);
-        const col = flowColorFor({ target: k });
+        const col = follow ? flowGlow({ target: k }) : flowColorFor({ target: k });
         const L = fxLayer(n);
         if (ZAP[fx]) zapNode(n.node(), k, col, true, fx);
         else if (fx === 'listrik') { fxClass(n, 'fx-shake'); fxFlash(L, w, h, '#fde047'); fxSparks(L, true); }
