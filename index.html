@@ -1474,6 +1474,9 @@
 .node.txt-halo.txt-light text:not(.lidah-no):not(.deceased-flower-badge) {
     paint-order: stroke; stroke: rgba(0,0,0,.6); stroke-width: 2.6px; stroke-linejoin: round;
 }
+.node.txt-glass text:not(.lidah-no):not(.deceased-flower-badge) {
+    paint-order: stroke; stroke: rgba(255,255,255,.42) !important; stroke-width: 1.5px !important; stroke-linejoin: round; opacity: .9;
+}
 .node.txt-halo.txt-dark text:not(.lidah-no):not(.deceased-flower-badge) {
     paint-order: stroke; stroke: rgba(255,255,255,.8); stroke-width: 2.6px; stroke-linejoin: round;
 }
@@ -2363,6 +2366,9 @@ svg.flow-style-rainbow .link-flow {
         addDynGrad('cap-gloss', '0%', '100%', [{ o: '0%', c: '#fff', op: 0.92 }, { o: '100%', c: '#fff', op: 0.12 }]);
         addDynGrad('cap-seam-shadow', '100%', '0%', [{ o: '0%', c: '#000', op: 0.32 }, { o: '100%', c: '#000', op: 0 }]);
         addDynGrad('cap-seam-shadow-l', '100%', '0%', [{ o: '0%', c: '#000', op: 0 }, { o: '100%', c: '#000', op: 0.3 }]);
+        // kilau permukaan kaca yang menutupi teks (diagonal, sangat tipis)
+        addDynGrad('cap-glass-sheen', '100%', '100%', [
+            { o: '0%', c: '#fff', op: 0.2 }, { o: '38%', c: '#fff', op: 0.05 }, { o: '62%', c: '#fff', op: 0 }, { o: '100%', c: '#fff', op: 0.11 }]);
         // kaca bening: hampir transparan, sedikit kebiruan, lebih pekat di tepi bawah
         addDynGrad('cap-glass', '0%', '100%', [
             { o: '0%', c: '#ffffff', op: 0.46 }, { o: '20%', c: '#eaf3fb', op: 0.2 }, { o: '55%', c: '#d3e2ef', op: 0.1 },
@@ -2493,20 +2499,43 @@ svg.flow-style-rainbow .link-flow {
         if (P.n >= 2) lums.push(avg2(P.b, P.bTo, P.bG));
         const mean = lums.reduce((s, v) => s + v, 0) / lums.length;
         const mixed = Math.max(...lums) - Math.min(...lums) > 0.4;
-        return { light: mean < 0.32 || (mixed && mean < 0.4), halo: mixed || hasGlass };
+        return {
+            light: mean < 0.32 || (mixed && mean < 0.4), halo: mixed || hasGlass, glass: hasGlass,
+            front: hasGlass ? { pcs: pieces.filter(sg => sg.glass).map(sg => ({ d: sg.d, x0: sg.x0, x1: sg.x1 })), w: w, h: h, r: r, top: top } : null
+        };
     }
 
     // pilih model sesuai pengaturan; atur kelas warna teks pada grup kartu
     document.addEventListener('DOMContentLoaded', () => { try { applyFlowSettings(); } catch (e) {} });
     function drawCard(g, w, h, type) {
         const nodeG = d3.select(g.node().parentNode);
-        nodeG.classed('txt-light', false).classed('txt-dark', false).classed('txt-halo', false);
+        nodeG.classed('txt-light', false).classed('txt-dark', false).classed('txt-halo', false).classed('txt-glass', false);
+        const nn = nodeG.node();
+        if (nn) nn.__glassFront = null;
         if (cardSettings.model === 'kapsul') {
             const info = drawCapsule(g, w, h, type);
-            nodeG.classed('txt-light', info.light).classed('txt-dark', !info.light).classed('txt-halo', info.halo);
+            nodeG.classed('txt-light', info.light).classed('txt-dark', !info.light).classed('txt-halo', info.halo).classed('txt-glass', info.glass);
+            if (nn) nn.__glassFront = info.front || null;
         } else {
             drawRealisticBattery(g, w, h, type);
         }
+        // lapisan kilau kaca dipasang SETELAH teks selesai digambar (microtask) agar berada di atas teks
+        Promise.resolve().then(() => buildGlassFront(nodeG));
+    }
+    function buildGlassFront(nodeG) {
+        const n = nodeG.node();
+        if (!n || !n.isConnected) return;
+        nodeG.selectAll('g.glass-front').remove();
+        const f = n.__glassFront;
+        if (!f) return;
+        ensureCapsuleStatics();
+        const gf = nodeG.append('g').attr('class', 'glass-front').attr('pointer-events', 'none');
+        f.pcs.forEach(pc => {
+            gf.append('path').attr('d', pc.d).attr('fill', 'url(#cap-glass-sheen)');
+            const bx0 = pc.x0 === 0 ? f.r * 0.7 : pc.x0 + 5, bx1 = pc.x1 === f.w ? f.w - f.r * 0.7 : pc.x1 - 5;
+            if (bx1 - bx0 > 8) gf.append('rect').attr('x', bx0).attr('y', f.top + 2).attr('width', bx1 - bx0).attr('height', 2.4)
+                .attr('rx', 1.2).attr('fill', '#fff').attr('opacity', 0.6);
+        });
     }
 
     // lidah nomor anak (di kiri kartu)
