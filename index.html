@@ -1535,6 +1535,8 @@
 .cs-color-row label { font-size: .68rem; color: #475569; display: flex; align-items: center; gap: 4px; cursor: pointer; }
 .cs-select { width: 100%; padding: 7px 8px; border-radius: 8px; border: 1.5px solid #cbd5e1; font-size: .78rem; font-weight: 700; background: #fff; }
 .cs-range { width: 100%; accent-color: #7c3aed; }
+.cs-color-row.glass-on input[type=color], .cs-color-row.glass-on label.gr { opacity: .28; pointer-events: none; }
+.cs-color-row .glass-lb { font-weight: 700; color: #0e7490; }
 .cs-hint { font-size: .66rem; color: #64748b; margin-top: 4px; line-height: 1.35; }
 .cs-ok { min-height: 16px; font-size: .7rem; color: #15803d; font-weight: 700; margin-top: 6px; text-align: center; }
 </style>
@@ -1665,6 +1667,7 @@ svg.flow-style-rainbow .link-flow {
                         <button data-v="2" onclick="csSetCount(2)">2 WARNA</button>
                         <button data-v="3" onclick="csSetCount(3)">3 WARNA</button>
                     </div>
+                    <div class="cs-hint">Centang “🪟 kaca” pada sisi mana pun untuk membuat bagian itu transparan seperti kaca bening (mis. kiri merah, kanan kaca).</div>
                     <div class="cs-hint">1 warna = kapsul polos tanpa sambungan. 2 warna = ada garis sambungan di tengah. 3 warna = ada dua sambungan (kiri–tengah–kanan, mis. biru–putih–merah). Pilih “PER GENERASI” di bawah agar tiap generasi bisa berbeda (mis. Gen 1 = 1 warna, Gen 2 = 2 warna).</div>
                 </div>
 
@@ -1696,17 +1699,20 @@ svg.flow-style-rainbow .link-flow {
                     <div class="cs-color-row" id="cs-row-a">
                         <span class="nm" id="cs-nm-a">Warna 1</span>
                         <input type="color" id="cs-a" oninput="csColorInput('a',this.value)">
-                        <label><input type="checkbox" id="cs-a-grad" onchange="csGradToggle('a',this.checked)"> gradasi</label>
+                        <label class="gr"><input type="checkbox" id="cs-a-grad" onchange="csGradToggle('a',this.checked)"> gradasi</label>
+                        <label class="glass-lb"><input type="checkbox" id="cs-a-glass" onchange="csGlassToggle('a',this.checked)"> 🪟 kaca</label>
                         <input type="color" id="cs-aTo" oninput="csColorInput('aTo',this.value)" style="display:none">
                     </div>
                     <div class="cs-color-row" id="cs-row-m" style="display:none">
                         <span class="nm">Warna tengah</span>
                         <input type="color" id="cs-m" oninput="csColorInput('m',this.value)">
+                        <label class="glass-lb"><input type="checkbox" id="cs-m-glass" onchange="csGlassToggle('m',this.checked)"> 🪟 kaca</label>
                     </div>
                     <div class="cs-color-row" id="cs-row-b">
                         <span class="nm">Warna 2</span>
                         <input type="color" id="cs-b" oninput="csColorInput('b',this.value)">
-                        <label><input type="checkbox" id="cs-b-grad" onchange="csGradToggle('b',this.checked)"> gradasi</label>
+                        <label class="gr"><input type="checkbox" id="cs-b-grad" onchange="csGradToggle('b',this.checked)"> gradasi</label>
+                        <label class="glass-lb"><input type="checkbox" id="cs-b-glass" onchange="csGlassToggle('b',this.checked)"> 🪟 kaca</label>
                         <input type="color" id="cs-bTo" oninput="csColorInput('bTo',this.value)" style="display:none">
                     </div>
                     <div id="cs-seam3-wrap" style="display:none">
@@ -2279,7 +2285,20 @@ svg.flow-style-rainbow .link-flow {
         { name: 'Hijau',        count: 1, p: { a: '#16a34a' } },
         { name: 'Ungu–Putih',   count: 2, p: { a: '#7c3aed', b: '#ffffff' } },
         { name: 'Biru–Putih–Merah', count: 3, p: { a: '#2b8fd6', m: '#f1f5f9', b: '#dc2626' } },
-        { name: 'Hijau–Putih–Merah', count: 3, p: { a: '#16a34a', m: '#f8fafc', b: '#dc2626' } }
+        { name: 'Hijau–Putih–Merah', count: 3, p: { a: '#16a34a', m: '#f8fafc', b: '#dc2626' } },
+        // --- bergaya kapsul mengkilap (gradasi) ---
+        { name: 'Merah–Biru',        count: 2, p: { a: '#e11d2a', b: '#2a9df4' } },
+        { name: 'Merah–Putih',       count: 2, p: { a: '#e11d2a', b: '#f1f5f9' } },
+        { name: 'Merah–Putih–Biru',  count: 3, p: { a: '#e11d2a', m: '#f8fafc', b: '#2a9df4' } },
+        { name: 'Merah–Biru→Hijau',  count: 2, p: { a: '#e11d2a', b: '#3b82f6', bTo: '#22c55e' } },
+        { name: 'Merah Glossy',      count: 1, p: { a: '#ff5a5a', aTo: '#9f1239' } },
+        { name: 'Biru Glossy',       count: 1, p: { a: '#38bdf8', aTo: '#1d4ed8' } },
+        // --- separuh / seluruhnya kaca bening ---
+        { name: 'Merah–Kaca',        count: 2, p: { a: '#e11d2a', b: '#ffffff', bG: true } },
+        { name: 'Biru–Kaca',         count: 2, p: { a: '#2a9df4', b: '#ffffff', bG: true } },
+        { name: 'Hijau–Kaca',        count: 2, p: { a: '#16a34a', b: '#ffffff', bG: true } },
+        { name: 'Merah–Kaca–Biru',   count: 3, p: { a: '#e11d2a', m: '#ffffff', mG: true, b: '#2a9df4' } },
+        { name: 'Kaca Bening',       count: 1, p: { a: '#ffffff', aG: true } }
     ];
 
     function loadCardSettings() {
@@ -2306,7 +2325,13 @@ svg.flow-style-rainbow .link-flow {
     function capsulePalette(type) {
         const p = cardSettings.same ? cardSettings.all : (cardSettings.per[type] || CAPSULE_DEFAULTS[type] || CAPSULE_DEFAULTS.gen3);
         const n = (p.n === 1 || p.n === 2 || p.n === 3) ? p.n : cardSettings.count;
-        return { n: n, a: p.a || '#dc2626', aTo: p.aTo || null, m: p.m || '#ffffff', b: p.b || p.a || '#ffffff', bTo: p.bTo || null };
+        return { n: n, a: p.a || '#dc2626', aTo: p.aTo || null, m: p.m || '#ffffff', b: p.b || p.a || '#ffffff', bTo: p.bTo || null,
+                 aG: !!p.aG, mG: !!p.mG, bG: !!p.bG };
+    }
+    // warna "wakil" kartu (untuk lidah & aliran) - bila sisi kiri kaca, pakai warna sisi lain
+    function capBaseColor(P) {
+        if (!P.aG) return P.a;
+        return (P.n >= 2 && !P.bG) ? P.b : '#94a3b8';
     }
     function normCardType(d) {
         let type = d.data.type;
@@ -2337,7 +2362,13 @@ svg.flow-style-rainbow .link-flow {
             { o: '86%', c: '#000', op: 0 }, { o: '100%', c: '#000', op: 0.24 }]);
         addDynGrad('cap-gloss', '0%', '100%', [{ o: '0%', c: '#fff', op: 0.92 }, { o: '100%', c: '#fff', op: 0.12 }]);
         addDynGrad('cap-seam-shadow', '100%', '0%', [{ o: '0%', c: '#000', op: 0.32 }, { o: '100%', c: '#000', op: 0 }]);
+        addDynGrad('cap-seam-shadow-l', '100%', '0%', [{ o: '0%', c: '#000', op: 0 }, { o: '100%', c: '#000', op: 0.3 }]);
+        // kaca bening: hampir transparan, sedikit kebiruan, lebih pekat di tepi bawah
+        addDynGrad('cap-glass', '0%', '100%', [
+            { o: '0%', c: '#ffffff', op: 0.46 }, { o: '20%', c: '#eaf3fb', op: 0.2 }, { o: '55%', c: '#d3e2ef', op: 0.1 },
+            { o: '86%', c: '#a9bfd3', op: 0.2 }, { o: '100%', c: '#7f9bb5', op: 0.36 }]);
     }
+    let capUid = 0;
     // isi satu setengah kapsul: warna polos, atau gradasi horizontal bila ada warna ke-2
     function capFill(c, to) {
         if (!to) return c;
@@ -2350,11 +2381,8 @@ svg.flow-style-rainbow .link-flow {
         const P = capsulePalette(type);
         const r = Math.min(h / 2, 38);
         const top = -h / 2, bot = h / 2;
-        const full = `M ${r},${top} H ${w - r} A ${r},${r} 0 0 1 ${w - r},${bot} H ${r} A ${r},${r} 0 0 1 ${r},${top} Z`;
-
-        // bayangan lembut di bawah kapsul
-        g.append('rect').attr('x', 2).attr('y', top + 3.5).attr('width', w).attr('height', h).attr('rx', r)
-            .attr('fill', '#000').attr('opacity', 0.17);
+        // sudut membulat radius r (kartu pendek = kapsul penuh; kartu tinggi = sudut membulat, sama dengan bingkai luar)
+        const full = `M ${r},${top} H ${w - r} A ${r},${r} 0 0 1 ${w},${top + r} V ${bot - r} A ${r},${r} 0 0 1 ${w - r},${bot} H ${r} A ${r},${r} 0 0 1 0,${bot - r} V ${top + r} A ${r},${r} 0 0 1 ${r},${top} Z`;
 
         // posisi sambungan: 2 warna = 1 sambungan, 3 warna = 2 sambungan
         let seams = [];
@@ -2365,23 +2393,58 @@ svg.flow-style-rainbow .link-flow {
             const sB = Math.max(sA + 16, Math.min(w - r, w * cardSettings.seamB / 100));
             seams = [sA, sB];
         }
+
+        // potongan kapsul: tiap potongan bisa berwarna (polos/gradasi) atau kaca bening
+        const pieces = [];
         if (seams.length === 0) {
-            g.append('path').attr('d', full).attr('fill', capFill(P.a, P.aTo));
+            pieces.push({ d: full, x0: 0, x1: w, glass: P.aG, fill: capFill(P.a, P.aTo) });
         } else {
             const s0 = seams[0], s1 = seams[seams.length - 1];
-            g.append('path').attr('d', `M ${s0},${top} H ${r} A ${r},${r} 0 0 0 ${r},${bot} H ${s0} Z`)
-                .attr('fill', capFill(P.a, P.aTo));
-            if (P.n === 3) g.append('rect').attr('x', s0).attr('y', top).attr('width', s1 - s0).attr('height', h).attr('fill', P.m);
-            g.append('path').attr('d', `M ${s1},${top} H ${w - r} A ${r},${r} 0 0 1 ${w - r},${bot} H ${s1} Z`)
-                .attr('fill', capFill(P.b, P.bTo));
+            pieces.push({ d: `M ${s0},${top} H ${r} A ${r},${r} 0 0 0 0,${top + r} V ${bot - r} A ${r},${r} 0 0 0 ${r},${bot} H ${s0} Z`, x0: 0, x1: s0, glass: P.aG, fill: capFill(P.a, P.aTo) });
+            if (P.n === 3) pieces.push({ d: `M ${s0},${top} H ${s1} V ${bot} H ${s0} Z`, x0: s0, x1: s1, glass: P.mG, fill: P.m });
+            pieces.push({ d: `M ${s1},${top} H ${w - r} A ${r},${r} 0 0 1 ${w},${top + r} V ${bot - r} A ${r},${r} 0 0 1 ${w - r},${bot} H ${s1} Z`, x0: s1, x1: w, glass: P.bG, fill: capFill(P.b, P.bTo) });
+        }
+        const hasGlass = pieces.some(sg => sg.glass);
+
+        // bayangan lembut di bawah kapsul (bila ada kaca: hanya di luar badan kapsul agar tidak tembus)
+        const shadow = g.append('rect').attr('x', 2).attr('y', top + 3.5).attr('width', w).attr('height', h).attr('rx', r)
+            .attr('fill', '#000').attr('opacity', hasGlass ? 0.14 : 0.17);
+        if (hasGlass) {
+            const mid = 'capm' + (++capUid);
+            const mk = g.append('mask').attr('id', mid).attr('maskUnits', 'userSpaceOnUse')
+                .attr('x', -20).attr('y', top - 20).attr('width', w + 40).attr('height', h + 40);
+            mk.append('rect').attr('x', -20).attr('y', top - 20).attr('width', w + 40).attr('height', h + 40).attr('fill', '#fff');
+            mk.append('path').attr('d', full).attr('fill', '#000');
+            shadow.attr('mask', `url(#${mid})`);
         }
 
-        // pembayangan silinder (atas terang -> bawah gelap) + ujung membulat
-        g.append('path').attr('d', full).attr('fill', 'url(#cap-shade)').attr('pointer-events', 'none');
-        g.append('path').attr('d', full).attr('fill', 'url(#cap-endshade)').attr('pointer-events', 'none');
+        // isi tiap potongan
+        pieces.forEach(sg => {
+            g.append('path').attr('d', sg.d).attr('fill', sg.glass ? 'url(#cap-glass)' : sg.fill);
+        });
+
+        // pembayangan silinder (atas terang -> bawah gelap) + ujung membulat; potongan kaca tidak digelapkan
+        (hasGlass ? pieces.filter(sg => !sg.glass).map(sg => sg.d) : [full]).forEach(dd => {
+            g.append('path').attr('d', dd).attr('fill', 'url(#cap-shade)').attr('pointer-events', 'none');
+            g.append('path').attr('d', dd).attr('fill', 'url(#cap-endshade)').attr('pointer-events', 'none');
+        });
+
+        // detail kaca: tepi, pantulan bawah, bibir bagian berwarna yang terlihat tembus
+        pieces.filter(sg => sg.glass).forEach(sg => {
+            g.append('path').attr('d', sg.d).attr('fill', 'none').attr('stroke', '#4b647c')
+                .attr('stroke-opacity', 0.5).attr('stroke-width', 1.2).attr('pointer-events', 'none');
+            const bx0 = sg.x0 === 0 ? r * 0.8 : sg.x0 + 4, bx1 = sg.x1 === w ? w - r * 0.8 : sg.x1 - 4;
+            if (bx1 - bx0 > 6) g.append('rect').attr('x', bx0).attr('y', bot - h * 0.22).attr('width', bx1 - bx0).attr('height', h * 0.075)
+                .attr('rx', h * 0.037).attr('fill', '#fff').attr('opacity', 0.34).attr('pointer-events', 'none');
+        });
 
         // sambungan (hanya untuk 2 & 3 warna)
-        seams.forEach(seamX => {
+        seams.forEach((seamX, si) => {
+            const leftSeg = pieces[si], rightSeg = pieces[si + 1];
+            if (leftSeg && leftSeg.glass && rightSeg && !rightSeg.glass) {
+                g.append('rect').attr('x', seamX - 8).attr('y', top).attr('width', 8).attr('height', h)
+                    .attr('fill', 'url(#cap-seam-shadow-l)').attr('pointer-events', 'none');
+            }
             g.append('rect').attr('x', seamX).attr('y', top).attr('width', 7).attr('height', h)
                 .attr('fill', 'url(#cap-seam-shadow)').attr('pointer-events', 'none');
             g.append('rect').attr('x', seamX - 0.9).attr('y', top).attr('width', 1.8).attr('height', h)
@@ -2420,17 +2483,17 @@ svg.flow-style-rainbow .link-flow {
         // garis tepi tipis (juga dipakai efek pencarian: rect.real-body)
         g.append('rect').attr('class', 'real-body')
             .attr('x', 0).attr('y', top).attr('width', w).attr('height', h).attr('rx', r)
-            .attr('fill', 'none').attr('stroke', '#0f172a').attr('stroke-opacity', 0.38).attr('stroke-width', 1);
+            .attr('fill', 'none').attr('stroke', '#0f172a').attr('stroke-opacity', hasGlass ? 0.5 : 0.38).attr('stroke-width', 1);
 
-        // tentukan warna teks yang terbaca
+        // tentukan warna teks yang terbaca (kaca dianggap terang; teks diberi halo karena latar tembus pandang)
         const lums = [];
-        const avg2 = (c, t) => t ? (hexLum(c) + hexLum(t)) / 2 : hexLum(c);
-        lums.push(avg2(P.a, P.aTo));
-        if (P.n === 3) lums.push(hexLum(P.m));
-        if (P.n >= 2) lums.push(avg2(P.b, P.bTo));
+        const avg2 = (c, t, gl) => gl ? 0.82 : (t ? (hexLum(c) + hexLum(t)) / 2 : hexLum(c));
+        lums.push(avg2(P.a, P.aTo, P.aG));
+        if (P.n === 3) lums.push(avg2(P.m, null, P.mG));
+        if (P.n >= 2) lums.push(avg2(P.b, P.bTo, P.bG));
         const mean = lums.reduce((s, v) => s + v, 0) / lums.length;
         const mixed = Math.max(...lums) - Math.min(...lums) > 0.4;
-        return { light: mean < 0.32 || (mixed && mean < 0.4), halo: mixed };
+        return { light: mean < 0.32 || (mixed && mean < 0.4), halo: mixed || hasGlass };
     }
 
     // pilih model sesuai pengaturan; atur kelas warna teks pada grup kartu
@@ -2471,7 +2534,7 @@ svg.flow-style-rainbow .link-flow {
             const lum = c2 ? (hexLum(c1.formatHex()) + hexLum(c2.formatHex())) / 2 : hexLum(c1.formatHex());
             numFill = lum < 0.3 ? '#ffffff' : '#0f172a';
         } else if (cardSettings.model === 'kapsul') {
-            const base = d3.color(capsulePalette(type).a);
+            const base = d3.color(capBaseColor(capsulePalette(type)));
             const id = 'captab-' + base.formatHex().slice(1);
             addDynGrad(id, '0%', '100%', [
                 { o: '0%', c: base.darker(0.2).formatHex() },
@@ -2575,12 +2638,18 @@ svg.flow-style-rainbow .link-flow {
         CAPSULE_PRESETS.forEach((pr, i) => {
             const b = document.createElement('button');
             b.className = 'cs-chip'; b.type = 'button';
-            const a = pr.p.a, bb = pr.p.b;
             const sw = document.createElement('i');
-            if (pr.count === 1) sw.style.background = a;
-            else if (pr.count === 3) sw.style.background = `linear-gradient(90deg, ${a} 0 33%, ${pr.p.m} 33% 66%, ${bb} 66% 100%)`;
-            else if (pr.p.bTo) sw.style.background = `linear-gradient(90deg, ${a} 0 50%, ${bb} 50%, ${pr.p.bTo} 100%)`;
-            else sw.style.background = `linear-gradient(90deg, ${a} 0 50%, ${bb} 50% 100%)`;
+            // potongan sama lebar; kaca digambar transparan di atas dasar putih-kebiruan
+            const parts = pr.count === 1 ? [{ c: pr.p.a, to: pr.p.aTo, g: pr.p.aG }]
+                : pr.count === 3 ? [{ c: pr.p.a, to: pr.p.aTo, g: pr.p.aG }, { c: pr.p.m, g: pr.p.mG }, { c: pr.p.b, to: pr.p.bTo, g: pr.p.bG }]
+                : [{ c: pr.p.a, to: pr.p.aTo, g: pr.p.aG }, { c: pr.p.b, to: pr.p.bTo, g: pr.p.bG }];
+            const stops = parts.map((pt, k) => {
+                const s0 = Math.round(k * 100 / parts.length), s1 = Math.round((k + 1) * 100 / parts.length);
+                if (pt.g) return `transparent ${s0}% ${s1}%`;
+                if (pt.to) return `${pt.c} ${s0}%, ${pt.to} ${s1}%`;
+                return `${pt.c} ${s0}% ${s1}%`;
+            });
+            sw.style.background = `linear-gradient(90deg, ${stops.join(', ')}), linear-gradient(180deg, #ffffff, #c3d3e3)`;
             b.appendChild(sw); b.appendChild(document.createTextNode(pr.name));
             b.onclick = () => csApplyPreset(i);
             box.appendChild(b);
@@ -2590,7 +2659,7 @@ svg.flow-style-rainbow .link-flow {
         const pr = CAPSULE_PRESETS[i];
         cardSettings.model = 'kapsul';
         const pal = csEditPal();
-        ['a', 'aTo', 'm', 'b', 'bTo'].forEach(k => delete pal[k]);
+        ['a', 'aTo', 'm', 'b', 'bTo', 'aG', 'mG', 'bG'].forEach(k => delete pal[k]);
         Object.assign(pal, pr.p);
         pal.n = pr.count;
         if (pr.count === 1) pal.b = pr.p.a;
@@ -2623,6 +2692,10 @@ svg.flow-style-rainbow .link-flow {
         const pal = { a: base.a, aTo: base.aTo || null, b: base.b || base.a, bTo: base.bTo || null };
         csEl('cs-a').value = pal.a; csEl('cs-b').value = pal.b; csEl('cs-m').value = base.m || '#ffffff';
         csEl('cs-a-grad').checked = !!pal.aTo; csEl('cs-b-grad').checked = !!pal.bTo;
+        csEl('cs-a-glass').checked = !!base.aG; csEl('cs-m-glass').checked = !!base.mG; csEl('cs-b-glass').checked = !!base.bG;
+        csEl('cs-row-a').classList.toggle('glass-on', !!base.aG);
+        csEl('cs-row-m').classList.toggle('glass-on', !!base.mG);
+        csEl('cs-row-b').classList.toggle('glass-on', !!base.bG);
         csEl('cs-aTo').style.display = pal.aTo ? '' : 'none'; csEl('cs-bTo').style.display = pal.bTo ? '' : 'none';
         csEl('cs-aTo').value = pal.aTo || pal.a; csEl('cs-bTo').value = pal.bTo || pal.b;
         const L = s.lidah;
@@ -2676,6 +2749,12 @@ svg.flow-style-rainbow .link-flow {
         const pal = csEditPal();
         const to = side + 'To';
         if (on) pal[to] = (pal[to] || '#ffffff'); else delete pal[to];
+        csCommit();
+    }
+    function csGlassToggle(side, on) {
+        const pal = csEditPal();
+        const k = side + 'G';
+        if (on) pal[k] = true; else delete pal[k];
         csCommit();
     }
     function csSeamInput(v) {
@@ -2739,7 +2818,7 @@ svg.flow-style-rainbow .link-flow {
         if (f.colorMode === 'custom') return f.color;
         const type = normCardType(link.target);
         let base;
-        if (cardSettings.model === 'kapsul') base = d3.color(capsulePalette(type).a);
+        if (cardSettings.model === 'kapsul') base = d3.color(capBaseColor(capsulePalette(type)));
         else base = d3.color((GEN_REAL_BASE[type]) || '#16a34a');
         if (!base) base = d3.color('#f59e0b');
         const hs = d3.hsl(base);
