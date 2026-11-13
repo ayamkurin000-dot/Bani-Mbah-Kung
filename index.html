@@ -1540,6 +1540,12 @@
 .cs-range { width: 100%; accent-color: #7c3aed; }
 .cs-color-row.glass-on input[type=color], .cs-color-row.glass-on label.gr { opacity: .28; pointer-events: none; }
 .cs-color-row .glass-lb { font-weight: 700; color: #0e7490; }
+.cs-chip.on { border-color: #7c3aed; background: #f5f3ff; color: #5b21b6; }
+#cs-bg-sec > summary { list-style: none; } #cs-bg-sec > summary::-webkit-details-marker { display: none; }
+#bg-fx { position: fixed; inset: 0; z-index: 0; pointer-events: none; display: none; }
+#bg-fx canvas { width: 100%; height: 100%; display: block; }
+body.bg-themed { background-image: none !important; background-color: #000 !important; }
+body.bg-dark .link { stroke: rgba(226, 232, 240, 0.8); }
 .cs-hint { font-size: .66rem; color: #64748b; margin-top: 4px; line-height: 1.35; }
 .cs-ok { min-height: 16px; font-size: .7rem; color: #15803d; font-weight: 700; margin-top: 6px; text-align: center; }
 </style>
@@ -1647,12 +1653,43 @@ svg.flow-style-rainbow .link-flow {
     <!-- ===== PANEL PENGATURAN TEMA KARTU ===== -->
     <div id="cs-panel" class="cs-overlay" onclick="if(event.target===this)closeCardSettings()">
         <div class="cs-box cs-panel">
-            <div class="cs-head"><h3>⚙ Pengaturan Kartu</h3><button class="cs-x" onclick="closeCardSettings()" title="Tutup">✕</button></div>
+            <div class="cs-head"><h3>⚙ Pengaturan Kartu &amp; Latar</h3><button class="cs-x" onclick="closeCardSettings()" title="Tutup">✕</button></div>
 
             <div class="cs-sec">
                 <div class="cs-label">Pratinjau</div>
                 <div class="cs-preview"><svg id="cs-preview-svg" width="330" height="90" viewBox="-40 -45 330 90"></svg></div>
             </div>
+
+            <details class="cs-sec" id="cs-bg-sec" open>
+                <summary class="cs-label" style="cursor:pointer;margin-bottom:6px">🌌 Latar belakang</summary>
+                <div class="cs-presets" id="cs-bg-themes"></div>
+                <div id="cs-bg-opts" style="display:none">
+                    <div class="cs-label" style="margin-top:10px" id="cs-bg-variant-label">Variasi</div>
+                    <div class="cs-presets" id="cs-bg-variants"></div>
+                    <div class="cs-label" style="margin-top:10px">Nuansa warna langit</div>
+                    <div class="cs-presets" id="cs-bg-tones"></div>
+                    <div id="cs-bg-stars-box" style="margin-top:10px"><div id="cs-bg-stars-sl"></div></div>
+                    <div id="cs-bg-pt-box" style="margin-top:10px">
+                        <div id="cs-bg-pt-sl"></div>
+                        <div class="cs-color-row">
+                            <label><input type="checkbox" id="cs-bg-cloud" onchange="csBgBool('cloud',this.checked)"> ☁ awan</label>
+                            <label><input type="checkbox" id="cs-bg-rain" onchange="csBgBool('rain',this.checked)"> 🌧 hujan</label>
+                            <label><input type="checkbox" id="cs-bg-flash" onchange="csBgBool('flash',this.checked)"> 💥 flash layar</label>
+                        </div>
+                        <div class="cs-row-btn" style="margin-top:2px"><button class="cs-btn small" id="cs-bg-test" style="flex:1" onclick="csBgTest()">⚡ COBA KILAT</button></div>
+                    </div>
+                    <div class="cs-color-row" style="margin-top:8px">
+                        <span class="nm" style="width:104px">Warna</span>
+                        <div class="cs-seg" id="cs-bg-cmode" style="flex:1">
+                            <button data-v="auto" onclick="csBgColorMode('auto')">IKUT VARIASI</button>
+                            <button data-v="custom" onclick="csBgColorMode('custom')">PILIH</button>
+                        </div>
+                        <input type="color" id="cs-bg-color" oninput="csBgColor(this.value)">
+                    </div>
+                    <div class="cs-hint" id="cs-bg-colorhint"></div>
+                    <div class="cs-hint">Memilih variasi petir akan mengembalikan pengaturan awal variasi itu; setelah itu semua slider bebas disesuaikan. Animasi berhenti sementara saat layar dicubit/digeser agar tetap ringan.</div>
+                </div>
+            </details>
 
             <div class="cs-sec">
                 <div class="cs-label">Model kartu</div>
@@ -1903,6 +1940,7 @@ svg.flow-style-rainbow .link-flow {
             </g>
         </svg>
     </div>
+    <div id="bg-fx" aria-hidden="true"><canvas id="bg-fx-canvas"></canvas></div>
     <canvas id="cursor-fx"></canvas>
     <div id="credit-tag">DIBUAT OLEH: MANNIXS-21</div>
     <div id="panel-switcher">
@@ -2304,6 +2342,66 @@ svg.flow-style-rainbow .link-flow {
         { name: 'Kaca Bening',       count: 1, p: { a: '#ffffff', aG: true } }
     ];
 
+    // ---------- LATAR BELAKANG: konfigurasi ----------
+    const BG_THEMES = [
+        { k: 'asli',  name: '🌿 Asli',               sw: 'linear-gradient(135deg,#e8d8b8,#c9b48a)' },
+        { k: 'hitam', name: '⭐ Hitam Berbintang',    sw: 'linear-gradient(135deg,#000,#1a1a2e)' },
+        { k: 'biru',  name: '🔷 Biru Berbintang',     sw: 'linear-gradient(135deg,#0a1e4a,#3b82f6)' },
+        { k: 'petir', name: '⚡ Hitam Petir',         sw: 'linear-gradient(135deg,#05060a,#6d28d9)' }
+    ];
+    const STAR_VARS = [
+        { k: 'kedip',    name: '✨ Kedip Klasik' },
+        { k: 'warna',    name: '🌈 Warna-warni' },
+        { k: 'kilau',    name: '💫 Berkilau Silang' },
+        { k: 'melayang', name: '🌠 Melayang' },
+        { k: 'jatuh',    name: '☄ Bintang Jatuh' },
+        { k: 'nebula',   name: '🌌 Nebula' }
+    ];
+    const BG_TONES = {
+        hitam: [
+            { name: 'Hitam Pekat',    css: 'radial-gradient(ellipse at 50% 110%, #0d0d12 0%, #000 65%)' },
+            { name: 'Hitam Kebiruan', css: 'linear-gradient(180deg,#000 0%,#030816 100%)' },
+            { name: 'Hitam Keunguan', css: 'linear-gradient(180deg,#000 0%,#0b0418 100%)' }],
+        biru: [
+            { name: 'Biru Malam',  css: 'linear-gradient(180deg,#020617 0%,#0a1e4a 65%,#123a8a 100%)' },
+            { name: 'Biru Royal',  css: 'linear-gradient(180deg,#06155a 0%,#1d3fae 60%,#3b82f6 100%)' },
+            { name: 'Biru Toska',  css: 'linear-gradient(180deg,#021a2a 0%,#05506b 65%,#0e8aa6 100%)' }],
+        petir: [
+            { name: 'Hitam Badai', css: 'linear-gradient(180deg,#02030a 0%,#0b1020 100%)', cloud: '70,80,100' },
+            { name: 'Ungu Badai',  css: 'linear-gradient(180deg,#07020f 0%,#1a0b33 100%)', cloud: '96,70,140' },
+            { name: 'Biru Badai',  css: 'linear-gradient(180deg,#020a14 0%,#0c2038 100%)', cloud: '60,96,130' }]
+    };
+    // mode: bolt = petir bercabang, sheet = flash di awan/layar, arc = busur listrik. burst = sambaran beruntun.
+    const PETIR_VAR = {
+        cabang:   { name: '⚡ Petir Bercabang',    mode: 'bolt',  freq: 4,   intensity: 60, flicker: 3, thick: 2, branches: 3, rain: false, cloud: false, flash: true },
+        flash:    { name: '🌩 Flash Halilintar',   mode: 'sheet', freq: 3.5, intensity: 85, flicker: 4, thick: 2, branches: 0, rain: false, cloud: true,  flash: true },
+        badai:    { name: '⛈ Badai Petir',        mode: 'bolt',  freq: 3,   intensity: 75, flicker: 3, thick: 3, branches: 4, rain: true,  cloud: true,  flash: true },
+        beruntun: { name: '🔥 Sambaran Beruntun',  mode: 'bolt',  freq: 6,   intensity: 80, flicker: 5, thick: 2, branches: 2, rain: false, cloud: false, flash: true, burst: true },
+        listrik:  { name: '🟣 Listrik Neon',       mode: 'arc',   freq: 1.3, intensity: 40, flicker: 2, thick: 2, branches: 2, rain: false, cloud: false, flash: false, color: '#b794ff' },
+        awan:     { name: '☁ Kilat dalam Awan',   mode: 'sheet', freq: 2.5, intensity: 55, flicker: 2, thick: 1, branches: 0, rain: false, cloud: true,  flash: false }
+    };
+    const PETIR_KEYS = ['freq', 'intensity', 'flicker', 'thick', 'branches', 'rain', 'cloud', 'flash'];
+    function petirParams(k) { const d = PETIR_VAR[k] || PETIR_VAR.cabang, o = {}; PETIR_KEYS.forEach(x => { o[x] = d[x]; }); return o; }
+    const BG_DEFAULTS = {
+        theme: 'asli', variant: { hitam: 'kedip', biru: 'kedip', petir: 'cabang' }, tone: { hitam: 0, biru: 0, petir: 0 },
+        stars: { density: 1, speed: 1, size: 1 }, colorMode: 'auto', color: '#ffffff'
+    };
+    function normBg(x) {
+        x = x || {};
+        const o = Object.assign({}, BG_DEFAULTS, x);
+        o.variant = Object.assign({}, BG_DEFAULTS.variant, x.variant || {});
+        o.tone = Object.assign({}, BG_DEFAULTS.tone, x.tone || {});
+        o.stars = Object.assign({}, BG_DEFAULTS.stars, x.stars || {});
+        if (['asli', 'hitam', 'biru', 'petir'].indexOf(o.theme) < 0) o.theme = 'asli';
+        if (!PETIR_VAR[o.variant.petir]) o.variant.petir = 'cabang';
+        if (!STAR_VARS.some(v => v.k === o.variant.hitam)) o.variant.hitam = 'kedip';
+        if (!STAR_VARS.some(v => v.k === o.variant.biru)) o.variant.biru = 'kedip';
+        ['hitam', 'biru', 'petir'].forEach(t => { if (!BG_TONES[t][o.tone[t]]) o.tone[t] = 0; });
+        o.pt = Object.assign(petirParams(o.variant.petir), x.pt || {});
+        if (o.colorMode !== 'custom') o.colorMode = 'auto';
+        return o;
+    }
+
     function loadCardSettings() {
         let saved = null;
         try { saved = JSON.parse(localStorage.getItem(CARD_SETTINGS_KEY) || 'null'); } catch (e) {}
@@ -2312,6 +2410,7 @@ svg.flow-style-rainbow .link-flow {
         s.per = Object.assign({}, DEFAULT_CARD_SETTINGS.per, (saved && saved.per) || {});
         s.flow = Object.assign({}, FLOW_DEFAULTS, DEFAULT_CARD_SETTINGS.flow || {}, (saved && saved.flow) || {});
         s.lidah = Object.assign({}, LIDAH_DEFAULTS, DEFAULT_CARD_SETTINGS.lidah || {}, (saved && saved.lidah) || {});
+        s.bg = normBg(Object.assign({}, DEFAULT_CARD_SETTINGS.bg || {}, (saved && saved.bg) || {}));
         if (s.lidah.mode !== 'card') s.lidah.mode = 'custom';
         if (s.model !== 'kapsul') s.model = 'baterai';
         s.count = ([1, 2, 3].indexOf(+s.count) >= 0) ? +s.count : 2;
@@ -2734,6 +2833,7 @@ svg.flow-style-rainbow .link-flow {
         csEl('cs-laTo').style.display = L.grad ? '' : 'none'; csEl('cs-laTo').value = L.aTo || L.a;
         csFlowSync();
         csPreview();
+        csBgSync();
     }
     function csCommit() {
         saveCardSettings();
@@ -2805,6 +2905,7 @@ svg.flow-style-rainbow .link-flow {
         try { localStorage.removeItem(CARD_SETTINGS_KEY); } catch (e) {}
         cardSettings = loadCardSettings();
         applyFlowSettings();
+        applyBackground();
         csCommit();
     }
     function csCopyCode() {
@@ -2834,6 +2935,368 @@ svg.flow-style-rainbow .link-flow {
             .style('fill', light ? '#fff' : '#0f172a').text('1990 - ....');
     }
 
+
+
+    // =====================================================================
+    // LATAR BELAKANG: bintang berkedip / langit biru berbintang / petir & flash halilintar
+    // =====================================================================
+    const BgFx = (function () {
+        let wrap = null, cv = null, ctx = null;
+        let W = 0, H = 0, DPR = 1, raf = 0, last = 0, cfg = null;
+        let stars = [], shoots = [], strikes = [], rain = [], cloudCv = null, nebCv = null;
+        let nextShoot = 0, nextStrike = 0, rsT = 0;
+        const rnd = Math.random;
+        const reduce = !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
+        const STAR_COLS = { hitam: ['#ffffff', '#ffffff', '#f1f5f9', '#fef3c7'], biru: ['#ffffff', '#dbeafe', '#bae6fd', '#a5f3fc', '#ffffff'] };
+        const RAINBOW = ['#ffffff', '#fde68a', '#93c5fd', '#fca5a5', '#86efac', '#c4b5fd', '#f9a8d4'];
+        const NEB = { hitam: ['109,40,217', '190,24,93', '29,78,216'], biru: ['34,211,238', '59,130,246', '139,92,246'] };
+
+        function rgb(hex) {
+            const c = d3.color(hex) || d3.color('#ffffff');
+            return c.r + ',' + c.g + ',' + c.b;
+        }
+        function ensure() {
+            if (cv) return true;
+            wrap = document.getElementById('bg-fx'); cv = document.getElementById('bg-fx-canvas');
+            if (!wrap || !cv) return false;
+            ctx = cv.getContext('2d');
+            let rt = null;
+            window.addEventListener('resize', () => {
+                clearTimeout(rt);
+                rt = setTimeout(() => { if (cfg && cfg.theme !== 'asli' && (Math.abs(innerWidth - W) > 40 || Math.abs(innerHeight - H) > 120)) { resize(); build(); } }, 220);
+            });
+            document.addEventListener('visibilitychange', () => { last = 0; });
+            return true;
+        }
+        function resize() {
+            W = innerWidth; H = innerHeight;
+            DPR = cfg && cfg.theme === 'petir' ? 1 : Math.min(window.devicePixelRatio || 1, 1.5);
+            cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR);
+            ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+        }
+        function toneOf() { const list = BG_TONES[cfg.theme]; return list[cfg.tone[cfg.theme]] || list[0]; }
+        function custom() { return cfg.colorMode === 'custom' ? cfg.color : null; }
+
+        // ---------------- BINTANG ----------------
+        function starColor() {
+            const v = cfg.variant[cfg.theme], c = custom();
+            if (v === 'warna') return RAINBOW[Math.floor(rnd() * RAINBOW.length)];
+            if (c) return c;
+            const L = STAR_COLS[cfg.theme] || STAR_COLS.hitam;
+            return L[Math.floor(rnd() * L.length)];
+        }
+        function initStars() {
+            const s = cfg.stars, v = cfg.variant[cfg.theme];
+            const n = Math.min(650, Math.round(W * H / 2600 * s.density));
+            stars = [];
+            for (let i = 0; i < n; i++) {
+                stars.push({
+                    x: rnd() * W, y: rnd() * H, l: rnd(), ph: rnd() * 6.283, sp: 0.6 + rnd() * 2.2,
+                    r: (0.55 + Math.pow(rnd(), 2.5) * 1.9) * s.size, big: rnd() < (v === 'kilau' ? 0.16 : 0.05), col: starColor()
+                });
+            }
+            shoots = []; nextShoot = performance.now() + 1500;
+            nebCv = null;
+            if (v === 'nebula') {
+                nebCv = document.createElement('canvas'); nebCv.width = Math.ceil(W / 2); nebCv.height = Math.ceil(H / 2);
+                const nc = nebCv.getContext('2d'), cols = NEB[cfg.theme] || NEB.hitam;
+                nc.globalCompositeOperation = 'lighter';
+                for (let i = 0; i < 7; i++) {
+                    const x = rnd() * nebCv.width, y = rnd() * nebCv.height, r = (0.25 + rnd() * 0.3) * Math.max(nebCv.width, nebCv.height);
+                    const g = nc.createRadialGradient(x, y, 0, x, y, r), c = cols[i % cols.length];
+                    g.addColorStop(0, 'rgba(' + c + ',0.30)'); g.addColorStop(1, 'rgba(' + c + ',0)');
+                    nc.fillStyle = g; nc.fillRect(0, 0, nebCv.width, nebCv.height);
+                }
+            }
+        }
+        function spawnShoot(now) {
+            const ang = Math.PI * (0.74 + rnd() * 0.12);
+            shoots.push({ x: W * (0.25 + rnd() * 0.75), y: rnd() * H * 0.35, dx: Math.cos(ang), dy: Math.sin(ang),
+                v: 520 + rnd() * 420, len: 90 + rnd() * 110, t: 0, col: custom() || '#ffffff' });
+            nextShoot = now + (2200 + rnd() * 5200) / cfg.stars.speed;
+        }
+        function drawStars(now, dt) {
+            const sec = now / 1000, sp = cfg.stars.speed, v = cfg.variant[cfg.theme];
+            ctx.clearRect(0, 0, W, H);
+            if (nebCv) { ctx.globalAlpha = 0.95; ctx.drawImage(nebCv, -30 + Math.sin(sec * 0.05) * 26, -30 + Math.cos(sec * 0.04) * 20, W + 60, H + 60); }
+            for (let i = 0; i < stars.length; i++) {
+                const s = stars[i];
+                if (v === 'melayang') {
+                    s.y -= (4 + 16 * s.l) * sp * dt / 1000; s.x += (1 + 5 * s.l) * sp * dt / 1000 * 0.6;
+                    if (s.y < -4) { s.y = H + 4; s.x = rnd() * W; } if (s.x > W + 4) s.x = -4;
+                }
+                const tw = 0.5 + 0.5 * Math.sin(sec * s.sp * 2.2 * sp + s.ph);
+                const a = (v === 'kedip' || v === 'warna') ? 0.08 + 0.92 * tw * tw * tw : 0.25 + 0.75 * tw;
+                ctx.globalAlpha = a; ctx.fillStyle = s.col;
+                ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, 6.2832); ctx.fill();
+                if (v === 'kilau' && s.big) {
+                    const L = (5 + s.r * 5) * a;
+                    ctx.globalAlpha = a * 0.22; ctx.beginPath(); ctx.arc(s.x, s.y, s.r * 2.6, 0, 6.2832); ctx.fill();
+                    ctx.globalAlpha = a * 0.85; ctx.strokeStyle = s.col; ctx.lineWidth = 0.9;
+                    ctx.beginPath(); ctx.moveTo(s.x - L, s.y); ctx.lineTo(s.x + L, s.y); ctx.moveTo(s.x, s.y - L); ctx.lineTo(s.x, s.y + L); ctx.stroke();
+                }
+            }
+            ctx.globalAlpha = 1;
+            if (v === 'jatuh' || v === 'nebula') {
+                if (now >= nextShoot && shoots.length < 3) spawnShoot(now);
+                for (let i = shoots.length - 1; i >= 0; i--) {
+                    const s = shoots[i];
+                    s.t += dt / 1000; const d = s.v * s.t, hx = s.x + s.dx * d, hy = s.y + s.dy * d;
+                    const tx = hx - s.dx * s.len, ty = hy - s.dy * s.len;
+                    if (hx < -50 || hy > H + 50 || s.t > 1.6) { shoots.splice(i, 1); continue; }
+                    const g = ctx.createLinearGradient(hx, hy, tx, ty), c = rgb(s.col);
+                    g.addColorStop(0, 'rgba(' + c + ',1)'); g.addColorStop(1, 'rgba(' + c + ',0)');
+                    ctx.strokeStyle = g; ctx.lineWidth = 1.8; ctx.lineCap = 'round';
+                    ctx.beginPath(); ctx.moveTo(hx, hy); ctx.lineTo(tx, ty); ctx.stroke();
+                    ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(hx, hy, 1.8, 0, 6.2832); ctx.fill();
+                }
+            }
+        }
+
+        // ---------------- PETIR ----------------
+        function jag(x0, y0, x1, y1, disp, minLen) {
+            let pts = [[x0, y0], [x1, y1]], d = disp;
+            for (let it = 0; it < 9; it++) {
+                const np = [pts[0]]; let did = false;
+                for (let i = 0; i < pts.length - 1; i++) {
+                    const a = pts[i], b = pts[i + 1], L = Math.hypot(b[0] - a[0], b[1] - a[1]);
+                    if (L < minLen) { np.push(b); continue; }
+                    did = true;
+                    const nx = -(b[1] - a[1]) / L, ny = (b[0] - a[0]) / L, o = (rnd() - 0.5) * d;
+                    np.push([(a[0] + b[0]) / 2 + nx * o, (a[1] + b[1]) / 2 + ny * o], b);
+                }
+                pts = np; d *= 0.56; if (!did) break;
+            }
+            return pts;
+        }
+        function boltColor() { return custom() || (PETIR_VAR[cfg.variant.petir] || {}).color || '#d6e8ff'; }
+        function makeStrike(delay) {
+            const m = cfg.pt, def = PETIR_VAR[cfg.variant.petir] || PETIR_VAR.cabang, now = performance.now();
+            const s = { t0: now + (delay || 0), col: boltColor(), mode: def.mode, main: null, br: [], cx: rnd() * W, pulses: [] };
+            if (def.mode === 'bolt') {
+                const x0 = W * (0.12 + 0.76 * rnd()), x1 = x0 + (rnd() - 0.5) * W * 0.35, y1 = H * (0.5 + 0.45 * rnd());
+                s.cx = x0; s.main = jag(x0, -8, x1, y1, Math.hypot(x1 - x0, y1) * 0.3, 12);
+                for (let k = 0; k < m.branches; k++) {
+                    const p = s.main[Math.floor(s.main.length * (0.15 + 0.65 * rnd()))], ang = (rnd() < 0.5 ? -1 : 1) * (0.35 + rnd() * 0.9), len = H * (0.1 + 0.24 * rnd());
+                    s.br.push(jag(p[0], p[1], p[0] + Math.sin(ang) * len, p[1] + Math.cos(ang) * len, len * 0.3, 10));
+                }
+            } else if (def.mode === 'arc') {
+                const side = Math.floor(rnd() * 3), sx = side === 0 ? 0 : side === 1 ? W : rnd() * W, sy = side === 2 ? 0 : rnd() * H * 0.8;
+                const L = Math.min(W, H) * (0.3 + rnd() * 0.45), ang = Math.atan2(H * 0.5 - sy, W * 0.5 - sx) + (rnd() - 0.5) * 1.2;
+                s.cx = sx; s.main = jag(sx, sy, sx + Math.cos(ang) * L, sy + Math.sin(ang) * L, L * 0.3, 8);
+                for (let k = 0; k < m.branches; k++) {
+                    const p = s.main[Math.floor(s.main.length * (0.2 + 0.6 * rnd()))], a2 = rnd() * 6.283, l2 = L * (0.12 + 0.2 * rnd());
+                    s.br.push(jag(p[0], p[1], p[0] + Math.cos(a2) * l2, p[1] + Math.sin(a2) * l2, l2 * 0.35, 8));
+                }
+            }
+            let at = 0;
+            for (let i = 0; i < m.flicker; i++) {
+                s.pulses.push({ at: at, amp: i === 0 ? 1 : 0.35 + rnd() * 0.6, dur: (def.mode === 'arc' ? 45 : 85) + rnd() * 70 });
+                at += (def.mode === 'arc' ? 50 : 70) + rnd() * 140;
+            }
+            s.end = at + 420;
+            return s;
+        }
+        function doStrike() {
+            const def = PETIR_VAR[cfg.variant.petir] || PETIR_VAR.cabang;
+            strikes.push(makeStrike(0));
+            if (def.burst) { const n = 2 + Math.floor(rnd() * 3); for (let i = 1; i <= n; i++) strikes.push(makeStrike(i * (110 + rnd() * 260))); }
+            if (def.mode === 'arc') strikes.push(makeStrike(60 + rnd() * 140));
+            if (strikes.length > 14) strikes.splice(0, strikes.length - 14);
+        }
+        function scheduleStrike(now) {
+            const f = cfg.pt.freq * 1000;
+            nextStrike = now + f * (0.45 + rnd() * 1.1);
+        }
+        function initPetir() {
+            strikes = []; rain = []; cloudCv = null;
+            const cw = W * 2, ch = Math.round(H * 0.5);
+            cloudCv = document.createElement('canvas'); cloudCv.width = cw; cloudCv.height = ch;
+            const c2 = cloudCv.getContext('2d'), tone = toneOf(), crgb = tone.cloud || '70,80,100';
+            for (let i = 0; i < 24; i++) {
+                const cx = rnd() * cw, cy = rnd() * ch * 0.55, r = (0.12 + rnd() * 0.2) * Math.max(W, 500);
+                [-cw, 0, cw].forEach(off => {
+                    const g = c2.createRadialGradient(cx + off, cy, 0, cx + off, cy, r);
+                    g.addColorStop(0, 'rgba(' + crgb + ',0.42)'); g.addColorStop(1, 'rgba(' + crgb + ',0)');
+                    c2.fillStyle = g; c2.fillRect(cx + off - r, cy - r, r * 2, r * 2);
+                });
+            }
+            c2.globalCompositeOperation = 'destination-out';
+            const fg = c2.createLinearGradient(0, ch * 0.45, 0, ch); fg.addColorStop(0, 'rgba(0,0,0,0)'); fg.addColorStop(1, 'rgba(0,0,0,1)');
+            c2.fillStyle = fg; c2.fillRect(0, 0, cw, ch);
+            const n = Math.round(W * H / 6500);
+            for (let i = 0; i < n; i++) rain.push({ x: rnd() * W, y: rnd() * H, v: 650 + rnd() * 500, l: 9 + rnd() * 15 });
+            scheduleStrike(performance.now() - cfg.pt.freq * 600);
+        }
+        function strokePts(pts, w, style) {
+            ctx.strokeStyle = style; ctx.lineWidth = w; ctx.beginPath();
+            ctx.moveTo(pts[0][0], pts[0][1]);
+            for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i][0], pts[i][1]);
+            ctx.stroke();
+        }
+        function drawPetir(now, dt) {
+            const m = cfg.pt;
+            ctx.clearRect(0, 0, W, H);
+            if (m.cloud && cloudCv) {
+                const cw = cloudCv.width, x = -((now / 1000 * 9) % cw);
+                ctx.globalAlpha = 1; ctx.drawImage(cloudCv, x, 0); ctx.drawImage(cloudCv, x + cw, 0);
+            }
+            if (m.rain) {
+                ctx.strokeStyle = 'rgba(176,196,226,0.28)'; ctx.lineWidth = 1; ctx.beginPath();
+                for (let i = 0; i < rain.length; i++) {
+                    const r = rain[i]; r.y += r.v * dt / 1000; r.x -= r.v * 0.14 * dt / 1000;
+                    if (r.y > H) { r.y = -20; r.x = rnd() * (W + 80); } if (r.x < -20) r.x = W + 10;
+                    ctx.moveTo(r.x, r.y); ctx.lineTo(r.x + r.l * 0.14, r.y - r.l);
+                }
+                ctx.stroke();
+            }
+            if (now >= nextStrike) { doStrike(); scheduleStrike(now); }
+            ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+            for (let i = strikes.length - 1; i >= 0; i--) {
+                const s = strikes[i], t = now - s.t0;
+                if (t < 0) continue;
+                if (t > s.end) { strikes.splice(i, 1); continue; }
+                let a = 0; for (const p of s.pulses) { const d = t - p.at; if (d >= 0) a += p.amp * Math.exp(-d / p.dur); }
+                a = Math.min(1, a); if (a < 0.02) continue;
+                const col = rgb(s.col), fa = a * m.intensity / 100;
+                // cahaya di awan / layar
+                if (s.mode === 'sheet' || m.flash) {
+                    ctx.globalCompositeOperation = 'lighter';
+                    const gx = s.cx, rg = ctx.createRadialGradient(gx, H * 0.1, 0, gx, H * 0.1, Math.max(W, H) * 0.75);
+                    rg.addColorStop(0, 'rgba(' + col + ',' + (fa * (s.mode === 'sheet' ? 0.75 : 0.4)).toFixed(3) + ')'); rg.addColorStop(1, 'rgba(' + col + ',0)');
+                    ctx.fillStyle = rg; ctx.fillRect(0, 0, W, H);
+                    if (m.flash) {
+                        const lg = ctx.createLinearGradient(0, 0, 0, H);
+                        const fl = fa * (s.mode === 'sheet' ? 0.5 : 0.3);
+                        lg.addColorStop(0, 'rgba(' + col + ',' + fl.toFixed(3) + ')'); lg.addColorStop(1, 'rgba(' + col + ',' + (fl * 0.3).toFixed(3) + ')');
+                        ctx.fillStyle = lg; ctx.fillRect(0, 0, W, H);
+                    }
+                    ctx.globalCompositeOperation = 'source-over';
+                }
+                if (s.main) {
+                    const th = m.thick;
+                    [s.main].concat(s.br).forEach((pts, k) => {
+                        const f = k === 0 ? 1 : 0.55;
+                        strokePts(pts, th * 7 * f, 'rgba(' + col + ',' + (0.1 * a).toFixed(3) + ')');
+                        strokePts(pts, th * 3.2 * f, 'rgba(' + col + ',' + (0.3 * a).toFixed(3) + ')');
+                        strokePts(pts, Math.max(0.8, th * 1.1 * f), 'rgba(255,255,255,' + a.toFixed(3) + ')');
+                    });
+                }
+            }
+        }
+
+        // ---------------- loop ----------------
+        function frame(ts) {
+            raf = requestAnimationFrame(frame);
+            if (document.hidden) return;
+            if (ts - last < 32) return;
+            const dt = last ? Math.min(100, ts - last) : 33; last = ts;
+            const sv = document.querySelector('#chart-container svg');
+            if (sv && sv.classList.contains('sedang-gerak')) return;   // jangan berebut tenaga saat zoom/geser
+            const now = performance.now();
+            if (cfg.theme === 'petir') drawPetir(now, dt); else drawStars(now, dt);
+        }
+        function build() { if (cfg.theme === 'petir') initPetir(); else initStars(); }
+        function stop() { if (raf) cancelAnimationFrame(raf); raf = 0; if (ctx) ctx.clearRect(0, 0, W, H); }
+
+        return {
+            apply: function (c) {
+                if (!ensure()) return;
+                cfg = c;
+                stop();
+                if (c.theme === 'asli') { wrap.style.display = 'none'; return; }
+                wrap.style.display = 'block';
+                wrap.style.background = toneOf().css;
+                resize(); build();
+                if (reduce) { if (c.theme === 'petir') drawPetir(performance.now(), 0); else drawStars(performance.now(), 0); return; }
+                last = 0; raf = requestAnimationFrame(frame);
+            },
+            test: function () { if (cfg && cfg.theme === 'petir' && ctx) { doStrike(); } },
+            stop: stop
+        };
+    })();
+
+    // ---------- UI pengaturan latar belakang ----------
+    let csBgBuilt = false, csBgRaf = null;
+    const BG_SLIDERS = {
+        stars: [['density', 'Jumlah bintang', 0.3, 2.5, 0.1, v => v.toFixed(1) + '×'], ['speed', 'Kecepatan kedip', 0.3, 3, 0.1, v => v.toFixed(1) + '×'], ['size', 'Ukuran bintang', 0.6, 2.2, 0.1, v => v.toFixed(1) + '×']],
+        pt: [['freq', 'Jeda kilat', 1, 15, 0.5, v => v + ' dtk'], ['intensity', 'Terang flash', 10, 100, 5, v => v + '%'], ['flicker', 'Jumlah kedipan', 1, 6, 1, v => v + '×'], ['thick', 'Tebal petir', 1, 5, 1, v => v + ''], ['branches', 'Jumlah cabang', 0, 7, 1, v => v + '']]
+    };
+    function applyBackground() {
+        const b = cardSettings.bg;
+        document.body.classList.toggle('bg-themed', b.theme !== 'asli');
+        document.body.classList.toggle('bg-dark', b.theme !== 'asli');
+        BgFx.apply(b);
+    }
+    function csBgLater() {
+        saveCardSettings();
+        if (csBgRaf) cancelAnimationFrame(csBgRaf);
+        csBgRaf = requestAnimationFrame(() => { applyBackground(); csBgRaf = null; });
+    }
+    function csBgChip(box, items, curKey, onPick, swatch) {
+        box.innerHTML = '';
+        items.forEach(it => {
+            const b = document.createElement('button');
+            b.type = 'button'; b.className = 'cs-chip' + (it.k === curKey ? ' on' : '');
+            if (swatch) { const i = document.createElement('i'); i.style.background = swatch(it); b.appendChild(i); }
+            b.appendChild(document.createTextNode(it.name));
+            b.onclick = () => onPick(it.k);
+            box.appendChild(b);
+        });
+    }
+    function csBgBuild() {
+        if (csBgBuilt) return; csBgBuilt = true;
+        const mk = (group, hostId) => {
+            const host = csEl(hostId);
+            BG_SLIDERS[group].forEach(([key, label, mn, mx, st, fmt]) => {
+                const row = document.createElement('div'); row.className = 'cs-color-row';
+                row.innerHTML = '<span class="nm" style="width:104px">' + label + '</span><input type="range" class="cs-range" style="flex:1" min="' + mn + '" max="' + mx + '" step="' + st + '" id="cs-bg-' + group + '-' + key + '"><span style="font-size:.7rem;font-weight:700;width:46px;text-align:right" id="cs-bg-' + group + '-' + key + '-v"></span>';
+                host.appendChild(row);
+                row.querySelector('input').addEventListener('input', e => {
+                    const v = +e.target.value; cardSettings.bg[group][key] = v;
+                    csEl('cs-bg-' + group + '-' + key + '-v').textContent = fmt(v); csBgLater();
+                });
+            });
+        };
+        mk('stars', 'cs-bg-stars-sl'); mk('pt', 'cs-bg-pt-sl');
+    }
+    function csBgSync() {
+        const b = cardSettings.bg; csBgBuild();
+        csBgChip(csEl('cs-bg-themes'), BG_THEMES, b.theme, csBgTheme, it => it.sw);
+        const on = b.theme !== 'asli', isP = b.theme === 'petir';
+        csEl('cs-bg-opts').style.display = on ? '' : 'none';
+        if (!on) return;
+        csEl('cs-bg-variant-label').textContent = isP ? 'Variasi petir & flash' : 'Variasi bintang';
+        csBgChip(csEl('cs-bg-variants'), isP ? Object.keys(PETIR_VAR).map(k => ({ k, name: PETIR_VAR[k].name })) : STAR_VARS, b.variant[b.theme], csBgVariant);
+        csBgChip(csEl('cs-bg-tones'), BG_TONES[b.theme].map((t, i) => ({ k: i, name: t.name, css: t.css })), b.tone[b.theme], csBgTone, it => it.css);
+        csEl('cs-bg-stars-box').style.display = isP ? 'none' : '';
+        csEl('cs-bg-pt-box').style.display = isP ? '' : 'none';
+        BG_SLIDERS.stars.forEach(([k, , , , , f]) => { csEl('cs-bg-stars-' + k).value = b.stars[k]; csEl('cs-bg-stars-' + k + '-v').textContent = f(+b.stars[k]); });
+        BG_SLIDERS.pt.forEach(([k, , , , , f]) => { csEl('cs-bg-pt-' + k).value = b.pt[k]; csEl('cs-bg-pt-' + k + '-v').textContent = f(+b.pt[k]); });
+        ['cloud', 'rain', 'flash'].forEach(k => { csEl('cs-bg-' + k).checked = !!b.pt[k]; });
+        csEl('cs-bg-cmode').querySelectorAll('button').forEach(x => x.classList.toggle('on', x.dataset.v === b.colorMode));
+        csEl('cs-bg-color').value = b.color;
+        csEl('cs-bg-colorhint').textContent = (!isP && b.variant[b.theme] === 'warna') ? 'Variasi Warna-warni memakai banyak warna, jadi pilihan warna tunggal tidak dipakai.' : '';
+        csEl('cs-bg-test').style.display = isP ? '' : 'none';
+    }
+    function csBgTheme(k) {
+        cardSettings.bg.theme = k;
+        if (k === 'petir' && cardSettings.bg.colorMode === 'custom' && !cardSettings.bg.color) cardSettings.bg.color = '#d6e8ff';
+        csBgLater(); csBgSync();
+    }
+    function csBgVariant(k) {
+        const b = cardSettings.bg;
+        b.variant[b.theme] = k;
+        if (b.theme === 'petir') b.pt = petirParams(k);          // variasi baru = pengaturan awal variasi itu
+        csBgLater(); csBgSync();
+    }
+    function csBgTone(i) { const b = cardSettings.bg; b.tone[b.theme] = +i; csBgLater(); csBgSync(); }
+    function csBgBool(k, v) { cardSettings.bg.pt[k] = !!v; csBgLater(); }
+    function csBgColorMode(m) { cardSettings.bg.colorMode = m; csBgLater(); csBgSync(); }
+    function csBgColor(v) { cardSettings.bg.color = v; cardSettings.bg.colorMode = 'custom'; csEl('cs-bg-cmode').querySelectorAll('button').forEach(x => x.classList.toggle('on', x.dataset.v === 'custom')); csBgLater(); }
+    function csBgTest() { BgFx.test(); }
+
+    document.addEventListener('DOMContentLoaded', () => { try { applyBackground(); } catch (e) { console.error(e); } });
 
     // =====================================================================
     // ALIRAN PADA GARIS PENGHUBUNG + EFEK KARTU ANAK
