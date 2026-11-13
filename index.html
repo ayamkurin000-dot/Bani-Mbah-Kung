@@ -1816,6 +1816,15 @@ svg.flow-style-listrik .link-flow, svg.flow-style-kilat .link-flow { stroke-widt
                     <button data-v="always" onclick="csFlow('mode','always')">TERUS</button>
                 </div>
                 <div class="cs-color-row" style="margin-top:8px;">
+                    <span class="nm">Jumlah aliran</span>
+                    <div class="cs-seg" id="cs-fone-seg" style="flex:1">
+                        <button data-v="off" onclick="csFlow('one','off')">SEMUA KARTU</button>
+                        <button data-v="urut" onclick="csFlow('one','urut')">1 URUT</button>
+                        <button data-v="acak" onclick="csFlow('one','acak')">1 ACAK</button>
+                    </div>
+                </div>
+                <div class="cs-hint" style="margin:-2px 0 6px;">“1 URUT/ACAK”: dari tiap kartu hanya SATU anak yang dialiri, anak lain tidak. Tiap putaran berpindah ke kartu berikutnya (urut) atau sembarang kartu (acak).</div>
+                <div class="cs-color-row">
                     <span class="nm">Gaya aliran</span>
                     <select id="cs-fstyle" class="cs-select" style="flex:1;width:auto" onchange="csFlow('style',this.value)">
                         <option value="listrik">⚡ Aliran Listrik (zig-zag menyetrum)</option>
@@ -1887,7 +1896,7 @@ svg.flow-style-listrik .link-flow, svg.flow-style-kilat .link-flow { stroke-widt
                     <span id="cs-fxgap-val" style="font-size:.7rem;font-weight:700;width:34px;"></span>
                 </div>
                 <div class="cs-row-btn" style="margin-top:4px;"><button class="cs-btn small" style="flex:1" onclick="csTestFlow()">▶ COBA EFEK</button></div>
-                <div class="cs-hint">Aliran selalu bersumber dari kartu pendiri (Mubanan), merambat ke generasi berikutnya, dan seterusnya. Kartu baru beraksi (efek) saat aliran SAMPAI padanya; kartu yang belum teraliri diam. Mode TERUS mengulang dari Mubanan setelah jeda. Aliran &amp; efek otomatis berhenti saat layar dicubit/digeser agar tetap ringan. “Coba efek” butuh minimal satu kartu yang sudah dibuka.</div>
+                <div class="cs-hint">Aliran selalu bersumber dari kartu pendiri (Mubanan), merambat ke generasi berikutnya, dan seterusnya. Setiap kartu yang dilewati aliran beraksi (efek) saat aliran SAMPAI padanya; kartu yang tidak dilewati diam. Mode TERUS mengulang dari Mubanan setelah jeda. Aliran &amp; efek otomatis berhenti saat layar dicubit/digeser agar tetap ringan. “Coba efek” butuh minimal satu kartu yang sudah dibuka.</div>
             </div>
 
             <div class="cs-ok" id="cs-ok"></div>
@@ -2338,7 +2347,7 @@ svg.flow-style-listrik .link-flow, svg.flow-style-kilat .link-flow { stroke-widt
     const CARD_SETTINGS_KEY = 'bk-kartu-tema-v2';
     const CARD_PASSWORD = '21';
     const LIDAH_DEFAULTS = { mode: 'custom', a: '#fbbf24', grad: true, aTo: '#d97706' };
-    const FLOW_DEFAULTS = { mode: 'once', style: 'dots', colorMode: 'auto', color: '#f59e0b', speed: 1, fx: 'getar', fxOpen: true, fxTap: false, fxLoop: false, fxGap: 4, seq: true, seqGap: 0.8, fxHit: true };
+    const FLOW_DEFAULTS = { mode: 'once', style: 'dots', colorMode: 'auto', color: '#f59e0b', speed: 1, fx: 'getar', fxOpen: true, fxTap: false, fxLoop: false, fxGap: 4, seq: true, seqGap: 0.8, fxHit: true, one: 'off' };
     const CAPSULE_DEFAULTS = {
         root:  { a: '#16a34a', b: '#dc2626' },
         gen1:  { a: '#4ade80', b: '#ffffff' },
@@ -3391,7 +3400,7 @@ svg.flow-style-listrik .link-flow, svg.flow-style-kilat .link-flow { stroke-widt
     // begitu SAMPAI di sebuah kartu, kartu itu beraksi (efek) lalu aliran diteruskan ke anak-anaknya, dst.
     // Jadi hanya kartu yang sudah teraliri yang beranimasi. Mode TERUS mengulang dari root tiap siklus.
     // =====================================================================
-    const FW = { timers: [], gen: 0, jag: new Map(), jagTimer: null, fxWin: 0, fxCnt: 0 };
+    const FW = { timers: [], gen: 0, jag: new Map(), jagTimer: null, fxWin: 0, fxCnt: 0, pick: new Map() };
 
     function isJagStyle() { return FLOW_JAG.indexOf(cardSettings.flow.style) >= 0; }
     function linkOf(k) { return gContainer.selectAll('path.link-flow').filter(l => l.target === k); }
@@ -3441,24 +3450,42 @@ svg.flow-style-listrik .link-flow, svg.flow-style-kilat .link-flow { stroke-widt
         fwClearLit();
     }
 
-    // susun jadwal: kapan aliran mulai di tiap garis & kapan sampai di tiap kartu (mulai dari root)
+    // aliran tunggal: dari tiap kartu hanya SATU anak yang dialiri (urut bergantian atau acak), anak lain tidak
+    function fwPickKid(p, kids) {
+        if (kids.length <= 1) return kids;
+        const f = cardSettings.flow, last = FW.pick.get(p.id);
+        let i;
+        if (f.one === 'urut') i = ((last == null ? -1 : last) + 1) % kids.length;
+        else { do { i = Math.floor(Math.random() * kids.length); } while (i === last); }
+        FW.pick.set(p.id, i);
+        return [kids[i]];
+    }
+    // susun jadwal: kapan aliran mulai di tiap garis & kapan sampai di tiap kartu (mulai dari root).
+    // Aturan efek: SETIAP kartu yang dilewati aliran beraksi saat aliran sampai; kartu yang tidak dilewati tidak.
     function fwPlan(focus, trigger) {
         const f = cardSettings.flow, slot = flowSlot(), out = [];
+        const one = f.one === 'urut' || f.one === 'acak';
         const onPath = new Set(); for (let n = focus; n; n = n.parent) onPath.add(n);
         const inSub = n => { for (let x = n; x; x = x.parent) if (x === focus) return true; return false; };
         const restrict = !!focus && f.mode !== 'always';        // mode "saat dibuka": hanya jalur ke kartu itu + isinya
         const base = focus ? Math.min(duration, 450) : 0;        // beri waktu tata letak selesai bergeser
+        const test = trigger === 'test';
         const walk = (p, A) => {
-            const kids = (p.children || []).filter(k => !restrict || onPath.has(k) || inSub(k));
+            let kids = (p.children || []).filter(k => !restrict || onPath.has(k) || inSub(k));
+            if (one) { const pk = kids.filter(k => onPath.has(k)); kids = pk.length ? pk : fwPickKid(p, kids); }
             let idx = 0;
             kids.forEach(k => {
-                const path = onPath.has(k);                      // jalur leluhur -> kartu yang dibuka (cepat, tanpa efek)
-                const start = A + (path ? 0 : (f.seq ? idx : idx * 0.09) * (f.seq ? slot : 1000));
+                const path = onPath.has(k);                      // jalur leluhur -> kartu yang dibuka (aliran lebih cepat)
+                const start = A + (path ? 0 : (f.seq && !one ? idx * slot : idx * 90));
                 if (!path) idx++;
                 const ms = flowTravelK(k, path);
-                const sub = !!focus && !path && inSub(k);        // isi kartu yang baru dibuka
                 let fx = false;
-                if (f.fx !== 'none' && !path) fx = sub ? (trigger === 'test' || !!f.fxOpen) : !!(f.fxLoop && f.fxHit);
+                if (f.fx !== 'none') {
+                    if (k === focus) fx = test || !!(f.fxHit && f.fxTap);                 // kartu yang diketuk: efek saat aliran sampai
+                    else if (path) fx = test || !!(f.fxHit && f.fxOpen);                  // leluhur yang dilewati aliran
+                    else if (focus && inSub(k)) fx = test || !!f.fxOpen;                  // isi kartu yang baru dibuka
+                    else fx = !!(f.fxLoop && f.fxHit);                                    // putaran terus-menerus
+                }
                 out.push({ k, start, ms, arrive: start + ms, fx });
                 walk(k, start + ms + 90);                        // diteruskan ke generasi berikutnya
             });
@@ -3753,6 +3780,12 @@ svg.flow-style-listrik .link-flow, svg.flow-style-kilat .link-flow { stroke-widt
         getar(c) { zapGlow(c); kartuGetar(c, 6, 760); },
         warna(c) {
             if (!c.real) return;
+            const { w: ww, h: hh } = c.dims, rr = Math.min(22, Math.round(hh * 0.42));
+            for (let i = 0; i < 2; i++) {
+                const ring = zapTemp(c, 'rect', { x: -2, y: -hh / 2 - 2, width: ww + 4, height: hh + 4, rx: rr + 2, ry: rr + 2, fill: 'none', stroke: c.col, 'stroke-width': 3 },
+                    [{ opacity: 0.9, scale: 1 }, { opacity: 0, scale: 1.3 }], { duration: 900, delay: i * 300, easing: 'ease-out' });
+                ring.style.filter = `drop-shadow(0 0 5px ${c.col})`;
+            }
             const hs = [0, 90, 180, 270, 360], sa = [1, 1.7, 2, 1.7, 1], br = [1, 1.12, 1.2, 1.12, 1], gl = [0, 8, 13, 8, 0];
             c.track(c.real.animate(hs.map((h, i) => ({
                 filter: `hue-rotate(${h}deg) saturate(${sa[i]}) brightness(${br[i]}) drop-shadow(0 0 ${gl[i]}px ${c.col})`,
@@ -3886,7 +3919,7 @@ svg.flow-style-listrik .link-flow, svg.flow-style-kilat .link-flow { stroke-widt
     function csFlowSync() {
         const f = cardSettings.flow;
         const mark = (id, v) => csEl(id).querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.v === String(v)));
-        mark('cs-fmode-seg', f.mode); mark('cs-fcol-seg', f.colorMode);
+        mark('cs-fmode-seg', f.mode); mark('cs-fcol-seg', f.colorMode); mark('cs-fone-seg', (f.one === 'urut' || f.one === 'acak') ? f.one : 'off');
         csEl('cs-fstyle').value = f.style; csEl('cs-ffx').value = f.fx;
         csEl('cs-fcolor').value = f.color; csEl('cs-fcolor').style.display = f.colorMode === 'custom' ? '' : 'none';
         csEl('cs-fspeed').value = f.speed;
@@ -3895,14 +3928,14 @@ svg.flow-style-listrik .link-flow, svg.flow-style-kilat .link-flow { stroke-widt
         csEl('cs-fxgap-row').style.display = (f.mode === 'always' || (f.fxLoop && !f.fxHit)) ? '' : 'none';
         csEl('cs-fseq').checked = !!f.seq; csEl('cs-fxhit').checked = !!f.fxHit;
         csEl('cs-fseqgap').value = f.seqGap; csEl('cs-fseqgap-val').textContent = (+f.seqGap).toFixed(1) + ' dtk';
-        csEl('cs-fseqgap-row').style.display = f.seq ? '' : 'none';
+        csEl('cs-fseqgap-row').style.display = (f.seq && !(f.one === 'urut' || f.one === 'acak')) ? '' : 'none';
     }
     function csFlow(key, val, quiet) {
         cardSettings.flow[key] = val;
         saveCardSettings();
         applyFlowSettings();
         csFlowSync();
-        if (!quiet) { csEl('cs-ok').textContent = 'Tersimpan ✓'; if (key === 'style' || key === 'fx' || key === 'mode' || key === 'seq' || key === 'fxHit') csTestFlow(true); }
+        if (!quiet) { csEl('cs-ok').textContent = 'Tersimpan ✓'; if (key === 'style' || key === 'fx' || key === 'mode' || key === 'seq' || key === 'fxHit' || key === 'one') csTestFlow(true); }
     }
     function csTestFlow(silent) {
         let target = null;
@@ -4819,7 +4852,7 @@ svg.flow-style-listrik .link-flow, svg.flow-style-kilat .link-flow { stroke-widt
                 }
                 update(d);
                 if (d.children) playFlow(d); else flowAfterClose();
-                if (cardSettings.flow.fxTap) arriveFx(d);
+                if (cardSettings.flow.fxTap && !cardSettings.flow.fxHit) arriveFx(d);   // bila fxHit aktif, efek ketuk muncul saat aliran sampai
 
                 if (isFirstRootExpand) {
                     rootFirstExpandZoomDone = true;
