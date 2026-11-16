@@ -6620,16 +6620,37 @@ window.addEventListener('load',()=>setTimeout(()=>{ if(!currentRoot) currentRoot
 
 
 
+<style id="efek-hidup">
+/* ===== bintang-bintang berjatuhan di LATAR bawaan "Asli" (di belakang pohon silsilah) =====
+   Murni CSS. Hanya aktif saat latar bawaan; tema latar berbintang (hitam/biru/petir) sudah punya efek canvas sendiri. */
+body:not(.bg-themed)::after{
+  content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:#a67c1a;opacity:.5;
+  -webkit-mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='96' viewBox='0 0 64 96'%3E%3Cpath d='M10 8Q10 12 14 12Q10 12 10 16Q10 12 6 12Q10 12 10 8Z M44 26Q44 30 48 30Q44 30 44 34Q44 30 40 30Q44 30 44 26Z M24 53Q24 58 29 58Q24 58 24 63Q24 58 19 58Q24 58 24 53Z M54 77Q54 80 57 80Q54 80 54 83Q54 80 51 80Q54 80 54 77Z' fill='%23000'/%3E%3Ccircle cx='34' cy='8' r='1'/%3E%3Ccircle cx='58' cy='50' r='1'/%3E%3Ccircle cx='6' cy='40' r='1'/%3E%3Ccircle cx='40' cy='90' r='1'/%3E%3C/svg%3E"),url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='72' viewBox='0 0 48 72'%3E%3Cpath d='M12 7.5Q12 10 14.5 10Q12 10 12 12.5Q12 10 9.5 10Q12 10 12 7.5Z M36 32Q36 34 38 34Q36 34 36 36Q36 34 34 34Q36 34 36 32Z M20 53Q20 56 23 56Q20 56 20 59Q20 56 17 56Q20 56 20 53Z' fill='%23000'/%3E%3Ccircle cx='40' cy='12' r='.9'/%3E%3Ccircle cx='6' cy='34' r='.9'/%3E%3Ccircle cx='30' cy='66' r='.9'/%3E%3C/svg%3E");mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='96' viewBox='0 0 64 96'%3E%3Cpath d='M10 8Q10 12 14 12Q10 12 10 16Q10 12 6 12Q10 12 10 8Z M44 26Q44 30 48 30Q44 30 44 34Q44 30 40 30Q44 30 44 26Z M24 53Q24 58 29 58Q24 58 24 63Q24 58 19 58Q24 58 24 53Z M54 77Q54 80 57 80Q54 80 54 83Q54 80 51 80Q54 80 54 77Z' fill='%23000'/%3E%3Ccircle cx='34' cy='8' r='1'/%3E%3Ccircle cx='58' cy='50' r='1'/%3E%3Ccircle cx='6' cy='40' r='1'/%3E%3Ccircle cx='40' cy='90' r='1'/%3E%3C/svg%3E"),url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='72' viewBox='0 0 48 72'%3E%3Cpath d='M12 7.5Q12 10 14.5 10Q12 10 12 12.5Q12 10 9.5 10Q12 10 12 7.5Z M36 32Q36 34 38 34Q36 34 36 36Q36 34 34 34Q36 34 36 32Z M20 53Q20 56 23 56Q20 56 20 59Q20 56 17 56Q20 56 20 53Z' fill='%23000'/%3E%3Ccircle cx='40' cy='12' r='.9'/%3E%3Ccircle cx='6' cy='34' r='.9'/%3E%3Ccircle cx='30' cy='66' r='.9'/%3E%3C/svg%3E");
+  -webkit-mask-size:96px 144px,72px 108px;mask-size:96px 144px,72px 108px;
+  -webkit-mask-repeat:repeat;mask-repeat:repeat;
+  animation:bintangJatuh 9s linear infinite;
+}
+@keyframes bintangJatuh{
+  from{-webkit-mask-position:0 0,0 0;mask-position:0 0,0 0}
+  to{-webkit-mask-position:-96px 144px,-144px 324px;mask-position:-96px 144px,-144px 324px}
+}
+/* ===== kilatan cahaya dari ujung ke ujung pada kartu yang tampak di layar (dipicu skrip di bawah) ===== */
+.kilat-bar{transform:translateX(0) skewX(-18deg);animation:kilatSvg 1.05s cubic-bezier(.45,.05,.4,1) forwards}
+@keyframes kilatSvg{to{transform:translateX(var(--kd,300px)) skewX(-18deg)}}
+@media (prefers-reduced-motion:reduce){body:not(.bg-themed)::after{animation:none}.kilat-svg{display:none}}
+</style>
 <script>
-/* Ajakan memasang aplikasi (PWA): "Ya" -> dialog pemasangan; "Tidak" -> tidak muncul lagi selama 7 hari.
+/* Pengingat memasang aplikasi (PWA): muncul SETIAP aplikasi dibuka selama belum terpasang (tidak ada jeda 7 hari lagi).
+   "Nanti" hanya menutupnya untuk kunjungan ini; "Pasang" -> dialog pemasangan. Hilang sendiri setelah terpasang / dibuka dari layar utama.
    Android/komputer (Chrome, Edge): beforeinstallprompt. iPhone/iPad (Safari): petunjuk manual. */
 (function(){
-  var KUNCI='bk-ajak-instal',TUNDA=7*24*3600*1000,tunda=null,tawar=null,kotak=null;
+  var ditutup=false,tunda=null,tawar=null,kotak=null;
   function sudahTerpasang(){
     return (window.matchMedia&&(matchMedia('(display-mode: standalone)').matches||matchMedia('(display-mode: fullscreen)').matches))||navigator.standalone===true;
   }
-  function ditunda(){try{var t=+localStorage.getItem(KUNCI)||0;return t&&Date.now()-t<TUNDA}catch(e){return false}}
-  function catatTunda(){try{localStorage.setItem(KUNCI,String(Date.now()))}catch(e){}}
+  function ditunda(){return ditutup}
+  function catatTunda(){ditutup=true}   /* hanya untuk kunjungan ini; dibuka lagi nanti, pengingat muncul lagi */
   function tutup(){if(kotak){kotak.remove();kotak=null}}
   function ios(){return /iphone|ipad|ipod/i.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1)}
   function tampil(modeIos){
@@ -6641,6 +6662,11 @@ window.addEventListener('load',()=>setTimeout(()=>{ if(!currentRoot) currentRoot
      +'#ajakInstal img{width:46px;height:46px;border-radius:12px;flex:none}'
      +'#ajakInstal b{display:block;font-size:16px;line-height:1.3;color:#14532d}'
      +'#ajakInstal span.ket{display:block;font-size:13px;line-height:1.45;color:#475569;margin-top:2px}'
+     +'#ajakInstal ul{list-style:none;margin:0 0 12px;padding:0}'
+     +'#ajakInstal li{position:relative;padding:3px 0 3px 24px;font-size:14px;line-height:1.4;color:#0f172a}'
+     +'#ajakInstal li:before{content:"✓";position:absolute;left:2px;top:3px;color:#15803d;font-weight:800}'
+     +'#ajakInstal li b{display:inline;font-size:inherit;color:#14532d}'
+     +'#ajakInstal .cara{margin:0 0 12px;padding:8px 10px;border-radius:10px;background:#f0fdf4;font-size:13px;line-height:1.45;color:#14532d}'
      +'#ajakInstal .bt{display:flex;gap:10px;justify-content:flex-end}'
      +'#ajakInstal button{font:inherit;font-size:15px;font-weight:600;padding:10px 22px;border-radius:12px;cursor:pointer;min-width:84px}'
      +'#ajakInstal .tdk{background:#fff;color:#475569;border:1px solid #cbd5e1}'
@@ -6650,9 +6676,10 @@ window.addEventListener('load',()=>setTimeout(()=>{ if(!currentRoot) currentRoot
     document.head.appendChild(css);
     kotak=document.createElement('div');
     kotak.id='ajakInstal';
-    kotak.innerHTML='<div class="kt" role="dialog" aria-label="Instal aplikasi"><div class="jd"><img src="logo/ikon-192.png" alt=""><div><b>Instal Aplikasi Keluarga Besar Mbah Kung?</b><span class="ket">'
-      +(modeIos?'Ketuk tombol Bagikan di Safari, lalu pilih “Tambahkan ke Layar Utama”.':'Ada ikon di layar utama, tampil layar penuh, dan lebih cepat dibuka.')
-      +'</span></div></div><div class="bt"><button type="button" class="tdk">Tidak</button><button type="button" class="ya">'+(modeIos?'Mengerti':'Ya')+'</button></div></div>';
+    kotak.innerHTML='<div class="kt" role="dialog" aria-label="Pasang aplikasi"><div class="jd"><img src="logo/ikon-192.png" alt=""><div><b>Pasang aplikasi Keluarga Besar Mbah Kung</b><span class="ket">Pasang sekali, manfaatnya terasa setiap hari:</span></div></div>'
+      +'<ul><li><b>Link tidak hilang</b> — ikon tetap ada di layar utama</li><li><b>Buka lebih cepat</b></li><li><b>Tampilan layar penuh</b>, tanpa bilah browser</li><li><b>Data &amp; pengaturan aman</b>, tidak terhapus otomatis</li><li><b>Tetap bisa dibuka tanpa internet</b> (silsilah)</li></ul>'
+      +(modeIos?'<div class="cara">Caranya: ketuk tombol <b>Bagikan</b> di Safari, lalu pilih <b>Tambahkan ke Layar Utama</b>.</div>':'')
+      +'<div class="bt"><button type="button" class="tdk">Nanti</button><button type="button" class="ya">'+(modeIos?'Mengerti':'Pasang')+'</button></div></div>';
     document.body.appendChild(kotak);
     kotak.querySelector('.tdk').onclick=function(){catatTunda();tutup()};
     kotak.querySelector('.ya').onclick=function(){
@@ -6677,6 +6704,77 @@ window.addEventListener('load',()=>setTimeout(()=>{ if(!currentRoot) currentRoot
       navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).catch(function(){});
     }
   });
+})();
+</script>
+<script>
+/* Kilatan cahaya acak pada kartu silsilah yang TAMPAK di layar (min. 70% terlihat, tidak tertutup panel).
+   Kartu yang tersembunyi/di luar layar baru ikut diundi setelah pohon digeser sehingga tampak. */
+(function(){
+  if(window.matchMedia&&matchMedia('(prefers-reduced-motion:reduce)').matches)return;
+  var last=null,timer=0,uid=0,NS='http://www.w3.org/2000/svg';
+  function rect(sel){
+    var e=document.querySelector(sel);if(!e)return null;
+    var cs=getComputedStyle(e);if(cs.display==='none'||cs.visibility==='hidden')return null;
+    var r=e.getBoundingClientRect();return r.width&&r.height?r:null;
+  }
+  function overlap(a,b){return a.left<b.right&&a.right>b.left&&a.top<b.bottom&&a.bottom>b.top}
+  function candidates(){
+    var hd=rect('#header'),top=hd?hd.bottom:0,
+        obs=[rect('#chat-panel.active'),rect('#gen-legend'),rect('#panel-switcher')].filter(Boolean),
+        nodes=document.querySelectorAll('#chart-container svg g.node'),out=[],i,sh,b,w,h,vw,vh;
+    for(i=0;i<nodes.length;i++){
+      sh=nodes[i].querySelector('.node-shape-real');if(!sh)continue;
+      b=sh.getBoundingClientRect();w=b.width;h=b.height;if(!w||!h)continue;
+      vw=Math.min(b.right,innerWidth)-Math.max(b.left,0);
+      vh=Math.min(b.bottom,innerHeight)-Math.max(b.top,top);
+      if(vw<w*.7||vh<h*.7)continue;
+      if(obs.some(function(o){return overlap(b,o)}))continue;
+      if(parseFloat(getComputedStyle(nodes[i]).opacity)<.6)continue;
+      out.push({n:nodes[i],sh:sh});
+    }
+    return out;
+  }
+  function dims(c){
+    var w,h,r;
+    try{var d=d3.select(c.n).datum(),x=cardDims(d);w=x.w;h=x.h}catch(e){}
+    if(!(w>0&&h>0)){try{var bb=c.sh.getBBox();w=bb.width;h=bb.height}catch(e){return null}}
+    try{r=cardSettings.model==='kapsul'?Math.min(h/2,38):Math.min(22,Math.round(h*.42))}catch(e){r=h/2}
+    return{w:w,h:h,r:r};
+  }
+  function grad(svg){
+    if(document.getElementById('kilat-grad'))return;
+    var defs=svg.querySelector('defs');if(!defs)return;
+    var g=document.createElementNS(NS,'linearGradient');g.setAttribute('id','kilat-grad');g.setAttribute('x1','0');g.setAttribute('x2','1');g.setAttribute('y1','0');g.setAttribute('y2','0');
+    [['0',0],['.5',.8],['1',0]].forEach(function(s){var t=document.createElementNS(NS,'stop');t.setAttribute('offset',s[0]);t.setAttribute('stop-color','#fff');t.setAttribute('stop-opacity',s[1]);g.appendChild(t)});
+    defs.appendChild(g);
+  }
+  function flash(){
+    var svg=document.querySelector('#chart-container svg');
+    if(!svg||document.hidden||svg.classList.contains('sedang-gerak')||document.querySelector('.cs-overlay.show'))return next(1500);
+    var v=candidates();
+    if(v.length>1&&last)v=v.filter(function(x){return x.n!==last});
+    if(!v.length)return next(1200);
+    var c=v[Math.floor(Math.random()*v.length)],m=dims(c);
+    if(!m)return next(1200);
+    grad(svg);
+    var id='kilat-kp-'+(++uid),bw=Math.max(26,m.w*.34),
+        g=document.createElementNS(NS,'g'),cp=document.createElementNS(NS,'clipPath'),cr=document.createElementNS(NS,'rect'),
+        gg=document.createElementNS(NS,'g'),bar=document.createElementNS(NS,'rect');
+    g.setAttribute('class','kilat-svg');g.setAttribute('pointer-events','none');g.setAttribute('aria-hidden','true');
+    cp.setAttribute('id',id);
+    cr.setAttribute('x',0);cr.setAttribute('y',-m.h/2);cr.setAttribute('width',m.w);cr.setAttribute('height',m.h);cr.setAttribute('rx',m.r);cr.setAttribute('ry',m.r);
+    cp.appendChild(cr);g.appendChild(cp);
+    gg.setAttribute('clip-path','url(#'+id+')');
+    bar.setAttribute('class','kilat-bar');bar.setAttribute('x',-bw*1.4);bar.setAttribute('y',-m.h/2-2);bar.setAttribute('width',bw);bar.setAttribute('height',m.h+4);
+    bar.setAttribute('fill','url(#kilat-grad)');bar.setAttribute('style','--kd:'+Math.round(m.w+bw*2.8)+'px');
+    gg.appendChild(bar);g.appendChild(gg);
+    bar.addEventListener('animationend',function(){g.remove()});
+    c.sh.appendChild(g);last=c.n;
+    setTimeout(function(){if(g.parentNode)g.remove()},1600);   /* jaga-jaga bila animationend tidak terpicu */
+    next(1100+Math.random()*2200);
+  }
+  function next(ms){clearTimeout(timer);timer=setTimeout(flash,ms)}
+  next(2500);
 })();
 </script>
 </body>
